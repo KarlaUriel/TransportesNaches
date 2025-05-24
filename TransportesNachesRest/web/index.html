@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Transportes Naches</title>
+        <link rel="icon" type="image/png" sizes="16x16" href="/Resource/transportesNaches.png">
+
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-orange-400 to-orange-800">
+        <div class="bg-white p-8 rounded-2xl shadow-lg text-center flex flex-col items-center">
+            <img src="Resource/transportesNaches.png" alt="logo" class="w-100 h-80 mb-4">
+            <h1 class="text-2xl font-bold text-gray-800">Transportes Naches</h1>
+            <h2 class="text-lg text-gray-600 mb-6">¡Bienvenido!</h2>
+            <button 
+                class="bg-gradient-to-r from-orange-600 to-orange-700 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-300"
+                onclick="window.location.href = '/login'">
+                Ingresar
+            </button>
+              </div>
+
+        <script type="module">
+            // Import the functions you need from the SDKs you need
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+            import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+            // TODO: Add SDKs for Firebase products that you want to use
+            // https://firebase.google.com/docs/web/setup#available-libraries
+
+            // Your web app's Firebase configuration
+            // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+            const firebaseConfig = {
+                apiKey: "AIzaSyBMvKmqHV3W0HCno-OjcA3zBI1Df8f1gg0",
+                authDomain: "transportesnaches-b71e0.firebaseapp.com",
+                projectId: "transportesnaches-b71e0",
+                storageBucket: "transportesnaches-b71e0.firebasestorage.app",
+                messagingSenderId: "1015711514564",
+                appId: "1:1015711514564:web:c198e025f98f861f856e91",
+                measurementId: "G-DDCE1GJ2GG"
+            };
+
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
+        </script>
+
+    </body>
+</html>

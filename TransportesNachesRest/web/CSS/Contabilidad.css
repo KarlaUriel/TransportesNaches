@@ -1,0 +1,42 @@
+/* Estilos para la tabla de gastos */
+.tabla-gastos {
+    width: 100%;
+    margin: 20px 0;
+    font-family: Arial, sans-serif;
+}
+
+.tabla-gastos table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-gastos th, .tabla-gastos td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.tabla-gastos th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #333;
+}
+
+.tabla-gastos tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.tabla-gastos td {
+    color: #555;
+}
+
+.tabla-gastos td[colspan], .tabla-gastos td[rowspan] {
+    font-weight: bold;
+    background-color: #e9ecef;
+}
+
+.tabla-gastos td strong {
+    color: #333;
+}

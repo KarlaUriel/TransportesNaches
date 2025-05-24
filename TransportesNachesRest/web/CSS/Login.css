@@ -1,0 +1,145 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, cursive;
+    background: linear-gradient(to right, #ff4e50, #fc913a);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #fff;
+    text-align:center;
+}
+/* Animación de entrada */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.container {
+    align-content: center;
+    text-align: center;
+    width: 70%;
+    height: 80%;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.8s ease-in-out;
+}
+/* Animación de entrada del contenedor */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+img {
+    width: 25%;
+    height: auto;
+    margin-bottom: 20px;
+    border-radius: 15px;
+}
+h1 {
+    font-size: 2.5em;
+    margin: 0;
+}
+h2 {
+    font-size: 1.5em;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+input {
+    width: 80%;
+    max-width: 300px;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+/* Efecto de iluminación en inputs */
+input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+    outline: none;
+}
+.login-btn {
+    background: linear-gradient(to right, #ff4e50, #fc913a,#ff4e50);
+    color: white;
+    padding: 15px 25px;
+    border: none;
+    border-radius: 50px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.login-btn:hover {
+ background: linear-gradient(to right, #ff4e50, #fc913a,#ff4e50);
+transform: scale(1.05);
+}
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    h2 {
+        font-size: 1.1em;
+    }
+
+    input {
+        width: 90%;
+    }
+
+    .login-btn {
+        font-size: 18px;
+        padding: 12px 20px;
+    }
+}
+
+/* Para móviles */
+@media (max-width: 480px) {
+    .container {
+        width: 95%;
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    h2 {
+        font-size: 1em;
+    }
+
+    img {
+        width: 80px;
+    }
+
+    input {
+        width: 100%;
+    }
+
+    .login-btn {
+        font-size: 16px;
+        padding: 10px 18px;
+    }
+}

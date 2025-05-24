@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Contabilidad - Transportes Naches</title>
+        <link rel="icon" type="image/png" sizes="16x16" href="/Resource/transportesNaches.png">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            'primary-orange': '#f97316',
+                            'secondary-orange': '#fb923c',
+                            'dark-bg-start': '#1a202c',
+                            'dark-bg-end': '#2d3748'
+                        }
+                    }
+                }
+            }
+        </script>
+        <style>
+            .tooltip {
+                position: relative;
+                display: inline-block;
+            }
+            .tooltip .tooltiptext {
+                visibility: hidden;
+                width: auto;
+                background-color: #4a5568;
+                color: #fff;
+                text-align: center;
+                border-radius: 6px;
+                padding: 5px 10px;
+                position: absolute;
+                z-index: 1;
+                left: 110%;
+                opacity: 0;
+                transition: opacity 0.3s;
+                white-space: nowrap;
+            }
+            .tooltip:hover .tooltiptext {
+                visibility: visible;
+                opacity: 1;
+            }
+            .card {
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 50;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0,0,0,0.4);
+            }
+            .modal-content {
+                background-color: #fff;
+                margin: 5% auto;
+                padding: 20px;
+                border: 1px solid #888;
+                width: 90%;
+                max-width: 800px; /* Increased from 500px to make modal larger */
+                border-radius: 10px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                max-height: 80vh; /* Limit height to enable scrolling */
+                overflow-y: auto; /* Enable vertical scrolling */
+            }
+            .close {
+                color: #aaa;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+            }
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
+            }
+            .action-btn {
+                font-size: 0.875rem;
+                padding: 0.75rem 1.5rem;
+                border-radius: 0.5rem;
+                transition: all 0.3s ease;
+                width: 100%;
+                text-align: center;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                border: none;
+                font-weight: 500;
+            }
+            .action-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+            @media (min-width: 640px) {
+                .action-btn {
+                    width: auto;
+                    padding: 0.75rem 2rem;
+                    font-size: 1rem;
+                }
+            }
+            .filter-btn {
+                background-color: #1e40af;
+                color: white;
+                padding: 0.75rem 1.5rem;
+                border-radius: 0.5rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                font-weight: 500;
+            }
+            .filter-btn:hover {
+                background-color: #1e3a8a;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+        </style>
+    </head>
+    <body class="h-screen bg-gradient-to-r from-orange-400 to-orange-700 overflow-x-hidden">
+        <div class="md:hidden fixed top-4 left-4 z-50 bg-transparent">
+            <button id="menuButton" onclick="toggleSidebar()" class="text-white text-3xl bg-transparent">
+                <i id="menu-icon" class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="flex h-full w-full">
+            <nav id="sidebar" class="fixed md:relative z-40 w-16 h-full flex flex-col items-center py-4 shadow-2xl transform -translate-x-full md:translate-x-0 transition-transform duration-300" style="background: linear-gradient(to bottom, #1a202c, #2d3748)">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-orange-400 mb-8">
+                    <a href="/menu">
+                        <img src="../../Resource/transportesNaches.png" alt="logo" class="w-6 h-6 rounded-full hover:opacity-80 transition" />
+                    </a>
+                </div>
+                <ul class="w-full px-2 space-y-6 flex-grow">
+                    <li id="bitacora" class="tooltip">
+                        <a href="/bitacora" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors">
+                            <i class="fas fa-book text-xl"></i>
+                            <span class="tooltiptext">Bitácora</span>
+                        </a>
+                    </li>
+                    <li class="admin-only tooltip" id="contabilidad">
+                        <a href="/contabilidad" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors">
+                            <i class="fas fa-calculator text-xl"></i>
+                            <span class="tooltiptext">Contabilidad</span>
+                        </a>
+                    </li>
+                    <li id="gestionAdmin" class="admin-only tooltip">
+                        <button onclick="toggleGestionMenu()" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors w-full">
+                            <i class="fas fa-cogs text-xl"></i>
+                            <span class="tooltiptext">Gestión</span>
+                        </button>
+                        <ul id="gestionSubmenu" class="hidden absolute left-16 top-0 bg-gray-800 text-white rounded-md shadow-lg py-2 w-48 space-y-2 z-50">
+                            <li><a href="/cliente" class="block px-4 py-2 hover:bg-orange-500">Gestión Cliente</a></li>
+                            <li><a href="/unidad" class="block px-4 py-2 hover:bg-orange-500">Gestión Unidad</a></li>
+                            <li><a href="/empleado" class="block px-4 py-2 hover:bg-orange-500">Gestión Empleado</a></li>
+                            <li><a href="/ciudad" class="block px-4 py-2 hover:bg-orange-500">Gestión Ciudad</a></li>
+                            <li><a href="/caseta" class="block px-4 py-2 hover:bg-orange-500">Gestión Caseta</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="mt-16 mb-4 tooltip">
+                    <button id="cerrarSesion" class="flex items-center justify-center p-3 text-white hover:text-red-300 transition-colors">
+                        <i class="fas fa-sign-out-alt text-xl"></i>
+                        <span class="tooltiptext">Cerrar Sesión</span>
+                        </button>
+                </div>
+            </nav>
+            <main class="flex-1 p-6 overflow-auto md:mt-0 mt-16">
+                <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 max-w-full mx-auto">
+                    <h1 class="text-center text-xl sm:text-2xl font-bold text-gray-800 bg-orange-200 py-2 px-4 rounded-lg mb-4 sm:mb-6">
+                        Registro de Notas
+                    </h1>
+                    <div class="mb-4 sm:mb-6">
+                        <!-- Search Bar -->
+                        <div class="flex justify-end mb-2">
+                            <input type="text" id="searchBar" placeholder="Buscar por cliente, operador, ruta, etc." class="border-2 border-gray-300 rounded-lg p-2 w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                        </div>
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col sm:flex-row items-center sm:justify-end space-y-4 sm:space-y-0 sm:space-x-4">
+                            <button id="openFilterModal" class="filter-btn">Filtros</button>
+                            <button id="mostrarResumenBtn" class="action-btn bg-green-600 text-white hover:bg-green-700">
+                                Resumen Financiero
+                            </button>
+                            <button id="gastosAnualesBtn" class="action-btn bg-blue-600 text-white hover:bg-blue-700">
+                                Gastos Anuales
+                            </button>
+                            <button id="descargarExcel" class="action-btn bg-primary-orange text-white hover:bg-secondary-orange">
+                                Descargar Excel
+                            </button>
+                        </div>
+                    </div>
+                    <div id="notasContainer" class="space-y-4">
+                        <!-- Las tarjetas se generarán aquí -->
+                    </div>
+                </div>
+
+                <!-- Filter Modal -->
+                <div id="filterModal" class="modal">
+                    <div class="modal-content">
+                        <span id="closeFilterModal" class="close">×</span>
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Filtros</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="filtroMes" class="block text-gray-800 font-semibold mb-1">Filtrar por mes:</label>
+                                <select id="filtroMes" class="border-2 border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400">
+                                    <option value="todos">Todos los meses</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filtroSemana" class="block text-gray-800 font-semibold mb-1">Filtrar por semana:</label>
+                                <select id="filtroSemana" class="border-2 border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400">
+                                    <option value="todos">Todas las semanas</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filtroOperador" class="block text-gray-800 font-semibold mb-1">Filtrar por operador:</label>
+                                <select id="filtroOperador" class="border-2 border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400">
+                                    <option value="todos">Todos los operadores</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filtroCliente" class="block text-gray-800 font-semibold mb-1">Filtrar por cliente:</label>
+                                <select id="filtroCliente" class="border-2 border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400">
+                                    <option value="todos">Todos los clientes</option>
+                                </select>
+                            </div>
+                            <button id="applyFiltersBtn" class="action-btn bg-primary-orange text-white hover:bg-secondary-orange w-full mt-4">
+                                Aplicar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal para Gastos Anuales -->
+                <div id="gastosAnualesModal" class="modal">
+                    <div class="modal-content">
+                        <span id="spanGastos" class="close">×</span>
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Gestión de Gastos Anuales</h2>
+                        <div id="gastosFormContainer">
+                            <form id="gastosAnualesForm" class="mb-6">
+                                <input type="hidden" id="idGastoAnual" value="">
+                                <div class="mb-4">
+                                    <label for="descripcionGasto" class="block text-gray-800 font-semibold">Descripción:</label>
+                                    <input type="text" id="descripcionGasto" class="border-2 border-orange-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="montoGasto" class="block text-gray-800 font-semibold">Monto Anual ($):</label>
+                                    <input type="number" id="montoGasto" step="0.01" class="border-2 border-orange-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="anioGasto" class="block text-gray-800 font-semibold">Año:</label>
+                                    <input type="number" id="anioGasto" class="border-2 border-orange-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="fechaInicio" class="block text-gray-800 font-semibold">Fecha de Inicio:</label>
+                                    <input type="date" id="fechaInicio" class="border-2 border-orange-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="fechasPago" class="block text-gray-800 font-semibold">Fechas de Pago:</label>
+                                    <input type="text" id="fechasPago" class="border-2 border-orange-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                                </div>
+                                <button type="submit" id="submitGastoBtn" class="bg-primary-orange text-white py-2 px-4 rounded-lg hover:bg-secondary-orange transition">Guardar</button>
+                                <button type="button" id="cancelEditBtn" class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition hidden">Cancelar Edición</button>
+                            </form>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Gastos Registrados</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-300">
+                                <thead>
+                                    <tr class="bg-orange-200">
+                                        <th class="py-2 px-4 border-b text-left">Descripción</th>
+                                        <th class="py-2 px-4 border-b text-left">Monto Anual ($)</th>
+                                        <th class="py-2 px-4 border-b text-left">Año</th>
+                                        <th class="py-2 px-4 border-b text-left">Fecha de Inicio</th>
+                                        <th class="py-2 px-4 border-b text-left">Fechas de Pago</th>
+                                        <th class="py-2 px-4 border-b text-left">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gastosAnualesTableBody">
+                                    <!-- Los gastos se generarán aquí -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal para Resumen Financiero -->
+                <div id="resumenFinancieroModal" class="modal">
+                    <div class="modal-content">
+                        <span id="spanResumen" class="close">×</span>
+                        <div id="resumenFinancieroContainer">
+                            <!-- El contenido del resumen se generará aquí -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <script>
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const menuIcon = document.getElementById('menu-icon');
+                sidebar.classList.toggle('-translate-x-full');
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    menuIcon.classList.remove('fa-times');
+                    menuIcon.classList.add('fa-bars');
+                } else {
+                    menuIcon.classList.remove('fa-bars');
+                    menuIcon.classList.add('fa-times');
+                }
+            }
+
+            function toggleGestionMenu() {
+                const menu = document.getElementById('gestionSubmenu');
+                menu.classList.toggle('hidden');
+            }
+
+            const userRole = 'administrador';
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = userRole === 'administrador' ? '' : 'none';
+                });
+            });
+        </script>
+        <script src="/Modules/Menu/controller_Menu.js" type="module"></script>
+        <script src="/Modules/Contabilidad/controller_Contabilidad.js" type="module"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    </body>
+</html>
