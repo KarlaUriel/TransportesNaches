@@ -180,7 +180,7 @@
             }
         </style>
     </head>
-    <body class="h-screen bg-gradient-to-r from-orange-400 to-orange-700 overflow-x-hidden">
+   <body class="h-screen bg-gradient-to-r from-orange-400 to-orange-700 overflow-x-hidden">
 
         <div class="md:hidden fixed top-4 left-4 z-50 bg-transparent">
             <button id="menuButton" onclick="toggleSidebar()" class="text-white text-3xl bg-transparent">
@@ -197,7 +197,7 @@
                 <!-- Logo más pequeño -->
                 <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-orange-400 mb-8">
                     <a href="/menu">
-                        <img src="../../Resource/transportesNaches.png" alt="logo" class="w-6 h-6 rounded-full hover:opacity-80 transition" />
+                        <img src="/Resource/transportesNaches.png" alt="logo" class="w-6 h-6 rounded-full hover:opacity-80 transition" />
                     </a>
                 </div>
 
@@ -268,7 +268,6 @@
                                 </div>
                                 <label class="block text-sm font-bold text-gray-800 mb-2">Destinos:</label>
                                 <div id="destinosContainer" class="space-y-2">
-                                  
                                     <!-- Tercer campo (con botón de eliminación) -->
                                     <div class="flex items-center destino-row">
                                         <input type="text" class="destino-input w-full p-2 border border-orange-300 rounded bg-orange-50 text-gray-800 text-sm focus:ring-2 focus:ring-orange-500" placeholder="Escribe una ciudad..." autocomplete="off">
@@ -336,7 +335,6 @@
                                 name="fotoTablero" 
                                 class="block w-full text-sm text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-orange-600 file:text-white hover:file:bg-orange-700 transition"
                                 accept="image/*"
-                                capture="environment"
                                 required>
                             <div id="vistaPreviaTablero" class="mt-2"></div>
                         </div>
@@ -347,8 +345,7 @@
                                 id="fotoOtraInicio" 
                                 name="fotoOtraInicio" 
                                 class="block w-full text-sm text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-orange-600 file:text-white hover:file:bg-orange-700 transition"
-                                accept="image/*"
-                                capture="environment">
+                                accept="image/*">
                             <div id="vistaPreviaOtraInicio" class="mt-2"></div>
                         </div>
                         <div class="flex justify-center space-x-4 mt-6">
@@ -423,7 +420,6 @@
                                     name="fotoAcuse" 
                                     class="block w-full text-sm text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-orange-600 file:text-white hover:file:bg-orange-700 transition"
                                     accept="image/*"
-                                    capture="environment"
                                     required>
                                 <div id="vistaPreviaAcuse" class="mt-2"></div>
                             </div>
@@ -434,8 +430,7 @@
                                     id="fotoOtraFin" 
                                     name="fotoOtraFin" 
                                     class="block w-full text-sm text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-orange-600 file:text-white hover:file:bg-orange-700 transition"
-                                    accept="image/*"
-                                    capture="environment">
+                                    accept="image/*">
                                 <div id="vistaPreviaOtraFin" class="mt-2"></div>
                             </div>
                         </div>

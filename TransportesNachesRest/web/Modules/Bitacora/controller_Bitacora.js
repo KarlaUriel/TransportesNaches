@@ -2044,6 +2044,7 @@ function showWarning() {
 }
 
 // Mostrar vista previa de imágenes
+// Mostrar vista previa de imágenes
 function mostrarVistaPrevia(event, idVistaPrevia) {
     const archivo = event.target.files[0];
     const vistaPrevia = document.getElementById(idVistaPrevia);
@@ -2263,4 +2264,8 @@ document.getElementById('viajePendiente')?.addEventListener('change', function (
         `;
     }
 });
+
+
+
+// prueba te amo
 
