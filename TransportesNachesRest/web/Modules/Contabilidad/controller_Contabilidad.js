@@ -5,8 +5,11 @@ let currentFilters = {
     semana: 'todos',
     operador: 'todos',
     cliente: 'todos',
-    search: ''
+    search: '',
+    resumenMes: 'todos',
+    resumenAnio: 'todos'
 };
+let notasPorPagina = 200;
 
 function openFilterModal() {
     const modal = document.getElementById('filterModal');
@@ -23,24 +26,46 @@ function clearCache() {
     console.log('Cache cleared');
 }
 
-async function cargarNotas() {
+async function cargarNotas(page = 0, size = 200) {
     try {
-        const response = await fetch('https://transportesnaches.com.mx/api/nota/getAll', {
+        console.time('cargarNotas');
+        const response = await fetch(`https://transportesnaches.com.mx/api/nota/getAll?page=${page}&size=${size}`, {
             method: 'GET',
             headers: {'Content-Type': 'application/json'}
         });
+        console.timeEnd('cargarNotas');
+        console.time('processNotas');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         console.log("Datos recibidos:", data);
-        if (!Array.isArray(data)) {
-            throw new Error("La respuesta no es un array");
+
+        let notasArray = Array.isArray(data) ? data : data.content;
+        if (!Array.isArray(notasArray)) {
+            console.error("Estructura de datos inesperada:", data);
+            throw new Error("La respuesta no contiene un array de notas");
         }
-        todasLasNotas = data.sort((a, b) => b.idNota - a.idNota);
+
+        const newNotas = notasArray.map(nota => ({
+            ...nota,
+            noFact: nota.noFact || '',
+            estadoViaje: nota.estadoViaje || 'N/A',
+            ganancia: nota.ganancia || 0,
+            estado: nota.estado || 'PENDIENTE'
+        }));
+
+        todasLasNotas = [...todasLasNotas.filter(n1 => !newNotas.some(n2 => n2.idNota === n1.idNota)), ...newNotas]
+            .sort((a, b) => b.idNota - a.idNota);
         console.log('Tamaño de todasLasNotas:', new Blob([JSON.stringify(todasLasNotas)]).size / 1024, 'KB');
 
         await cargarGastosAnuales();
-        llenarSelectores(todasLasNotas);
         mostrarNotas(todasLasNotas);
-        verificarNotasPendientes(todasLasNotas);
+        setTimeout(() => {
+            llenarSelectores(todasLasNotas);
+            verificarNotasPendientes(todasLasNotas);
+        }, 0);
+        console.timeEnd('processNotas');
     } catch (error) {
         console.error("Error al cargar datos:", error);
         Swal.fire({
@@ -53,23 +78,88 @@ async function cargarNotas() {
     }
 }
 
+async function cargarNotasPorFecha(mes, anio) {
+    try {
+        const fechaInicio = mes === 'todos' ? null : `${anio}-${String(mes + 1).padStart(2, '0')}-01`;
+        const fechaFin = mes === 'todos' ? null : `${anio}-${String(mes + 1).padStart(2, '0')}-${new Date(anio, mes + 1, 0).getDate()}`;
+        const formData = new FormData();
+        if (fechaInicio && fechaFin) {
+            formData.append('fechaInicio', fechaInicio);
+            formData.append('fechaFin', fechaFin);
+        }
+
+        const response = await fetch('https://transportesnaches.com.mx/api/nota/buscar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams(formData).toString()
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        let notasArray = Array.isArray(data) ? data : data.content || [];
+        if (!Array.isArray(notasArray)) {
+            throw new Error("Respuesta no válida para notas por fecha");
+        }
+
+        const newNotas = notasArray.map(nota => ({
+            ...nota,
+            noFact: nota.noFact || '',
+            estadoViaje: nota.estadoViaje || 'N/A',
+            ganancia: nota.ganancia || 0,
+            estado: nota.estado || 'PENDIENTE'
+        }));
+
+        todasLasNotas = [...todasLasNotas.filter(n1 => !newNotas.some(n2 => n2.idNota === n1.idNota)), ...newNotas]
+            .sort((a, b) => b.idNota - a.idNota);
+        return true;
+    } catch (error) {
+        console.error("Error al cargar notas por fecha:", error);
+        Swal.fire({
+            title: 'Error',
+            text: 'No se pudo cargar notas para el período seleccionado.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#f97316',
+        });
+        return false;
+    }
+}
+
 async function cargarGastosAnuales() {
     try {
         const cachedGastos = sessionStorage.getItem('gastosAnuales');
         if (cachedGastos) {
-            gastosAnuales = JSON.parse(cachedGastos);
-            mostrarGastosAnuales(gastosAnuales);
-            return;
+            try {
+                gastosAnuales = JSON.parse(cachedGastos);
+                console.log('Gastos cargados desde cache:', gastosAnuales);
+                if (!Array.isArray(gastosAnuales)) {
+                    console.warn('Cached gastosAnuales no es un array, limpiando cache');
+                    clearCache();
+                    return await cargarGastosAnuales(); // Reintentar sin cache
+                }
+                mostrarGastosAnuales(gastosAnuales);
+                return;
+            } catch (e) {
+                console.error('Error parsing cached gastosAnuales:', e);
+                clearCache();
+            }
         }
+        console.log('Fetching gastosAnuales from API');
         const response = await fetch('https://transportesnaches.com.mx/api/gastoAnual/getAll', {
             method: 'GET',
             headers: {'Content-Type': 'application/json'}
         });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
+        console.log('API response for gastosAnuales:', data);
         if (!Array.isArray(data)) {
             throw new Error("La respuesta no es un array");
         }
         gastosAnuales = data;
+        console.log('gastosAnuales asignados:', gastosAnuales);
         try {
             const gastosData = JSON.stringify(gastosAnuales);
             console.log('Tamaño de gastosAnuales:', new Blob([gastosData]).size / 1024, 'KB');
@@ -96,12 +186,26 @@ async function cargarGastosAnuales() {
 }
 
 function llenarSelectores(notas) {
+    console.time('llenarSelectores');
     const filtroMes = document.getElementById('filtroMes');
     const filtroOperador = document.getElementById('filtroOperador');
     const filtroCliente = document.getElementById('filtroCliente');
     const filtroSemana = document.getElementById('filtroSemana');
+    const filtroResumenMes = document.getElementById('filtroResumenMes');
+    const filtroResumenAnio = document.getElementById('filtroResumenAnio');
+
+    filtroMes.innerHTML = '<option value="todos">Todos los meses</option>';
+    filtroOperador.innerHTML = '<option value="todos">Todos los operadores</option>';
+    filtroCliente.innerHTML = '<option value="todos">Todos los clientes</option>';
+    filtroSemana.innerHTML = '<option value="todos">Todas las semanas</option>';
+    if (filtroResumenMes) filtroResumenMes.innerHTML = '<option value="todos">Todos los meses</option>';
+    if (filtroResumenAnio) filtroResumenAnio.innerHTML = '<option value="todos">Todos los años</option>';
+
     const mesesUnicos = new Set();
+    const aniosUnicos = new Set();
     const semanasUnicas = new Set();
+    const operadoresUnicos = new Set();
+    const clientesUnicos = new Set();
 
     notas.forEach(nota => {
         if (nota.fechaSalida) {
@@ -109,7 +213,17 @@ function llenarSelectores(notas) {
             const mes = fecha.getMonth();
             const anio = fecha.getFullYear();
             mesesUnicos.add(`${mes}-${anio}`);
+            aniosUnicos.add(anio);
+
+            const diaSemana = fecha.getDay();
+            const diff = fecha.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
+            const semanaInicio = new Date(fecha);
+            semanaInicio.setDate(diff);
+            const semanaKey = semanaInicio.toISOString().split('T')[0];
+            semanasUnicas.add(semanaKey);
         }
+        if (nota.nombreOperador) operadoresUnicos.add(nota.nombreOperador);
+        if (nota.cliente?.nombreCliente) clientesUnicos.add(nota.cliente.nombreCliente);
     });
 
     const mesesNombres = [
@@ -118,75 +232,69 @@ function llenarSelectores(notas) {
     ];
 
     Array.from(mesesUnicos)
-            .sort((a, b) => {
-                const [mesA, anioA] = a.split('-').map(Number);
-                const [mesB, anioB] = b.split('-').map(Number);
-                return anioA - anioB || mesA - mesB;
-            })
-            .forEach(mesAnio => {
-                const [mes, anio] = mesAnio.split('-').map(Number);
-                const option = document.createElement('option');
-                option.value = mesAnio;
-                option.textContent = `${mesesNombres[mes]} ${anio}`;
-                filtroMes.appendChild(option);
-            });
+        .sort((a, b) => {
+            const [mesA, anioA] = a.split('-').map(Number);
+            const [mesB, anioB] = b.split('-').map(Number);
+            return anioA - anioB || mesA - mesB;
+        })
+        .forEach(mesAnio => {
+            const [mes, anio] = mesAnio.split('-').map(Number);
+            const option = document.createElement('option');
+            option.value = mesAnio;
+            option.textContent = `${mesesNombres[mes]} ${anio}`;
+            filtroMes.appendChild(option);
+            if (filtroResumenMes) {
+                const resumenOption = document.createElement('option');
+                resumenOption.value = mes;
+                resumenOption.textContent = mesesNombres[mes];
+                if (!Array.from(filtroResumenMes.options).some(opt => opt.value === String(mes))) {
+                    filtroResumenMes.appendChild(resumenOption);
+                }
+            }
+        });
 
-    notas.forEach(nota => {
-        if (nota.fechaSalida) {
-            const fecha = new Date(nota.fechaSalida);
-            const diaSemana = fecha.getDay();
-            const diff = fecha.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
-            const semanaInicio = new Date(fecha.setDate(diff));
-            const semanaFin = new Date(semanaInicio);
-            semanaFin.setDate(semanaInicio.getDate() + 6);
-            const semanaKey = `${semanaInicio.toISOString().split('T')[0]}`;
-            semanasUnicas.add(semanaKey);
-        }
-    });
+    Array.from(aniosUnicos)
+        .sort((a, b) => a - b)
+        .forEach(anio => {
+            if (filtroResumenAnio) {
+                const option = document.createElement('option');
+                option.value = anio;
+                option.textContent = anio;
+                filtroResumenAnio.appendChild(option);
+            }
+        });
 
     Array.from(semanasUnicas)
-            .sort((a, b) => new Date(a) - new Date(b))
-            .forEach(semanaKey => {
-                const semanaInicio = new Date(semanaKey);
-                const semanaFin = new Date(semanaInicio);
-                semanaFin.setDate(semanaInicio.getDate() + 6);
-                const option = document.createElement('option');
-                option.value = semanaKey;
-                option.textContent = `${semanaInicio.toLocaleDateString()} - ${semanaFin.toLocaleDateString()}`;
-                filtroSemana.appendChild(option);
-            });
-
-    const operadoresUnicos = new Set();
-    notas.forEach(nota => {
-        if (nota.operador?.nombreOperador) {
-            operadoresUnicos.add(nota.operador.nombreOperador);
-        }
-    });
+        .sort((a, b) => new Date(a) - new Date(b))
+        .forEach(semanaKey => {
+            const semanaInicio = new Date(semanaKey);
+            const semanaFin = new Date(semanaInicio);
+            semanaFin.setDate(semanaInicio.getDate() + 6);
+            const option = document.createElement('option');
+            option.value = semanaKey;
+            option.textContent = `${semanaInicio.toLocaleDateString()} - ${semanaFin.toLocaleDateString()}`;
+            filtroSemana.appendChild(option);
+        });
 
     Array.from(operadoresUnicos)
-            .sort()
-            .forEach(nombreOperador => {
-                const option = document.createElement('option');
-                option.value = nombreOperador;
-                option.textContent = nombreOperador;
-                filtroOperador.appendChild(option);
-            });
-
-    const clientesUnicos = new Set();
-    notas.forEach(nota => {
-        if (nota.cliente?.nombreCliente) {
-            clientesUnicos.add(nota.cliente.nombreCliente);
-        }
-    });
+        .sort()
+        .forEach(nombreOperador => {
+            const opcion = document.createElement('option');
+            opcion.value = nombreOperador;
+            opcion.textContent = nombreOperador;
+            filtroOperador.appendChild(opcion);
+        });
 
     Array.from(clientesUnicos)
-            .sort()
-            .forEach(nombreCliente => {
-                const option = document.createElement('option');
-                option.value = nombreCliente;
-                option.textContent = nombreCliente;
-                filtroCliente.appendChild(option);
-            });
+        .sort()
+        .forEach(nombreCliente => {
+            const option = document.createElement('option');
+            option.value = nombreCliente;
+            option.textContent = nombreCliente;
+            filtroCliente.appendChild(option);
+        });
+
+    console.timeEnd('llenarSelectores');
 }
 
 function applyFilters() {
@@ -198,14 +306,25 @@ function applyFilters() {
     closeFilterModal();
 }
 
+async function applyResumenFilters() {
+    const resumenMes = document.getElementById('filtroResumenMes').value;
+    const resumenAnio = document.getElementById('filtroResumenAnio').value;
+    currentFilters.resumenMes = resumenMes;
+    currentFilters.resumenAnio = resumenAnio;
+
+    if (resumenMes !== 'todos' && resumenAnio !== 'todos') {
+        await cargarNotasPorFecha(parseInt(resumenMes), parseInt(resumenAnio));
+    }
+    mostrarNotas(todasLasNotas);
+}
+
 function filtrarNotas() {
     let notasFiltradas = [...todasLasNotas];
 
     if (currentFilters.mes !== 'todos') {
         const [mes, anio] = currentFilters.mes.split('-').map(Number);
         notasFiltradas = notasFiltradas.filter(nota => {
-            if (!nota.fechaSalida)
-                return false;
+            if (!nota.fechaSalida) return false;
             const fecha = new Date(nota.fechaSalida);
             return fecha.getMonth() === mes && fecha.getFullYear() === anio;
         });
@@ -216,8 +335,7 @@ function filtrarNotas() {
         const semanaFin = new Date(semanaInicio);
         semanaFin.setDate(semanaInicio.getDate() + 6);
         notasFiltradas = notasFiltradas.filter(nota => {
-            if (!nota.fechaSalida)
-                return false;
+            if (!nota.fechaSalida) return false;
             const fecha = new Date(nota.fechaSalida);
             return fecha >= semanaInicio && fecha <= semanaFin;
         });
@@ -225,7 +343,7 @@ function filtrarNotas() {
 
     if (currentFilters.operador !== 'todos') {
         notasFiltradas = notasFiltradas.filter(nota => {
-            return nota.operador?.nombreOperador === currentFilters.operador;
+            return nota.nombreOperador === currentFilters.operador;
         });
     }
 
@@ -239,18 +357,18 @@ function filtrarNotas() {
         notasFiltradas = notasFiltradas.filter(nota => {
             const idNota = nota.idNota?.toString() || '';
             const cliente = nota.cliente?.nombreCliente?.toLowerCase() || '';
-            const operador = nota.operador?.nombreOperador?.toLowerCase() || '';
+            const operador = nota.nombreOperador?.toLowerCase() || '';
             const ruta = `${nota.origen || ''} ${nota.destino || ''}`.toLowerCase();
             const unidad = nota.unidad?.tipoVehiculo?.toLowerCase() || '';
             const fecha = formatearFecha(nota.fechaSalida)?.toLowerCase() || '';
             return (
-                    idNota.includes(currentFilters.search) ||
-                    cliente.includes(currentFilters.search) ||
-                    operador.includes(currentFilters.search) ||
-                    ruta.includes(currentFilters.search) ||
-                    unidad.includes(currentFilters.search) ||
-                    fecha.includes(currentFilters.search)
-                    );
+                idNota.includes(currentFilters.search) ||
+                cliente.includes(currentFilters.search) ||
+                operador.includes(currentFilters.search) ||
+                ruta.includes(currentFilters.search) ||
+                unidad.includes(currentFilters.search) ||
+                fecha.includes(currentFilters.search)
+            );
         });
     }
 
@@ -267,17 +385,26 @@ document.getElementById('openFilterModal').addEventListener('click', openFilterM
 document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
 document.getElementById('closeFilterModal').addEventListener('click', closeFilterModal);
 
+document.addEventListener('DOMContentLoaded', () => {
+    const notasPorPaginaSelect = document.getElementById('notasPorPagina');
+    if (notasPorPaginaSelect) {
+        notasPorPaginaSelect.addEventListener('change', () => {
+            notasPorPagina = parseInt(notasPorPaginaSelect.value);
+            cargarNotas(0, notasPorPagina);
+        });
+    }
+});
+
 document.getElementById('descargarExcel').addEventListener('click', () => {
-    const mesSeleccionado = currentFilters.mes;
     let notasFiltradas = [...todasLasNotas];
     let gastosAnualesDiarios = 0;
     let gastosAnualesTotal = 0;
 
-    if (mesSeleccionado !== 'todos') {
-        const [mes, anio] = mesSeleccionado.split('-').map(Number);
+    if (currentFilters.resumenMes !== 'todos' && currentFilters.resumenAnio !== 'todos') {
+        const mes = parseInt(currentFilters.resumenMes);
+        const anio = parseInt(currentFilters.resumenAnio);
         notasFiltradas = notasFiltradas.filter(nota => {
-            if (!nota.fechaSalida)
-                return false;
+            if (!nota.fechaSalida) return false;
             const fecha = new Date(nota.fechaSalida);
             return fecha.getMonth() === mes && fecha.getFullYear() === anio;
         });
@@ -290,7 +417,7 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
 
     if (currentFilters.operador !== 'todos') {
         notasFiltradas = notasFiltradas.filter(nota => {
-            return nota.operador?.nombreOperador === currentFilters.operador;
+            return nota.nombreOperador === currentFilters.operador;
         });
     }
 
@@ -307,16 +434,10 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
         const rendimiento = nota.unidad?.rendimientoUnidad || 7;
         const precioLitro = nota.valorLitro || 25.50;
         const noEntrega = parseInt(nota.noEntrega) || 0;
-        if (nota.idNota === 77) {
-            console.log(`Nota 77: distancia=${distancia}, rendimiento=${rendimiento}, precioLitro=${precioLitro}, noEntrega=${noEntrega}`);
-        }
         const pagoViaje = ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
-        if (nota.idNota === 77) {
-            console.log(`Nota 77: pagoViaje=${pagoViaje}`);
-        }
         const gastosOperativos = nota.gastos ? nota.gastos.reduce((sum, g) => sum + (g.total || 0), 0) : 0;
         const maniobra = parseFloat(nota.maniobra) || 0;
-        const comision = parseFloat(nota.maniobra) || 0;
+        const comision = parseFloat(nota.comision) || 0;
         const totalGastosNota = gastosOperativos + maniobra + comision + gastosAnualesDiarios;
         const egresos = gastosOperativos + maniobra + comision;
         const saldo = pagoViaje - totalGastosNota;
@@ -332,16 +453,11 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
         if (nota.gastos) {
             nota.gastos.forEach(g => {
                 const desc = g.tipoGasto?.descripcion?.toLowerCase() || '';
-                if (desc.includes('combus'))
-                    gastoCategories.combus += g.total || 0;
-                else if (desc.includes('caseta'))
-                    gastoCategories.casetas += g.total || 0;
-                else if (desc.includes('consumo'))
-                    gastoCategories.consumo += g.total || 0;
-                else if (desc.includes('hospedaje'))
-                    gastoCategories.hospedaje += g.total || 0;
-                else
-                    gastoCategories.otros += g.total || 0;
+                if (desc.includes('combus')) gastoCategories.combus += g.total || 0;
+                else if (desc.includes('caseta')) gastoCategories.casetas += g.total || 0;
+                else if (desc.includes('consumo')) gastoCategories.consumo += g.total || 0;
+                else if (desc.includes('hospedaje')) gastoCategories.hospedaje += g.total || 0;
+                else gastoCategories.otros += g.total || 0;
             });
         }
 
@@ -350,7 +466,7 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
             "No. Factura": nota.cliente?.factura === 1 ? (nota.numeroFactura || generarNumeroFactura(todasLasNotas)) : 'NO FACT',
             "Fecha": formatearFecha(nota.fechaSalida) || 'N/A',
             "Cliente": nota.cliente?.nombreCliente || 'Sin cliente',
-            "Operador": nota.operador?.nombreOperador || 'Sin operador',
+            "Operador": nota.nombreOperador || 'Sin operador',
             "Unidad": nota.unidad?.tipoVehiculo || 'N/A',
             "Ruta": formatRuta(nota.origen, nota.destino) || 'N/A',
             "Ingresos": `$${pagoViaje.toFixed(2)}`,
@@ -370,92 +486,72 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
         };
     });
 
-    // Create a new worksheet
-    const worksheet = XLSX.utils.json_to_sheet(datosExcel, {header: Object.keys(datosExcel[0])});
+    const worksheet = XLSX.utils.json_to_sheet(datosExcel, { header: Object.keys(datosExcel[0]) });
 
-    // Apply styles to cells
     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
     for (let row = range.s.r + 1; row <= range.e.r; row++) {
         const nota = notasFiltradas[row - 1];
         const isFinalized = !!nota.fechaLlegada;
         const isPendingInvoice = nota.cliente?.factura === 1 && nota.estadoFact === 'PENDIENTE';
 
-        // Log styling decisions for debugging
-        console.log(`Row ${row} (idNota=${nota.idNota}): finalized=${isFinalized}, pendingInvoice=${isPendingInvoice}`);
-
-        // Define row background color
         const rowFill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: {rgb: isFinalized ? 'CCFFCC' : 'FFCCCC'} // Light green or light red
+            patternType: 'solid',
+            fgColor: { rgb: isFinalized ? 'CCFFCC' : 'FFCCCC' }
         };
 
-        // Apply background to all cells in the row
         for (let col = range.s.c; col <= range.e.c; col++) {
-            const cellAddress = XLSX.utils.encode_cell({r: row, c: col});
-            if (!worksheet[cellAddress])
-                continue;
+            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+            if (!worksheet[cellAddress]) continue;
             worksheet[cellAddress].s = {
                 fill: rowFill,
-                alignment: {vertical: 'center', horizontal: 'center'}
+                alignment: { vertical: 'center', horizontal: 'center' }
             };
         }
 
-        // Apply yellow to "No. Factura" (column B, index 1) if pending
         if (isPendingInvoice) {
-            const facturaCell = XLSX.utils.encode_cell({r: row, c: 1});
+            const facturaCell = XLSX.utils.encode_cell({ r: row, c: 1 });
             if (worksheet[facturaCell]) {
                 worksheet[facturaCell].s = {
-                    fill: {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: {rgb: 'FFFF99'} // Yellow
-                    },
-                    alignment: {vertical: 'center', horizontal: 'center'}
+                    fill: { patternType: 'solid', fgColor: { rgb: 'FFFF99' } },
+                    alignment: { vertical: 'center', horizontal: 'center' }
                 };
-                console.log(`Applied yellow to ${facturaCell}`);
             }
         }
     }
 
-    // Ensure headers are unstyled
     for (let col = range.s.c; col <= range.e.c; col++) {
-        const headerCell = XLSX.utils.encode_cell({r: 0, c: col});
+        const headerCell = XLSX.utils.encode_cell({ r: 0, c: col });
         if (worksheet[headerCell]) {
             worksheet[headerCell].s = {
-                fill: {type: 'pattern', pattern: 'solid', fgColor: {rgb: 'FFFFFF'}},
-                alignment: {vertical: 'center', horizontal: 'center'}
+                fill: { patternType: 'solid', fgColor: { rgb: 'FFFFFF' } },
+                alignment: { vertical: 'center', horizontal: 'center' }
             };
         }
     }
 
-    // Create workbook and append sheet
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Contabilidad');
 
-    // Set column widths for better readability
     worksheet['!cols'] = [
-        {wch: 10}, {wch: 12}, {wch: 12}, {wch: 20}, {wch: 20},
-        {wch: 15}, {wch: 20}, {wch: 15}, {wch: 12}, {wch: 12},
-        {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12},
-        {wch: 15}, {wch: 15}, {wch: 15}, {wch: 12}, {wch: 12}
+        { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 20 }, { wch: 20 },
+        { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 12 },
+        { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 12 }
     ];
 
-    // Generate file name
     let nombreArchivo = 'Contabilidad_Todos.xlsx';
-    if (mesSeleccionado !== 'todos') {
-        const [mes, anio] = mesSeleccionado.split('-').map(Number);
+    if (currentFilters.resumenMes !== 'todos' && currentFilters.resumenAnio !== 'todos') {
+        const mes = parseInt(currentFilters.resumenMes);
+        const anio = parseInt(currentFilters.resumenAnio);
         const mesesNombres = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         nombreArchivo = `Contabilidad_${mesesNombres[mes]}_${anio}.xlsx`;
     }
 
-    // Write the file
     XLSX.writeFile(workbook, nombreArchivo);
 });
 
 function formatearFecha(fecha) {
-    if (!fecha)
-        return null;
+    if (!fecha) return null;
     const date = new Date(fecha);
     const dia = String(date.getDate()).padStart(2, '0');
     const mes = String(date.getMonth() + 1).padStart(2, '0');
@@ -464,8 +560,7 @@ function formatearFecha(fecha) {
 }
 
 function formatRuta(origen, destino) {
-    if (!origen || !destino)
-        return 'N/A';
+    if (!origen || !destino) return 'N/A';
     const formattedOrigen = origen.includes('León') ? 'León' : origen;
     const formattedDestino = destino.includes('León') ? 'León' : destino;
     return `${formattedOrigen} - ${formattedDestino}`;
@@ -489,17 +584,17 @@ async function actualizarNumeroFactura(idNota, numeroFactura) {
         const response = await fetch(`https://transportesnaches.com.mx/api/nota/updateFactura`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({idNota, numeroFactura})
+            body: JSON.stringify({ idNota, numeroFactura })
         });
         if (!response.ok) {
             throw new Error('Error al actualizar número de factura');
         }
         todasLasNotas = todasLasNotas.map(nota =>
-            nota.idNota === idNota ? {...nota, numeroFactura} : nota
+            nota.idNota === idNota ? { ...nota, numeroFactura } : nota
         );
         return true;
     } catch (error) {
-        console.error(`Error al actualizar la factura para idNota=${idNota}:`, error);
+        console.error(`Error al actualizar factura para idNota=${idNota}:`, error);
         Swal.fire({
             title: 'Error',
             text: 'No se pudo actualizar el número de factura',
@@ -513,29 +608,30 @@ async function actualizarNumeroFactura(idNota, numeroFactura) {
 
 function generarNumeroFactura(notas) {
     const facturas = notas
-            .map(nota => nota.numeroFactura)
-            .filter(f => f && f.startsWith('FAC-'))
-            .map(f => parseInt(f.replace('FAC-', '')))
-            .filter(n => !isNaN(n));
+        .map(nota => nota.numeroFactura)
+        .filter(f => f && f.startsWith('FAC-'))
+        .map(f => parseInt(f.replace('FAC-', '')))
+        .filter(n => !isNaN(n));
     const maxNumero = facturas.length > 0 ? Math.max(...facturas) : 0;
     return `FAC-${String(maxNumero + 1).padStart(3, '0')}`;
 }
 
 function calcularGastosAnualesMensuales(mes, anio) {
     return gastosAnuales
-            .filter(gasto => gasto.anio === anio)
-            .reduce((suma, gasto) => suma + (gasto.monto / 12), 0);
+        .filter(gasto => gasto.anio === anio)
+        .reduce((suma, gasto) => suma + (gasto.monto / 12), 0);
 }
 
 function calcularGastosAnualesTotal(anio) {
     return gastosAnuales
-            .filter(gasto => gasto.anio === anio)
-            .reduce((suma, gasto) => suma + (gasto.monto || 0), 0);
+        .filter(gasto => gasto.anio === anio)
+        .reduce((suma, gasto) => suma + (gasto.monto || 0), 0);
 }
 
 function mostrarNotas(notas) {
+    console.time('mostrarNotas');
     const contenedor = document.getElementById('notasContainer');
-    contenedor.innerHTML = '';
+    const fragment = document.createDocumentFragment();
 
     let totalGastosOperativos = 0;
     let totalManiobra = 0;
@@ -550,39 +646,37 @@ function mostrarNotas(notas) {
     let gananciaMensual = 0;
     let gananciaAnual = 0;
 
-    const mesSeleccionado = currentFilters.mes;
+    let notasFiltradas = [...notas];
+    let anioSeleccionado = currentFilters.resumenAnio === 'todos' ? new Date().getFullYear() : parseInt(currentFilters.resumenAnio);
+    if (currentFilters.resumenMes !== 'todos' && currentFilters.resumenAnio !== 'todos') {
+        const mes = parseInt(currentFilters.resumenMes);
+        notasFiltradas = notasFiltradas.filter(nota => {
+            if (!nota.fechaSalida) return false;
+            const fecha = new Date(nota.fechaSalida);
+            return fecha.getMonth() === mes && fecha.getFullYear() === parseInt(currentFilters.resumenAnio);
+        });
+    }
+
     const operadorSeleccionado = currentFilters.operador;
     const semanaSeleccionada = currentFilters.semana;
-    let anioSeleccionado = null;
 
-    if (mesSeleccionado !== 'todos') {
-        const [mes, anio] = mesSeleccionado.split('-').map(Number);
-        anioSeleccionado = anio;
-        gastosAnualesTotal = calcularGastosAnualesTotal(anio);
+    if (currentFilters.resumenMes !== 'todos' && currentFilters.resumenAnio !== 'todos') {
+        gastosAnualesTotal = calcularGastosAnualesTotal(anioSeleccionado);
         gastosAnualesDiarios = gastosAnualesTotal / 365;
     } else {
         gastosAnualesTotal = gastosAnuales.reduce((suma, gasto) => suma + (gasto.monto || 0), 0);
         gastosAnualesDiarios = gastosAnualesTotal / 365;
-        anioSeleccionado = new Date().getFullYear();
     }
 
-    notas.forEach(nota => {
-        console.log(`Nota ${nota.idNota}: cliente=${nota.cliente?.nombreCliente}, factura=${nota.cliente?.factura}, estadoFact=${nota.estadoFact}, numeroFactura=${nota.numeroFactura}`);
-
+    notasFiltradas.forEach(nota => {
         const distancia = (nota.kmFinal && nota.kmInicio) ? nota.kmFinal - nota.kmInicio : 0;
         const rendimiento = nota.unidad?.rendimientoUnidad || 7;
         const precioLitro = nota.valorLitro || 25.50;
         const noEntrega = parseInt(nota.noEntrega) || 0;
-        if (nota.idNota === 77) {
-            console.log(`Nota 77: distancia=${distancia}, rendimiento=${rendimiento}, precioLitro=${precioLitro}, noEntrega=${noEntrega}`);
-        }
         const pagoViaje = ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
-        if (nota.idNota === 77) {
-            console.log(`Nota 77: pagoViaje=${pagoViaje}`);
-        }
         const gastosOperativos = nota.gastos ? nota.gastos.reduce((sum, g) => sum + (g.total || 0), 0) : 0;
         const maniobra = parseFloat(nota.maniobra) || 0;
-        const comision = parseFloat(nota.maniobra) || 0;
+        const comision = parseFloat(nota.comision) || 0;
         const totalGastosNota = gastosOperativos + maniobra + comision + gastosAnualesDiarios;
 
         totalGastosOperativos += gastosOperativos;
@@ -599,7 +693,7 @@ function mostrarNotas(notas) {
             if (fecha >= semanaInicio && fecha <= semanaFin && (operadorSeleccionado === 'todos' || nota.operador?.nombreOperador === operadorSeleccionado)) {
                 totalNomina += comision + maniobra;
             }
-        } else if (operadorSeleccionado !== 'todos' && nota.operador?.nombreOperador === operadorSeleccionado) {
+        } else if (operadorSeleccionado !== 'todos' && nota.nombreOperador === operadorSeleccionado) {
             totalNomina += comision + maniobra;
         }
 
@@ -626,7 +720,6 @@ function mostrarNotas(notas) {
                 estadoTexto = 'DESCONOCIDO';
                 estadoClase = 'text-yellow-600';
                 fondoClase = 'bg-yellow-100';
-                console.warn(`Nota ${nota.idNota}: estadoFact inválido (${nota.estadoFact})`);
             }
         } else if (nota.cliente.factura === 0) {
             estadoTexto = 'NO FACT';
@@ -635,24 +728,23 @@ function mostrarNotas(notas) {
             estadoTexto = 'ERROR';
             estadoClase = 'text-red-600';
             fondoClase = 'bg-red-100';
-            console.error(`Nota ${nota.idNota}: Valor de factura inválido (${nota.cliente.factura})`);
         }
 
         const card = document.createElement('div');
         card.classList.add(
-                'card', 'bg-white', 'rounded-lg', 'p-4', 'shadow-md', 'border', 'border-orange-300', 'cursor-pointer',
-                fondoClase
-                );
+            'card', 'bg-white', 'rounded-lg', 'p-4', 'shadow-md', 'border', 'border-orange-300', 'cursor-pointer',
+            fondoClase
+        );
 
         const numeroFactura = nota.cliente?.factura === 1 ? (nota.numeroFactura || generarNumeroFactura(todasLasNotas)) : 'NO FACT';
         const porTipoGasto = nota.gastos?.map(g => `${g.tipoGasto?.descripcion}: $${(g.total || 0).toFixed(2)}`).join(', ') || 'N/A';
-        const gananciaText = gananciaCalculada !== undefined && gananciaCalculada !== null ? `$${gananciaCalculada.toFixed(2)} ${gananciaCalculada >= 0 ? '(Positiva)' : '(Negativa)'}` : 'N/A';
+        const gananciaText = gananciaCalculada !== undefined ? `$${gananciaCalculada.toFixed(2)} ${gananciaCalculada >= 0 ? '(Positiva)' : '(Negativa)'}` : 'N/A';
         const viajeStatus = nota.fechaLlegada ? 'Finalizado' : 'No Finalizado';
         const viajeStatusColor = nota.fechaLlegada ? 'text-green-600' : 'text-red-600';
 
         card.innerHTML = `
             <div class="flex justify-between items-center mb-2">
-                <div class="text-sm font-bold text-gray-800">Nota #${nota.idNota || 'N/D'}</div>
+                <div class="text-sm font-bold text-gray-800">Nota #${nota.idNota || 'N/A'}</div>
                 <div class="flex items-center space-x-2">
                     <div class="text-sm font-semibold ${estadoClase}">
                         ${estadoTexto}
@@ -664,11 +756,11 @@ function mostrarNotas(notas) {
             </div>
             <div class="grid grid-cols-2 gap-2 text-sm text-gray-800">
                 <div class="flex items-center">
-                    <span class="font-semibold mr-1">N.º Facto:</span>
+                    <span class="font-semibold mr-1">N.º Factura:</span>
                     <input type="text" value="${numeroFactura}" class="factura-input border border-gray-300 rounded p-1 w-full text-sm" data-id="${nota.idNota}" ${nota.cliente?.factura !== 1 ? 'disabled' : ''}>
                 </div>
                 <div>
-                    <span class="font-semibold">Fecha Elab.:</span> ${formatearFecha(nota.fechaSalida) || 'N/D'}
+                    <span class="font-semibold">Fecha Elab.:</span> ${formatearFecha(nota.fechaSalida) || 'N/A'}
                 </div>
                 <div>
                     <span class="font-semibold">Cliente:</span> ${nota.cliente?.nombreCliente || 'Sin cliente'}
@@ -677,7 +769,7 @@ function mostrarNotas(notas) {
                     <span class="font-semibold">Ruta:</span> ${formatRuta(nota.origen, nota.destino) || 'N/A'}
                 </div>
                 <div>
-                    <span class="font-semibold">Operador:</span> ${nota.operador?.nombreOperador || 'Sin operador'}
+                    <span class="font-semibold">Operador:</span> ${nota.nombreOperador || 'Sin operador'}
                 </div>
                 <div>
                     <span class="font-semibold">Unidad:</span> ${nota.unidad?.tipoVehiculo || 'N/A'}
@@ -738,8 +830,11 @@ function mostrarNotas(notas) {
             }
         });
 
-        contenedor.appendChild(card);
+        fragment.appendChild(card);
     });
+
+    contenedor.innerHTML = '';
+    contenedor.appendChild(fragment);
 
     const totalGastosConAnuales = totalGastos;
     const gananciaNeta = totalIngresos - totalGastos;
@@ -750,14 +845,29 @@ function mostrarNotas(notas) {
     const resumenContainer = document.getElementById('resumenFinancieroContainer');
     resumenContainer.innerHTML = `
         <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-orange-300 pb-2">Resumen Financiero</h2>
+        <div class="mb-4 flex space-x-4">
+            <div>
+                <label for="filtroResumenMes" class="block text-sm font-medium text-gray-700">Mes:</label>
+                <select id="filtroResumenMes" class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                    <option value="todos">Todos los meses</option>
+                </select>
+            </div>
+            <div>
+                <label for="filtroResumenAnio" class="block text-sm font-medium text-gray-700">Año:</label>
+                <select id="filtroResumenAnio" class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                    <option value="todos">Todos los años</option>
+                </select>
+            </div>
+            <button id="applyResumenFiltersBtn" class="mt-6 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700">Aplicar</button>
+        </div>
         <div class="space-y-4">
-            <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="bg-white p-4 rounded-lg shadow">
                 <h3 class="text-lg font-semibold text-orange-600 mb-2">Ingresos</h3>
                 <ul class="list-disc list-inside pl-4 text-gray-700">
                     <li><span class="font-medium">Total de Ingresos:</span> $${totalIngresos.toFixed(2)}</li>
                 </ul>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="bg-white p-4 rounded-lg shadow">
                 <h3 class="text-lg font-semibold text-orange-600 mb-2">Gastos</h3>
                 <ul class="list-disc list-inside pl-4 text-gray-700">
                     <li><span class="font-medium">Gastos Operativos:</span> $${totalGastosOperativos.toFixed(2)}</li>
@@ -770,10 +880,10 @@ function mostrarNotas(notas) {
                             <li><span class="font-medium">Gastos Anuales Fijos (Total):</span> $${gastosAnualesTotal.toFixed(2)}</li>
                         </ul>
                     </li>
-                    <li class="font-medium mt-2">Total de Gastos:</span> $${totalGastosConAnuales.toFixed(2)}</li>
+                    <li><span class="font-medium">Total de Gastos:</span> $${totalGastosConAnuales.toFixed(2)}</li>
                 </ul>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="bg-white p-4 rounded-lg shadow">
                 <h3 class="text-lg font-semibold text-orange-600 mb-2">Ganancias</h3>
                 <ul class="list-disc list-inside pl-4 text-gray-700">
                     <li><span class="font-medium">Ganancia Neta:</span> $${gananciaNeta.toFixed(2)} ${gananciaNeta >= 0 ? '(Positiva)' : '(Negativa)'}</li>
@@ -781,7 +891,7 @@ function mostrarNotas(notas) {
                     <li class="ml-4"><span class="font-medium">Ganancia Anual:</span> $${gananciaAnual.toFixed(2)}</li>
                 </ul>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="bg-white p-4 rounded-lg shadow">
                 <h3 class="text-lg font-semibold text-orange-600 mb-2">Nómina</h3>
                 <ul class="list-disc list-inside pl-4 text-gray-700">
                     <li><span class="font-medium">Total Nómina:</span> $${totalNomina.toFixed(2)}</li>
@@ -789,6 +899,8 @@ function mostrarNotas(notas) {
             </div>
         </div>
     `;
+
+    document.getElementById('applyResumenFiltersBtn').addEventListener('click', applyResumenFilters);
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -818,7 +930,7 @@ function mostrarNotas(notas) {
                         mostrarNotas(todasLasNotas);
                         Swal.fire({
                             title: 'Eliminado',
-                            text: 'La nota ha sido eliminada',
+                            text: 'La nota ha sido eliminada.',
                             icon: 'success',
                             confirmButtonColor: '#f97316'
                         });
@@ -834,10 +946,17 @@ function mostrarNotas(notas) {
             });
         });
     });
+
+    console.timeEnd('mostrarNotas');
 }
 
 function mostrarGastosAnuales(gastos) {
+    console.log('mostrarGastosAnuales called with gastos:', gastos);
     const tableBody = document.getElementById('gastosAnualesTableBody');
+    if (!tableBody) {
+        console.error('Elemento gastosAnualesTableBody no encontrado en el DOM');
+        return;
+    }
     tableBody.innerHTML = '';
 
     gastos.forEach(gasto => {
@@ -853,7 +972,7 @@ function mostrarGastosAnuales(gastos) {
                 <button class="edit-btn2 text-blue-600 hover:text-blue-800 mr-2" data-id="${gasto.idGastoAnual}">Editar</button>
                 <button class="delete-btn2 text-red-600 hover:text-red-800" data-id="${gasto.idGastoAnual}">Eliminar</button>
             </td>
-        `;
+        </tr>`;
         tableBody.appendChild(row);
     });
 
@@ -867,33 +986,23 @@ function mostrarGastosAnuales(gastos) {
             document.getElementById('anioGasto').value = gasto.anio;
             document.getElementById('fechaInicio').value = gasto.fechaInicio || '';
             const fechasPagoInput = document.getElementById('fechasPago');
-            fechasPagoInput._flatpickr.setDate(Array.isArray(gasto.fechasPago) ? gasto.fechasPago : gasto.fechasPago ? gasto.fechasPago.split(',').map(f => f.trim()) : []);
+            fechasPagoInput._flatpickr.setDate(
+                Array.isArray(gasto.fechasPago)
+                    ? gasto.fechasPago
+                    : gasto.fechasPago && typeof gasto.fechasPago === 'string'
+                    ? gasto.fechasPago.split(',').map(f => f.trim())
+                    : []
+            );
             document.getElementById('submitGastoBtn').textContent = 'Actualizar';
             document.getElementById('cancelEditBtn').classList.remove('hidden');
-            
-            // Scroll to the form and focus the first input
             const formContainer = document.getElementById('gastosFormContainer');
             formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            document.getElementById('descripcionGasto').focus();
         });
     });
 
     document.querySelectorAll('.delete-btn2').forEach(btn => {
         btn.addEventListener('click', async () => {
             const idGastoAnual = parseInt(btn.dataset.id);
-            console.log(`Intentando eliminar gasto con idGastoAnual: ${idGastoAnual}`);
-
-            if (!idGastoAnual || isNaN(idGastoAnual)) {
-                console.error('ID de gasto inválido:', idGastoAnual);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'ID de gasto inválido. No se puede proceder con la eliminación.',
-                    icon: 'error',
-                    confirmButtonColor: '#f97316'
-                });
-                return;
-            }
-
             const result = await Swal.fire({
                 title: '¿Estás seguro?',
                 text: "No podrás deshacer esta acción",
@@ -912,41 +1021,23 @@ function mostrarGastosAnuales(gastos) {
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                         body: `idGastoAnual=${idGastoAnual}`
                     });
-
-                    console.log('Respuesta del servidor:', response.status, response.statusText);
-
-                    let result = {};
-                    try {
-                        result = await response.json();
-                    } catch (e) {
-                        if (response.ok) {
-                            result = {success: true};
-                        } else {
-                            throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
-                        }
+                    const result = await response.json();
+                    if (result.error) {
+                        throw new Error(result.error);
                     }
-
-                    if (!response.ok) {
-                        throw new Error(result.error || `Error del servidor: ${response.status} ${response.statusText}`);
-                    }
-
                     gastosAnuales = gastosAnuales.filter(g => g.idGastoAnual !== idGastoAnual);
-                    console.log(`Gastos después de eliminar: ${gastosAnuales.length}`);
-
                     try {
                         sessionStorage.setItem('gastosAnuales', JSON.stringify(gastosAnuales));
                     } catch (e) {
                         if (e.name === 'QuotaExceededError' || e.message.includes('quota')) {
-                            console.warn('sessionStorage quota exceeded for gastosAnuales update, clearing cache.');
+                            console.warn('sessionStorage quota exceeded for gastosAnuales, clearing cache.');
                             clearCache();
                         } else {
-                            console.error('Error al actualizar sessionStorage:', e);
+                            console.error('Error storing gastosAnuales in sessionStorage:', e);
                         }
                     }
-
                     mostrarGastosAnuales(gastosAnuales);
                     mostrarNotas(todasLasNotas);
-
                     Swal.fire({
                         title: 'Eliminado',
                         text: 'El gasto ha sido eliminado correctamente',
@@ -978,38 +1069,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnResumen = document.getElementById('mostrarResumenBtn');
     const spanResumen = document.getElementById('spanResumen');
 
-    // Initialize Flatpickr for fechasPago
     const fechasPagoInput = document.getElementById('fechasPago');
     flatpickr(fechasPagoInput, {
         mode: 'multiple',
         dateFormat: 'Y-m-d',
-        onChange: function (selectedDates) {
+        onChange: function(selectedDates) {
             fechasPagoInput.value = selectedDates.map(date => date.toISOString().split('T')[0]).join(', ');
         }
     });
 
     if (btnGastos && modalGastos && spanGastos) {
-        btnGastos.onclick = function () {
+        btnGastos.onclick = function() {
             modalGastos.style.display = 'block';
         };
-
-        spanGastos.onclick = function () {
+        spanGastos.onclick = function() {
             modalGastos.style.display = 'none';
             resetFormGastos();
         };
     }
 
     if (btnResumen && modalResumen && spanResumen) {
-        btnResumen.onclick = function () {
+        btnResumen.onclick = function() {
             modalResumen.style.display = 'block';
         };
-
-        spanResumen.onclick = function () {
+        spanResumen.onclick = function() {
             modalResumen.style.display = 'none';
         };
     }
 
-    window.onclick = function (event) {
+    window.onclick = function(event) {
         if (event.target == modalGastos) {
             modalGastos.style.display = 'none';
             resetFormGastos();
@@ -1023,11 +1111,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (cancelBtnGastos && formGastos) {
-        cancelBtnGastos.onclick = function () {
+        cancelBtnGastos.onclick = function() {
             resetFormGastos();
         };
 
-        formGastos.onsubmit = async function (e) {
+        formGastos.onsubmit = async function(e) {
             e.preventDefault();
             const idGastoAnual = parseInt(document.getElementById('idGastoAnual').value) || 0;
             const descripcion = document.getElementById('descripcionGasto').value.trim();
@@ -1049,14 +1137,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 let response;
-                const payload = {idGastoAnual, descripcion, monto, anio, fechaInicio, fechasPago};
+                const payload = { idGastoAnual, descripcion, monto, anio, fechaInicio, fechasPago };
                 if (idGastoAnual) {
                     response = await fetch(`https://transportesnaches.com.mx/api/gastoAnual/update`, {
                         method: 'PUT',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify(payload)
                     });
-                    console.log(payload);
                 } else {
                     response = await fetch(`https://transportesnaches.com.mx/api/gastoAnual/insert`, {
                         method: 'POST',
@@ -1071,10 +1158,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (idGastoAnual) {
-        const index = gastosAnuales.findIndex(g => g.idGastoAnual === idGastoAnual);
-                    gastosAnuales[index] = {idGastoAnual, descripcion, monto, anio, fechaInicio, fechasPago};
+                    const index = gastosAnuales.findIndex(g => g.idGastoAnual === idGastoAnual);
+                    gastosAnuales[index] = { idGastoAnual, descripcion, monto, anio, fechaInicio, fechasPago };
                 } else {
-                    gastosAnuales.push({idGastoAnual: result.idGastoAnual || (gastosAnuales.length + 1), descripcion, monto, anio, fechaInicio, fechasPago});
+                    gastosAnuales.push({ idGastoAnual: result.idGastoAnual || (gastosAnuales.length + 1), descripcion, monto, anio, fechaInicio, fechasPago });
                 }
 
                 try {
