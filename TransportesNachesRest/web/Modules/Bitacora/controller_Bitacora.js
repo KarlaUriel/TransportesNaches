@@ -937,8 +937,8 @@ async function finalizarViaje(event) {
                 console.log('iniciarViajeForm reseteado');
             }
             if (finalizarForm) {
-                finalizarForm.reset();
-                console.log('finalizarViajeForm reseteado');
+            window.location.href = '/menu';
+
             }
             const fotoTablero = document.getElementById('fotoTablero');
             const fotoAcuse = document.getElementById('fotoAcuse');

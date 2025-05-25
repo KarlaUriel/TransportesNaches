@@ -255,8 +255,8 @@ async function cargarDetallesNota() {
         document.getElementById('gananciaCalculada').textContent = gananciaText;
         document.getElementById('gananciaCalculadaInput').value = gananciaCalculada.toFixed(2);
 
-        document.getElementById('nombreOperador').textContent = notaData.operador?.nombreOperador || 'Sin operador';
-        document.getElementById('nombreOperadorSelect').value = notaData.operador?.nombreOperador || '';
+        document.getElementById('nombreOperador').textContent = notaData.nombreOperador || 'Sin operador';
+        document.getElementById('nombreOperadorSelect').value = notaData.nombreOperador || '';
         document.getElementById('nombreCliente').textContent = notaData.cliente?.nombreCliente || 'Sin cliente';
         document.getElementById('nombreClienteSelect').value = notaData.cliente?.nombreCliente || '';
         document.getElementById('tipoVehiculo').textContent = notaData.unidad?.tipoVehiculo || 'N/A';
@@ -522,7 +522,7 @@ async function guardarInfoGeneral() {
 
     const datosActualizados = {
         idNota,
-        operador: nombreOperador ? { nombreOperador } : null,
+        nombreOperador,
         cliente: { nombreCliente },
         unidad: tipoVehiculo ? { tipoVehiculo } : null,
         origen,
@@ -659,7 +659,7 @@ function configurarBotones() {
     if (cancelarEdicionBtn) {
         cancelarEdicionBtn.addEventListener('click', () => {
             toggleEditGeneral();
-            document.getElementById('nombreOperadorSelect').value = notaData.operador?.nombreOperador || '';
+            document.getElementById('nombreOperadorSelect').value = notaData.nombreOperador || '';
             document.getElementById('nombreClienteSelect').value = notaData.cliente?.nombreCliente || '';
             document.getElementById('tipoVehiculoSelect').value = notaData.unidad?.tipoVehiculo || '';
             document.getElementById('origen').value = notaData.origen ? processCityName(notaData.origen) : '';

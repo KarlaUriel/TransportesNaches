@@ -24,6 +24,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -35,21 +37,24 @@ public class RESTNotaGasto {
     @GET
     @Path("getAll")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAll() {
+    public Response getAll(@QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("20") int size) {
         String out;
         ControllerNotaGasto cng = new ControllerNotaGasto();
-        List<NotaGasto> notas;
-
         try {
-            notas = cng.getAll();
-            out = new Gson().toJson(notas);
+            List<NotaGasto> notas = cng.getAll(page, size);
+            long totalElements = cng.countAll(); // Add method to count total notes
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", notas);
+            response.put("totalElements", totalElements);
+            response.put("totalPages", (int) Math.ceil((double) totalElements / size));
+            response.put("pageNumber", page);
+            response.put("pageSize", size);
+            out = new Gson().toJson(response);
         } catch (Exception e) {
             e.printStackTrace();
-            out = """
-                  {"error":"Error interno del servidor, comunícate al área de sistemas de El Zarape."}                              
-                  """;
+            out = "{\"error\":\"Error interno del servidor, comunícate al área de sistemas de El Zarape.\"}";
         }
-
         return Response.ok(out).build();
     }
 
@@ -99,21 +104,19 @@ public class RESTNotaGasto {
     @POST
     @Path("buscar")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response buscar(
-            @FormParam("idNota") @DefaultValue("") String idNotaStr
-    ) {
+    public Response buscar(@FormParam("idNota") String idNotaStr,
+            @FormParam("fechaInicio") String fechaInicio,
+            @FormParam("fechaFin") String fechaFin) {
         String out;
         ControllerNotaGasto cng = new ControllerNotaGasto();
-
         try {
-            Integer idNota = idNotaStr.isEmpty() ? null : Integer.parseInt(idNotaStr);
-            List<NotaGasto> result = cng.buscar(idNota);
+            Integer idNota = idNotaStr != null && !idNotaStr.isEmpty() ? Integer.parseInt(idNotaStr) : null;
+            List<NotaGasto> result = cng.buscar(idNota, fechaInicio, fechaFin);
             out = new Gson().toJson(result);
         } catch (Exception ex) {
             ex.printStackTrace();
             out = String.format("{\"error\":\"%s\"}", ex.getMessage());
         }
-
         return Response.ok(out).build();
     }
 
@@ -226,31 +229,27 @@ public class RESTNotaGasto {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(out).build();
         }
     }
-    
-    
+
     @PUT
-@Path("updateGeneralInfo")
-@Produces(MediaType.APPLICATION_JSON)
-public Response updateGeneralInfo(@FormParam("datosNota") @DefaultValue("") String datosNota) {
-    String out;
-    Gson gson = new Gson();
-    ControllerNotaGasto cng = new ControllerNotaGasto();
+    @Path("updateGeneralInfo")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateGeneralInfo(@FormParam("datosNota") @DefaultValue("") String datosNota) {
+        String out;
+        Gson gson = new Gson();
+        ControllerNotaGasto cng = new ControllerNotaGasto();
 
-    try {
-        System.out.println("=== DATOS RECIBIDOS EN updateGeneralInfo ===");
-        System.out.println(datosNota); // Imprimir los datos recibidos para depuración
+        try {
+            System.out.println("=== DATOS RECIBIDOS EN updateGeneralInfo ===");
+            System.out.println(datosNota); // Imprimir los datos recibidos para depuración
 
-        NotaGasto ng = gson.fromJson(datosNota, NotaGasto.class);
-        // Update the note with the new general information
-        // Note: You'll need to implement logic in ControllerNotaGasto to update these fields
-        cng.updateGeneralInfo(ng); // Add this method to ControllerNotaGasto
-        out = "{\"result\":\"Información general actualizada correctamente.\"}";
-    } catch (Exception ex) {
-        ex.printStackTrace();
-        out = String.format("{\"error\":\"%s\"}", ex.getMessage());
+            NotaGasto ng = gson.fromJson(datosNota, NotaGasto.class);
+            cng.updateGeneralInfo(ng);
+            out = "{\"result\":\"Información general actualizada correctamente.\"}";
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            out = String.format("{\"error\":\"%s\"}", ex.getMessage());
+        }
+
+        return Response.ok(out).build();
     }
-
-    return Response.ok(out).build();
-}
-
 }
