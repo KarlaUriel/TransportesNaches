@@ -10,6 +10,20 @@ import java.util.Set;
 
 public class ControllerNotaGasto {
 
+    // NEW: Minimal fix to bypass Redisson/Netty error
+    static {
+        // Commented out Redisson to avoid NoClassDefFoundError
+        /*
+        try {
+            Config config = new Config();
+            config.useSingleServer().setAddress("redis://127.0.0.1:6379");
+            redissonClient = Redisson.create(config);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+         */
+    }
+
     public int iniciarNota(NotaGasto ng) throws Exception {
         String sql = "{CALL iniciarNotaGasto(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         ConexionMySQL connMySQL = new ConexionMySQL();
@@ -33,7 +47,7 @@ public class ControllerNotaGasto {
             // Configurar los parámetros del procedimiento almacenado
             cstmt.setString(1, ng.getNombreOperador());
             cstmt.setString(2, ng.getNombreCliente());
-            cstmt.setInt(3, idCliente); // Nuevo parámetro para idCliente
+            cstmt.setInt(3, idCliente);
             cstmt.setDate(4, ng.getFechaLlenado() != null ? new java.sql.Date(ng.getFechaLlenado().getTime()) : null);
             cstmt.setDate(5, ng.getFechaSalida() != null ? new java.sql.Date(ng.getFechaSalida().getTime()) : null);
             cstmt.setString(6, ng.getHoraSalida());
@@ -61,7 +75,7 @@ public class ControllerNotaGasto {
             String sqlContabilidad = "INSERT INTO contabilidadN (idNota, estado, numeroFactura) VALUES (?, ?, ?)";
             try (PreparedStatement pstmt = conn.prepareStatement(sqlContabilidad)) {
                 pstmt.setInt(1, idNota);
-                pstmt.setString(2, "PENDIENTE");
+                pstmt.setString(2, "Pendiente");
                 pstmt.setString(3, null);
                 pstmt.executeUpdate();
             }
@@ -88,7 +102,7 @@ public class ControllerNotaGasto {
                 cstmt.setInt(5, ng.getNoEntrega());
                 cstmt.setString(6, ng.getComentarioEstado());
                 cstmt.setString(7, ng.getFotoAcuse());
-                cstmt.setString(8, ng.getFotoOtraFin()); // Nuevo parámetro
+                cstmt.setString(8, ng.getFotoOtraFin());
                 cstmt.execute();
             }
 
@@ -118,7 +132,7 @@ public class ControllerNotaGasto {
                     cstmtGasto.setDouble(8, gasto.getSubTotal());
                     cstmtGasto.setDouble(9, gasto.getTotal());
                     cstmtGasto.setString(10, gasto.getTipoPago());
-                    cstmtGasto.setDouble(11, gasto.getValorLitro()); // Nuevo parámetro
+                    cstmtGasto.setDouble(11, gasto.getValorLitro());
                     cstmtGasto.execute();
                 }
             }
@@ -162,14 +176,39 @@ public class ControllerNotaGasto {
         }
     }
 
-    public List<NotaGasto> buscar(Integer idNota) throws Exception {
+    public List<NotaGasto> buscar(Integer idNota, String fechaInicio, String fechaFin) throws Exception {
         List<NotaGasto> notas = new ArrayList<>();
-        String sql = "SELECT * FROM v_nota_gasto" + (idNota != null ? " WHERE idNota = ?" : "") + " ORDER BY idNota, idGasto";
-        ConexionMySQL connMySQL = new ConexionMySQL();
+        StringBuilder sql = new StringBuilder(
+                "SELECT ng.idNota, ng.origen, ng.destino, ng.fechaLlenado, ng.fechaSalida, ng.fechaLlegada, "
+                + "ng.horaSalida, ng.horaLlegada, ng.kmInicio, ng.kmFinal, ng.noEntrega, ng.gasolinaInicio, "
+                + "ng.gasolinaLevel, ng.llantasInicio, ng.aceiteInicio, ng.anticongelanteInicio, ng.liquidoFrenosInicio, "
+                + "ng.comentarioEstado, ng.fotoTablero, ng.fotoAcuse, ng.fotoOtraInicio, ng.fotoOtraFin, "
+                + "c.numeroFactura, c.estadoFact, c.pagoViaje, c.comision, c.maniobra, c.fechaPago, c.pago, "
+                + "ng.nombreOperador, cl.idCliente, cl.nombreCliente, cl.factura, u.idUnidad, u.tipoVehiculo, "
+                + "u.rendimientoUnidad, u.activoUnidad "
+                + "FROM notaGasto ng "
+                + "LEFT JOIN contabilidadN c ON ng.idNota = c.idNota AND c.idGasto IS NULL "
+                + "LEFT JOIN cliente cl ON ng.idCliente = cl.idCliente "
+                + "LEFT JOIN unidad u ON ng.idUnidad = u.idUnidad "
+                + "WHERE 1=1"
+        );
 
-        try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            if (idNota != null) {
-                pstmt.setInt(1, idNota);
+        List<String> params = new ArrayList<>();
+        if (idNota != null) {
+            sql.append(" AND ng.idNota = ?");
+            params.add(idNota.toString());
+        }
+        if (fechaInicio != null && fechaFin != null) {
+            sql.append(" AND ng.fechaSalida BETWEEN ? AND ?");
+            params.add(fechaInicio);
+            params.add(fechaFin);
+        }
+        sql.append(" ORDER BY ng.idNota DESC");
+
+        ConexionMySQL connMySQL = new ConexionMySQL();
+        try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                pstmt.setString(i + 1, params.get(i));
             }
             try (ResultSet rs = pstmt.executeQuery()) {
                 Set<Integer> notaIds = new HashSet<>();
@@ -189,7 +228,20 @@ public class ControllerNotaGasto {
     }
 
     public NotaGasto getById(int idNota) throws Exception {
-        String sql = "SELECT * FROM v_nota_gasto WHERE idNota = ? ORDER BY idGasto";
+        // CHANGED: Simple SELECT instead of v_nota_gasto
+        String sql = "SELECT ng.idNota, ng.origen, ng.destino, ng.fechaLlenado, ng.fechaSalida, ng.fechaLlegada, "
+                + "ng.horaSalida, ng.horaLlegada, ng.kmInicio, ng.kmFinal, ng.noEntrega, ng.gasolinaInicio, "
+                + "ng.gasolinaLevel, ng.llantasInicio, ng.aceiteInicio, ng.anticongelanteInicio, ng.liquidoFrenosInicio, "
+                + "ng.comentarioEstado, ng.fotoTablero, ng.fotoAcuse, ng.fotoOtraInicio, ng.fotoOtraFin, "
+                + "c.numeroFactura, c.estadoFact, c.pagoViaje, c.comision, c.maniobra, c.fechaPago, c.pago, "
+                + "ng.nombreOperador, cl.idCliente, cl.nombreCliente, cl.factura, u.idUnidad, u.tipoVehiculo, "
+                + "u.rendimientoUnidad, u.activoUnidad "
+                + "FROM notaGasto ng "
+                + "LEFT JOIN contabilidadN c ON ng.idNota = c.idNota AND c.idGasto IS NULL "
+                + "LEFT JOIN cliente cl ON ng.idCliente = cl.idCliente "
+                + "LEFT JOIN unidad u ON ng.idUnidad = u.idUnidad "
+                + "WHERE ng.idNota = ? "
+                + "ORDER BY ng.idNota";
         ConexionMySQL connMySQL = new ConexionMySQL();
 
         try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -207,25 +259,57 @@ public class ControllerNotaGasto {
         }
     }
 
-    public List<NotaGasto> getAll() throws Exception {
+    public List<NotaGasto> getAll(int page, int size) throws Exception {
         List<NotaGasto> notas = new ArrayList<>();
-        String sql = "SELECT * FROM v_nota_gasto ORDER BY idNota, idGasto";
+        // CHANGED: Added LIMIT and OFFSET for pagination
+        String sql = "SELECT ng.idNota, ng.origen, ng.destino, ng.fechaLlenado, ng.fechaSalida, ng.fechaLlegada, "
+                + "ng.horaSalida, ng.horaLlegada, ng.kmInicio, ng.kmFinal, ng.noEntrega, ng.gasolinaInicio, "
+                + "ng.gasolinaLevel, ng.llantasInicio, ng.aceiteInicio, ng.anticongelanteInicio, ng.liquidoFrenosInicio, "
+                + "ng.comentarioEstado, ng.fotoTablero, ng.fotoAcuse, ng.fotoOtraInicio, ng.fotoOtraFin, "
+                + "c.numeroFactura, c.estadoFact, c.pagoViaje, c.comision, c.maniobra, c.fechaPago, c.pago, "
+                + "ng.nombreOperador, cl.idCliente, cl.nombreCliente, cl.factura, u.idUnidad, u.tipoVehiculo, "
+                + "u.rendimientoUnidad, u.activoUnidad "
+                + "FROM notaGasto ng "
+                + "LEFT JOIN contabilidadN c ON ng.idNota = c.idNota AND c.idGasto IS NULL "
+                + "LEFT JOIN cliente cl ON ng.idCliente = cl.idCliente "
+                + "LEFT JOIN unidad u ON ng.idUnidad = u.idUnidad "
+                + "ORDER BY ng.idNota DESC "
+                + "LIMIT ? OFFSET ?";
         ConexionMySQL connMySQL = new ConexionMySQL();
 
-        try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql); ResultSet rs = pstmt.executeQuery()) {
-            Set<Integer> notaIds = new HashSet<>();
-            while (rs.next()) {
-                int idNota = rs.getInt("idNota");
-                if (notaIds.add(idNota)) {
-                    NotaGasto nota = fill(rs);
-                    nota.setGastos(getGastosByNotaId(idNota, conn));
-                    notas.add(nota);
+        try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            // CHANGED: Set LIMIT and OFFSET parameters
+            pstmt.setInt(1, size);
+            pstmt.setInt(2, page * size);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                Set<Integer> notaIds = new HashSet<>();
+                while (rs.next()) {
+                    int idNota = rs.getInt("idNota");
+                    if (notaIds.add(idNota)) {
+                        NotaGasto nota = fill(rs);
+                        nota.setGastos(getGastosByNotaId(idNota, conn));
+                        notas.add(nota);
+                    }
                 }
             }
         } finally {
             connMySQL.close();
         }
         return notas;
+    }
+
+    public long countAll() throws Exception {
+        // CHANGED: New method to count total notes
+        String sql = "SELECT COUNT(*) FROM notaGasto";
+        ConexionMySQL connMySQL = new ConexionMySQL();
+        try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql); ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+            return 0;
+        } finally {
+            connMySQL.close();
+        }
     }
 
     public List<TipoGasto> getAllTipoGasto() throws Exception {
@@ -254,7 +338,20 @@ public class ControllerNotaGasto {
 
     public List<NotaGasto> getAllByUser(int idUsuario) throws Exception {
         List<NotaGasto> notas = new ArrayList<>();
-        String sql = "SELECT * FROM v_nota_gasto WHERE idUsuario = ? ORDER BY idNota, idGasto";
+        // CHANGED: Simple SELECT instead of v_nota_gasto
+        String sql = "SELECT ng.idNota, ng.origen, ng.destino, ng.fechaLlenado, ng.fechaSalida, ng.fechaLlegada, "
+                + "ng.horaSalida, ng.horaLlegada, ng.kmInicio, ng.kmFinal, ng.noEntrega, ng.gasolinaInicio, "
+                + "ng.gasolinaLevel, ng.llantasInicio, ng.aceiteInicio, ng.anticongelanteInicio, ng.liquidoFrenosInicio, "
+                + "ng.comentarioEstado, ng.fotoTablero, ng.fotoAcuse, ng.fotoOtraInicio, ng.fotoOtraFin, "
+                + "c.numeroFactura, c.estadoFact, c.pagoViaje, c.comision, c.maniobra, c.fechaPago, c.pago, "
+                + "ng.nombreOperador, cl.idCliente, cl.nombreCliente, cl.factura, u.idUnidad, u.tipoVehiculo, "
+                + "u.rendimientoUnidad, u.activoUnidad "
+                + "FROM notaGasto ng "
+                + "LEFT JOIN contabilidadN c ON ng.idNota = c.idNota AND c.idGasto IS NULL "
+                + "LEFT JOIN cliente cl ON ng.idCliente = cl.idCliente "
+                + "LEFT JOIN unidad u ON ng.idUnidad = u.idUnidad "
+                + "WHERE ng.idUsuario = ? "
+                + "ORDER BY ng.idNota";
         ConexionMySQL connMySQL = new ConexionMySQL();
 
         try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -300,7 +397,7 @@ public class ControllerNotaGasto {
         ng.setDestino(rs.getString("destino") != null ? rs.getString("destino") : "");
         ng.setFechaLlenado(rs.getDate("fechaLlenado"));
         ng.setFechaSalida(rs.getDate("fechaSalida"));
-        ng.setFechaLlegada(rs.getDate("fechaLlegada") != null ? rs.getDate("fechaLlegada") : null);
+        ng.setFechaLlegada(rs.getDate("fechaLlegada"));
         ng.setHoraSalida(rs.getString("horaSalida") != null ? rs.getString("horaSalida") : "");
         ng.setHoraLlegada(rs.getString("horaLlegada") != null ? rs.getString("horaLlegada") : "");
         ng.setKmInicio(rs.getDouble("kmInicio"));
@@ -315,29 +412,22 @@ public class ControllerNotaGasto {
         ng.setComentarioEstado(rs.getString("comentarioEstado") != null ? rs.getString("comentarioEstado") : "");
         ng.setFotoTablero(rs.getString("fotoTablero") != null ? rs.getString("fotoTablero") : "");
         ng.setFotoAcuse(rs.getString("fotoAcuse") != null ? rs.getString("fotoAcuse") : "");
-        ng.setFotoOtraInicio(rs.getString("fotoOtraInicio") != null ? rs.getString("fotoOtraInicio") : ""); // Nuevo campo
-        ng.setFotoOtraFin(rs.getString("fotoOtraFin") != null ? rs.getString("fotoOtraFin") : "");      // Nuevo campo
-        ng.setNoFact(rs.getString("noFact"));
-        ng.setEstadoFact(rs.getString("estadoFact"));
-        ng.setEstadoViaje(rs.getString("estadoViaje"));
-        ng.setPagoViaje(rs.getDouble("pagoViaje"));
-        ng.setGanancia(rs.getDouble("ganancia"));
-        ng.setEstado(rs.getString("estado") != null ? rs.getString("estado") : "PENDIENTE");
+        ng.setFotoOtraInicio(rs.getString("fotoOtraInicio") != null ? rs.getString("fotoOtraInicio") : "");
+        ng.setFotoOtraFin(rs.getString("fotoOtraFin") != null ? rs.getString("fotoOtraFin") : "");
         ng.setNumeroFactura(rs.getString("numeroFactura"));
+        ng.setEstadoFact(rs.getString("estadoFact"));
+        ng.setPagoViaje(rs.getDouble("pagoViaje"));
         ng.setComision(rs.getDouble("comision"));
         ng.setManiobra(rs.getDouble("maniobra"));
         ng.setFechaPago(rs.getDate("fechaPago"));
         ng.setPago(rs.getBoolean("pago"));
-        
-
-        Operador op = new Operador();
-        op.setNombreOperador(rs.getString("nombreOperador") != null ? rs.getString("nombreOperador") : "");
-        ng.setOperador(op);
+        // Removed: noFact, estadoViaje, ganancia, estado (not in SELECT)
+        ng.setNombreOperador(rs.getString("nombreOperador") != null ? rs.getString("nombreOperador") : "");
 
         Cliente cl = new Cliente();
         cl.setIdCliente(rs.getInt("idCliente"));
         cl.setNombreCliente(rs.getString("nombreCliente") != null ? rs.getString("nombreCliente") : "");
-        cl.setFactura(rs.getInt("factura")); // Añadir esta línea si no está presente
+        cl.setFactura(rs.getInt("factura"));
         ng.setCliente(cl);
 
         Unidad un = new Unidad();
@@ -374,7 +464,7 @@ public class ControllerNotaGasto {
                     gasto.setSubTotal(rs.getDouble("subTotal"));
                     gasto.setTotal(rs.getDouble("total"));
                     gasto.setTipoPago(rs.getString("tipoPago") != null ? rs.getString("tipoPago") : "");
-                    gasto.setValorLitro(rs.getDouble("valorLitro")); // Nuevo campo
+                    gasto.setValorLitro(rs.getDouble("valorLitro"));
                     gastos.add(gasto);
                 }
             }
@@ -385,13 +475,13 @@ public class ControllerNotaGasto {
     public List<NotaGasto> getNotasPendientes() throws SQLException, Exception {
         String sql = "{CALL getNotasPendientes()}";
         ConexionMySQL connMySQL = new ConexionMySQL();
-        var notas = new ArrayList<NotaGasto>(); // Usar 'var' en lugar de 'List<NotaGasto>'
+        var notas = new ArrayList<NotaGasto>();
 
         try (Connection conn = connMySQL.open(); CallableStatement cstmt = conn.prepareCall(sql); ResultSet rs = cstmt.executeQuery()) {
             while (rs.next()) {
-                var nota = new NotaGasto(); // Usar 'var' para inferir tipo
+                var nota = new NotaGasto();
                 nota.setIdNota(rs.getInt("idNota"));
-                nota.setFechaLlegada(rs.getDate("fechaLlegada")); // Formato YYYY-MM-DD
+                nota.setFechaLlegada(rs.getDate("fechaLlegada"));
                 nota.setEstadoFact(rs.getString("estadoFact"));
                 notas.add(nota);
             }
@@ -441,7 +531,7 @@ public class ControllerNotaGasto {
             }
 
             // Look up idCliente based on nombreCliente
-            String nombreCliente = ng.getCliente() != null ? ng.getCliente().getNombreCliente() : "";
+            String nombreCliente = ng.getNombreCliente()!= null ? ng.getCliente().getNombreCliente() : "";
             int idCliente = 0;
             if (nombreCliente != null && !nombreCliente.trim().isEmpty()) {
                 String sqlCliente = "SELECT idCliente FROM cliente WHERE TRIM(nombreCliente) = TRIM(?) AND activoCliente = 1";
@@ -455,20 +545,18 @@ public class ControllerNotaGasto {
                     }
                 }
             } else {
-                // Default idCliente for empty nombreCliente (adjust based on your schema)
-                // Example: Assume idCliente = 1 is "Sin cliente" or allow NULL if schema permits
-                idCliente = 1; // Replace with actual default idCliente or set to 0 if NULL is allowed
+                idCliente = 1;
             }
 
             // Debug logging
-            System.out.println("Updating nota_gasto with idNota: " + ng.getIdNota());
+            System.out.println("Updating notaGasto with idNota: " + ng.getIdNota());
             System.out.println("nombreCliente: " + nombreCliente + ", idCliente: " + idCliente);
             System.out.println("nombreOperador: " + (ng.getOperador() != null ? ng.getOperador().getNombreOperador() : "null"));
             System.out.println("tipoVehiculo: " + (ng.getUnidad() != null ? ng.getUnidad().getTipoVehiculo() : "null"));
 
             cstmt.setInt(1, ng.getIdNota());
             cstmt.setString(2, ng.getOperador() != null ? ng.getOperador().getNombreOperador() : null);
-            cstmt.setString(3, nombreCliente); // Pass empty string or valid nombreCliente
+            cstmt.setString(3, nombreCliente);
             cstmt.setString(4, ng.getUnidad() != null ? ng.getUnidad().getTipoVehiculo() : null);
             String ruta = (ng.getOrigen() != null && ng.getDestino() != null)
                     ? ng.getOrigen() + " - " + ng.getDestino()
@@ -497,5 +585,4 @@ public class ControllerNotaGasto {
             connMySQL.close();
         }
     }
-
 }
