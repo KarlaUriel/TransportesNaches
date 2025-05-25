@@ -73,11 +73,11 @@
                 padding: 20px;
                 border: 1px solid #888;
                 width: 90%;
-                max-width: 800px; /* Increased from 500px to make modal larger */
+                max-width: 800px;
                 border-radius: 10px;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                max-height: 80vh; /* Limit height to enable scrolling */
-                overflow-y: auto; /* Enable vertical scrolling */
+                max-height: 80vh;
+                overflow-y: auto;
             }
             .close {
                 color: #aaa;
@@ -174,7 +174,7 @@
                     <button id="cerrarSesion" class="flex items-center justify-center p-3 text-white hover:text-red-300 transition-colors">
                         <i class="fas fa-sign-out-alt text-xl"></i>
                         <span class="tooltiptext">Cerrar Sesión</span>
-                        </button>
+                    </button>
                 </div>
             </nav>
             <main class="flex-1 p-6 overflow-auto md:mt-0 mt-16">
@@ -187,8 +187,19 @@
                         <div class="flex justify-end mb-2">
                             <input type="text" id="searchBar" placeholder="Buscar por cliente, operador, ruta, etc." class="border-2 border-gray-300 rounded-lg p-2 w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-orange-400">
                         </div>
-                        <!-- Action Buttons -->
+                        <!-- Action Buttons and Notes per Page -->
                         <div class="flex flex-col sm:flex-row items-center sm:justify-end space-y-4 sm:space-y-0 sm:space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <label for="notasPorPagina" class="text-sm font-medium text-gray-700">Notas por página:</label>
+                                <select id="notasPorPagina" class="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                    <option value="150">150</option>
+                                    <option value="200" selected>200</option>
+
+                                </select>
+                            </div>
                             <button id="openFilterModal" class="filter-btn">Filtros</button>
                             <button id="mostrarResumenBtn" class="action-btn bg-green-600 text-white hover:bg-green-700">
                                 Resumen Financiero
@@ -333,8 +344,8 @@
                 });
             });
         </script>
-        <script src="/Modules/Menu/controller_Menu.js" type="module"></script>
-        <script src="/Modules/Contabilidad/controller_Contabilidad.js" type="module"></script>
+        <script src="/Modules/Menu/controller_Menu.js" type="module" ></script>
+        <script src="/Modules/Contabilidad/controller_Contabilidad.js" type="module" ></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     </body>
 </html>
