@@ -1,4 +1,4 @@
-package com.naches.email;
+ package com.naches.email;
 
 import com.naches.db.ConexionMySQL;
 import jakarta.mail.*;
