@@ -1,4 +1,3 @@
-// com.naches.model.Subcliente.java
 package com.naches.model;
 
 public class SubCliente {

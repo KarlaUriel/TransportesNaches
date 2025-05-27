@@ -1,5 +1,6 @@
+
 package com.naches.model;
 
-    public enum Rol{
+  public enum Rol{
         Administrador,Operador;
     }
