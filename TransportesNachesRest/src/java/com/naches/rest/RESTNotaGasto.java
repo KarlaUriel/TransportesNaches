@@ -207,4 +207,36 @@ public class RESTNotaGasto {
 
         return Response.ok(out).build();
     }
+    
+    
+    @POST
+    @Path("delete")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteNota(@FormParam("idNota") String idNotaStr) {
+        String out;
+        ControllerNotaGasto cng = new ControllerNotaGasto();
+
+        try {
+            if (idNotaStr == null || idNotaStr.isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\":\"El parámetro idNota es requerido.\"}").build();
+            }
+            int idNota = Integer.parseInt(idNotaStr);
+            cng.deleteNotaGasto(idNota);
+            out = "{\"result\":\"Nota eliminada correctamente.\"}";
+        } catch (NumberFormatException ex) {
+            ex.printStackTrace();
+            out = "{\"error\":\"El idNota debe ser un número válido.\"}";
+            return Response.status(Response.Status.BAD_REQUEST).entity(out).build();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            out = String.format("{\"error\":\"Error al eliminar la nota: %s\"}", ex.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(out).build();
+        }
+
+        return Response.ok(out).build();
+    }
+
+    
 }

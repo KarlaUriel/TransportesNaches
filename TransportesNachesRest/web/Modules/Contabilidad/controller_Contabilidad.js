@@ -9,7 +9,7 @@ let currentFilters = {
     resumenMes: 'todos',
     resumenAnio: 'todos'
 };
-let notasPorPagina = 200;
+let notasPorPagina = 20;
 
 function openFilterModal() {
     const modal = document.getElementById('filterModal');
@@ -492,7 +492,7 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
     for (let row = range.s.r + 1; row <= range.e.r; row++) {
         const nota = notasFiltradas[row - 1];
         const isFinalized = !!nota.fechaLlegada;
-        const isPendingInvoice = nota.cliente?.factura === 1 && nota.estadoFact === 'PENDIENTE';
+        const isPendingInvoice = nota.cliente?.factura === 1 && nota.estadoFact ? 'Pendiente' : 'PENDIENTE';
 
         const rowFill = {
             patternType: 'solid',
@@ -709,7 +709,7 @@ function mostrarNotas(notas) {
             estadoClase = 'text-gray-600';
             console.warn(`Nota ${nota.idNota}: Cliente o factura no definido`);
         } else if (nota.cliente.factura === 1) {
-            if (nota.estadoFact === 'Pendiente') {
+            if (nota.estadoFact ? 'Pendiente' : 'PENDIENTE') {
                 estadoTexto = 'PENDIENTE';
                 estadoClase = 'text-red-600';
                 fondoClase = 'bg-red-100';
