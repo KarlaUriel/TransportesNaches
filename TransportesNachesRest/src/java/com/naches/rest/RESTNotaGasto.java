@@ -1,23 +1,16 @@
 package com.naches.rest;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 import com.naches.controller.ControllerNotaGasto;
-import com.naches.controller.ControllerUnidad;
 import com.naches.model.Contabilidad;
 import com.naches.model.NotaGasto;
-import com.naches.model.PushSubscription;
-import com.naches.model.Unidad;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.OPTIONS;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
@@ -189,44 +182,6 @@ public class RESTNotaGasto {
         } catch (SQLException e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Error al obtener notas pendientes: " + e.getMessage()).build();
-        }
-    }
-
-    @POST
-    @Path("/savePushSubscription")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response savePushSubscription(PushSubscription subscription) throws Exception {
-        ControllerNotaGasto ntg = new ControllerNotaGasto();
-        try {
-            ntg.savePushSubscription(subscription.getToken());
-            return Response.ok().build();
-        } catch (SQLException e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error al guardar suscripción: " + e.getMessage()).build();
-        }
-    }
-
-    @POST
-    @Path("delete")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteNotaPost(@FormParam("idNota") @DefaultValue("0") int idNota) {
-        String out;
-        ControllerNotaGasto cng = new ControllerNotaGasto();
-
-        try {
-            if (idNota <= 0) {
-                out = "{\"error\":\"El idNota debe ser un número válido.\"}";
-                return Response.status(Response.Status.BAD_REQUEST).entity(out).build();
-            }
-
-            cng.deleteNotaGasto(idNota);
-            out = "{\"result\":\"Nota eliminada correctamente.\"}";
-            return Response.ok(out).build();
-        } catch (Exception e) {
-            e.printStackTrace();
-            out = String.format("{\"error\":\"%s\"}", e.getMessage());
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(out).build();
         }
     }
 

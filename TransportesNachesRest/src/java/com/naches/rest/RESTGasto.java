@@ -2,13 +2,8 @@ package com.naches.rest;
 
 import com.google.gson.Gson;
 import com.naches.controller.ControllerNotaGasto;
-import com.naches.model.Gasto;
-import com.naches.model.TipoGas;
 import com.naches.model.TipoGasto;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;

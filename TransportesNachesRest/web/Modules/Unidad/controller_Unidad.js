@@ -18,6 +18,8 @@ document.addEventListener("DOMContentLoaded", function () {
         tablaMantenimientosBody: document.getElementById("tablaMantenimientosBody")
     };
 
+//toggle eliminado del js
+
     // Debug: Verify critical elements
     console.log('btnNuevoMantenimiento:', elements.btnNuevoMantenimiento);
     console.log('nuevoMantenimientoModal:', elements.nuevoMantenimientoModal);
@@ -82,6 +84,12 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             cerrarNuevoMantenimiento();
         });
+        closeBtn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                closeBtn.click();
+            }
+        });
     });
     window.addEventListener('click', (event) => {
         if (event.target == elements.mantenimientoModal) {
@@ -125,13 +133,14 @@ document.addEventListener("DOMContentLoaded", function () {
             if (show) {
                 input.classList.add('input-error');
                 error.style.display = 'block';
+                input.setAttribute('aria-invalid', 'true');
             } else {
                 input.classList.remove('input-error');
                 error.style.display = 'none';
+                input.setAttribute('aria-invalid', 'false');
             }
         }
     }
-
     // Core Functions
     async function inicializar() {
         setDetalleVisible(false);
@@ -145,11 +154,13 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch('https://transportesnaches.com.mx/api/unidad/getAll', {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {'Content-Type': 'application/json'}
             });
-            if (!response.ok) await handleApiError(response, 'No se pudieron cargar las unidades');
+            if (!response.ok)
+                await handleApiError(response, 'No se pudieron cargar las unidades');
             const data = await response.json();
-            if (!Array.isArray(data)) throw new Error('Respuesta no es un array');
+            if (!Array.isArray(data))
+                throw new Error('Respuesta no es un array');
             unidades = data;
             console.log('Unidades cargadas:', unidades);
             mostrarUnidades();
@@ -174,20 +185,20 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td class="px-4 py-2 text-sm">${unidad.fechaVencimientoPol || 'No especificado'}</td>
                     <td class="px-4 py-2 text-sm text-gray-800">
                         ${
-                            unidad.disponibilidad === 'Disponible' ? '<span class="activo">Disponible</span>' :
-                            unidad.disponibilidad === 'En viaje' ? '<span class="en-viaje">En viaje</span>' :
-                            unidad.disponibilidad === 'En reparación' ? '<span class="en-reparacion">En reparación</span>' :
-                            '<span class="desconocido">Estado desconocido</span>'
-                        }
+                    unidad.disponibilidad === 'Disponible' ? '<span class="activo">Disponible</span>' :
+                    unidad.disponibilidad === 'En viaje' ? '<span class="en-viaje">En viaje</span>' :
+                    unidad.disponibilidad === 'En reparación' ? '<span class="en-reparacion">En reparación</span>' :
+                    '<span class="desconocido">Estado desconocido</span>'
+                    }
                     </td>
                     <td class="px-4 py-2 text-sm text-gray-800">
                         ${unidad.activoUnidad ? '<span class="activo">Activo</span>' : '<span class="inactivo">Inactivo</span>'}
                     </td>
                     <td class="px-4 py-2 text-sm text-gray-800 text-center">
                         ${
-                            needsMaintenance || policyExpiring ?
-                            '<span class="text-red-500 mr-2"><i class="fas fa-exclamation-triangle"></i></span>' : ''
-                        }
+                    needsMaintenance || policyExpiring ?
+                    '<span class="text-red-500 mr-2"><i class="fas fa-exclamation-triangle"></i></span>' : ''
+                    }
                         ${unidad.activoUnidad ? `
                             <button onclick="cargarDetalleUnidad(${unidad.idUnidad})" class="text-blue-500 hover:text-blue-700 mr-2" title="Editar">
                                 <i class="fas fa-edit"></i>
@@ -258,10 +269,11 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch('https://transportesnaches.com.mx/api/unidad/save', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(unidadData)
             });
-            if (!response.ok) await handleApiError(response, 'No se pudo guardar la unidad');
+            if (!response.ok)
+                await handleApiError(response, 'No se pudo guardar la unidad');
             const data = await response.json();
             mostrarExito('Éxito', data.result || 'Unidad guardada exitosamente');
             await recargarUnidades();
@@ -282,13 +294,15 @@ document.addEventListener("DOMContentLoaded", function () {
             cancelButtonColor: '#6b7280',
             confirmButtonText: 'Sí, desactivar'
         });
-        if (!confirmacion.isConfirmed) return;
+        if (!confirmacion.isConfirmed)
+            return;
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/unidad/delete/${idUnidad}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {'Content-Type': 'application/json'}
             });
-            if (!response.ok) await handleApiError(response, 'No se pudo desactivar la unidad');
+            if (!response.ok)
+                await handleApiError(response, 'No se pudo desactivar la unidad');
             const data = await response.json();
             mostrarExito('Éxito', data.result || 'Unidad desactivada correctamente');
             await recargarUnidades();
@@ -302,9 +316,10 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/unidad/reactivar/${idUnidad}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {'Content-Type': 'application/json'}
             });
-            if (!response.ok) await handleApiError(response, 'No se pudo reactivar la unidad');
+            if (!response.ok)
+                await handleApiError(response, 'No se pudo reactivar la unidad');
             const data = await response.json();
             mostrarExito('Éxito', data.result || 'Unidad reactivada correctamente');
             await recargarUnidades();
@@ -326,9 +341,10 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log('Fetching mantenimientos for idUnidad:', idUnidad);
             const response = await fetch(`https://transportesnaches.com.mx/api/unidad/getMantenimientosPorUnidad/${idUnidad}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {'Content-Type': 'application/json'}
             });
-            if (!response.ok) await handleApiError(response, 'No se pudieron cargar los mantenimientos');
+            if (!response.ok)
+                await handleApiError(response, 'No se pudieron cargar los mantenimientos');
             const data = await response.json();
             console.log('Mantenimientos recibidos (RAW):', data);
             mantenimientos = Array.isArray(data) ? data : [];
@@ -406,9 +422,10 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/unidad/getLatestKilometraje/${idUnidad}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {'Content-Type': 'application/json'}
             });
-            if (!response.ok) await handleApiError(response, 'No se pudo obtener el kilometraje');
+            if (!response.ok)
+                await handleApiError(response, 'No se pudo obtener el kilometraje');
             const data = await response.json();
             console.log(`Respuesta de kilometraje para unidad ${idUnidad}:`, data);
             console.log(`Tipo de data.data:`, typeof data.data);
@@ -433,21 +450,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 return fetchLatestKilometraje(idUnidad, retryCount - 1);
             }
             return 0;
-        }
+    }
     }
 
     async function checkMaintenanceAlert(idUnidad, kmActual, tipoVehiculo) {
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/unidad/getMantenimientosPorUnidad/${idUnidad}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {'Content-Type': 'application/json'}
             });
-            if (!response.ok) throw new Error('No se pudieron cargar los mantenimientos');
+            if (!response.ok)
+                throw new Error('No se pudieron cargar los mantenimientos');
             const mantenimientos = await response.json();
             console.log(`Mantenimientos para unidad ${idUnidad}:`, mantenimientos);
             if (!Array.isArray(mantenimientos) || mantenimientos.length === 0) {
                 console.log(`Unidad ${idUnidad}: Sin mantenimientos previos`);
-                return { needsMaintenance: false };
+                return {needsMaintenance: false};
             }
             const latestMantenimiento = mantenimientos[0]; // Sorted by fechaMantenimiento DESC
             const lastKmMantenimiento = Number(latestMantenimiento.kmActual) || 0;
@@ -458,17 +476,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     message: `Unidad ${tipoVehiculo} (ID: ${idUnidad}) necesita mantenimiento. Kilometraje actual: ${kmActual} km. Último mantenimiento: ${lastKmMantenimiento} km.`
                 };
             }
-            return { needsMaintenance: false };
+            return {needsMaintenance: false};
         } catch (error) {
             console.error(`Error al verificar mantenimiento para unidad ${idUnidad}:`, error);
-            return { needsMaintenance: false };
+            return {needsMaintenance: false};
         }
     }
 
     function checkPolicyExpiration(unidad) {
         if (!unidad.fechaVencimientoPol) {
             console.log(`Unidad ${unidad.idUnidad}: Sin fecha de vencimiento de póliza`);
-            return { needsAlert: false };
+            return {needsAlert: false};
         }
         const today = new Date();
         const expirationDate = new Date(unidad.fechaVencimientoPol);
@@ -480,7 +498,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 message: `La póliza de la unidad ${unidad.tipoVehiculo} (ID: ${unidad.idUnidad}) vence el ${unidad.fechaVencimientoPol}.`
             };
         }
-        return { needsAlert: false };
+        return {needsAlert: false};
     }
 
     async function checkAllUnitsForAlerts() {
@@ -488,24 +506,24 @@ document.addEventListener("DOMContentLoaded", function () {
             const alerts = [];
             const activeUnits = unidades.filter(u => u.activoUnidad);
             console.log(`Verificando ${activeUnits.length} unidades activas`);
-            
+
             const promises = activeUnits.map(async (unidad) => {
                 const [kmResult, maintenanceResult, policyResult] = await Promise.all([
                     fetchLatestKilometraje(unidad.idUnidad),
                     checkMaintenanceAlert(unidad.idUnidad, await fetchLatestKilometraje(unidad.idUnidad), unidad.tipoVehiculo),
                     Promise.resolve(checkPolicyExpiration(unidad))
                 ]);
-                
+
                 unidad._needsMaintenance = maintenanceResult.needsMaintenance;
                 unidad._policyExpiring = policyResult.needsAlert;
-                
+
                 if (maintenanceResult.needsMaintenance) {
                     alerts.push(maintenanceResult.message);
                 }
                 if (policyResult.needsAlert) {
                     alerts.push(policyResult.message);
                 }
-                
+
                 return unidad;
             });
 
@@ -573,13 +591,15 @@ document.addEventListener("DOMContentLoaded", function () {
             elements.nuevoMantenimientoModal.classList.add('show');
             console.log('nuevoMantenimientoModal displayed');
             document.getElementById("mantenimientoFecha").focus();
-            
+
             const maintenanceResult = await checkMaintenanceAlert(currentIdUnidad, kmActual, unidad.tipoVehiculo);
             const policyResult = checkPolicyExpiration(unidad);
             const modalAlerts = [];
-            if (maintenanceResult.needsMaintenance) modalAlerts.push(maintenanceResult.message);
-            if (policyResult.needsAlert) modalAlerts.push(policyResult.message);
-            
+            if (maintenanceResult.needsMaintenance)
+                modalAlerts.push(maintenanceResult.message);
+            if (policyResult.needsAlert)
+                modalAlerts.push(policyResult.message);
+
             if (modalAlerts.length > 0) {
                 Swal.fire({
                     title: 'Alertas de Unidad',
@@ -655,10 +675,11 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch('https://transportesnaches.com.mx/api/unidad/registrarMantenimiento', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(mantenimientoData)
             });
-            if (!response.ok) await handleApiError(response, 'No se pudo registrar el mantenimiento');
+            if (!response.ok)
+                await handleApiError(response, 'No se pudo registrar el mantenimiento');
             const data = await response.json();
             console.log('Respuesta del servidor al guardar mantenimiento:', JSON.stringify(data, null, 2));
             mostrarExito('Éxito', data.result || 'Mantenimiento registrado correctamente');
@@ -690,7 +711,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function setDetalleVisible(visible) {
         elements.formUnidad.classList.toggle('hidden', !visible);
         elements.tblUnidad.classList.toggle('hidden', visible);
-        if (!visible) limpiarFormulario();
+        if (!visible)
+            limpiarFormulario();
     }
 
     function mostrarError(titulo, mensaje) {
@@ -713,28 +735,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const menuIcon = document.getElementById('menu-icon');
-        sidebar.classList.toggle('-translate-x-full');
-        menuIcon.classList.toggle('fa-times', !sidebar.classList.contains('-translate-x-full'));
-        menuIcon.classList.toggle('fa-bars', sidebar.classList.contains('-translate-x-full'));
-    }
-
-    function toggleGestionMenu() {
-        document.getElementById('gestionSubmenu').classList.toggle('hidden');
-    }
-
-    // Role-based UI
-    const userRole = 'administrador';
-    document.querySelectorAll('.admin-only').forEach(el => {
-        el.style.display = userRole === 'administrador' ? '' : 'none';
-    });
-
     // Global functions for inline event handlers
     window.cargarDetalleUnidad = cargarDetalleUnidad;
     window.eliminarUnidad = eliminarUnidad;
     window.reactivarUnidad = reactivarUnidad;
     window.mostrarMantenimientos = mostrarMantenimientos;
-    window.toggleGestionMenu = toggleGestionMenu; // Added to global scope
 });
+
+

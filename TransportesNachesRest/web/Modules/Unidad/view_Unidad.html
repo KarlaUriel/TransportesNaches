@@ -122,7 +122,6 @@
                 <i id="menu-icon" class="fas fa-bars"></i>
             </button>
         </div>
-
         <div class="flex h-full w-full">
             <nav id="sidebar" class="fixed md:relative z-40 w-16 h-full flex flex-col items-center py-4 shadow-2xl transform -translate-x-full md:translate-x-0 transition-transform duration-300" style="background: linear-gradient(to bottom, #1a202c, #2d3748)">
                 <div class="md:hidden mb-8">
@@ -167,7 +166,6 @@
                     </button>
                 </div>
             </nav>
-
             <main class="flex-1 p-6 overflow-auto">
                 <div class="bg-white rounded-xl shadow-2xl p-6 max-w-full mx-auto">
                     <h1 class="text-center text-2xl font-bold text-gray-800 bg-orange-200 py-2 px-4 rounded-lg mb-6">
@@ -256,7 +254,7 @@
                         </table>
                     </div>
 
-                    <div id="mantenimientoModal" class="modal" role="dialog" aria-labelledby="mantenimientoModalTitle">
+                    <div id="mantenimientoModal" class="modal" role="dialog" aria-labelledby="mantenimientoModalTitle" aria-modal="true">
                         <div class="modal-content">
                             <span class="close" role="button" aria-label="Cerrar modal">×</span>
                             <h2 id="mantenimientoModalTitle" class="text-xl font-bold mb-4">Mantenimientos de la Unidad</h2>
@@ -296,9 +294,9 @@
                         </div>
                     </div>
 
-                    <div id="nuevoMantenimientoModal" class="modal" role="dialog" aria-labelledby="nuevoMantenimientoModalTitle">
+                    <div id="nuevoMantenimientoModal" class="modal" role="dialog" aria-labelledby="nuevoMantenimientoModalTitle" aria-modal="true">
                         <div class="modal-content">
-                            <span class="close" role="button" aria-label="Cerrar modal">×</span>
+                            <span class="close" role="button" aria-label="Cerrar modal" aria-controls="nuevoMantenimientoModal" tabindex="0">×</span>
                             <div class="bg-orange-100 p-4 rounded-t-lg">
                                 <h2 id="nuevoMantenimientoModalTitle" class="text-2xl font-bold text-gray-800">Registrar Nuevo Mantenimiento</h2>
                                 <p class="text-sm text-gray-600 mt-1">Complete los detalles del mantenimiento para la unidad seleccionada.</p>
@@ -306,10 +304,10 @@
                             <form id="formNuevoMantenimiento" class="p-4" aria-labelledby="nuevoMantenimientoModalTitle" aria-describedby="formInstructions">
                                 <p id="formInstructions" class="sr-only">Todos los campos son obligatorios. Asegúrese de ingresar una fecha válida, seleccionar un tipo de mantenimiento y proporcionar el kilometraje actual.</p>
                                 <input type="hidden" id="mantenimientoIdUnidad">
-                                <div class="space-y-4">
+                                <div class="space-y-4" aria-live="polite">
                                     <div>
                                         <label for="mantenimientoFecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                                        <input type="date" id="mantenimientoFecha" class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" required aria-required="true" aria-describedby="fechaError">
+                                        <input type="date" id="mantenimientoFecha" class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" required aria-describedby="fechaError">
                                         <p id="fechaError" class="error-message">Por favor, seleccione una fecha válida.</p>
                                     </div>
                                     <div>
@@ -320,11 +318,11 @@
                                             <option value="Filtros">Filtros</option>
                                             <option value="Llantas">Llantas</option>
                                         </select>
-                                        <p id="tipoError" class="error-message">Por favor, seleccione un tipo de mantenimiento.</p>
+                                        <p id="tipoError" class="error-message">Por favor, seleccione un tipo de mantenimiento a registrar.</p>
                                     </div>
                                     <div>
                                         <label for="mantenimientoKmActual" class="block text-sm font-medium text-gray-700 mb-1">Kilometraje Actual</label>
-                                        <input type="number" id="mantenimientoKmActual" class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" min="0" required aria-required="true" placeholder="Ej. 11383" aria-describedby="kmError">
+                                        <input type="number" id="mantenimientoKmActual" class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-800 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" min="0" required aria-required="true" placeholder="Ej. 11383" aria-describedby="kmError kmWarning">
                                         <p id="kmError" class="error-message">Por favor, ingrese un kilometraje válido (mínimo 0).</p>
                                         <p id="kmWarning" class="text-yellow-600 text-sm mt-1 hidden">No se pudo obtener el kilometraje automáticamente. Verifique el valor ingresado.</p>
                                     </div>
@@ -340,9 +338,41 @@
                             </form>
                         </div>
                     </div>
-                </div>
             </main>
         </div>
+
+        <script>
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('overlay');
+                const menuIcon = document.getElementById('menu-icon');
+
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
+
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    menuIcon.classList.remove('fa-times');
+                    menuIcon.classList.add('fa-bars');
+                } else {
+                    menuIcon.classList.remove('fa-bars');
+                    menuIcon.classList.add('fa-times');
+                }
+            }
+
+            function toggleGestionMenu() {
+                const menu = document.getElementById('gestionSubmenu');
+                menu.classList.toggle('hidden');
+            }
+
+            // Simulación de rol: 'admin' o 'empleado'
+            const userRole = 'Administrador'; // cambia a 'empleado' para probar visibilidad
+
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = userRole === 'Administrador' ? '' : 'none';
+                });
+            });
+        </script>
         <script src="/Modules/Unidad/controller_Unidad.js" type="module"></script>
         <script src="/Modules/Menu/controller_Menu.js" type="module"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
