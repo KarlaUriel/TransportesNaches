@@ -1,13 +1,9 @@
 package com.naches.model;
 
-import java.io.Serializable;
 import java.util.List;
 
+public class Cliente {
 
-
-public class Cliente implements Serializable{
-
-    private static final long serialVersionUID = 1L;
     private int idCliente;
     private String nombreCliente;
     private String calificaciones;

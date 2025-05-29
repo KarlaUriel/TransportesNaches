@@ -1,10 +1,7 @@
 package com.naches.model;
 
-import java.io.Serializable;
+public class Gasto {
 
-public class Gasto implements Serializable{
-
-    private static final long serialVersionUID = 1L;
     private int idGasto;
     private int noGasto;
     private double cantidad;

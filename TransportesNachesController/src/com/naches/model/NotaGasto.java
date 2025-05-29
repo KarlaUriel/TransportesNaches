@@ -1,13 +1,10 @@
 package com.naches.model;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-public class NotaGasto implements Serializable {
+public class NotaGasto {
 
-    
-    private static final long serialVersionUID = 1L;
     private int idNota;
     private String origen;
     private String destino;
