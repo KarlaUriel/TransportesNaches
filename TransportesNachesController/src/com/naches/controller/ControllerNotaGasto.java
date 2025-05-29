@@ -7,10 +7,42 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.io.InputStream;
+import java.util.Properties;
+import org.ehcache.Cache;
+import org.ehcache.CacheManager;
+import org.ehcache.config.Configuration;
+import org.ehcache.config.builders.CacheManagerBuilder;
+import org.ehcache.xml.XmlConfiguration;
+import java.net.URL;
 
 public class ControllerNotaGasto {
 
-    // NEW: Minimal fix to bypass Redisson/Netty error
+    // Utility to load application.properties
+    private static class ConfigUtil {
+        private static final Properties props = new Properties();
+
+        static {
+            try (InputStream input = ControllerNotaGasto.class.getResourceAsStream("/WEB-INF/application.properties")) {
+                if (input != null) {
+                    props.load(input);
+                } else {
+                    throw new RuntimeException("No se encontró application.properties en WEB-INF");
+                }
+            } catch (Exception e) {
+                System.err.println("Error al cargar application.properties: " + e.getMessage());
+            }
+        }
+
+        public static String getProperty(String key) {
+            return props.getProperty(key);
+        }
+    }
+
+    // EhCache configuration
+    private static Cache<String, NotaGasto> notasCache;
+    private static CacheManager cacheManager;
+
     static {
         // Commented out Redisson to avoid NoClassDefFoundError
         /*
@@ -22,6 +54,30 @@ public class ControllerNotaGasto {
             e.printStackTrace();
         }
          */
+
+        // Initialize EhCache
+        try {
+            String configPath = ConfigUtil.getProperty("ehcache.config.file");
+            URL configUrl = ControllerNotaGasto.class.getResource(configPath);
+            if (configUrl == null) {
+                throw new RuntimeException("No se encontró ehcache.xml en " + configPath);
+            }
+            Configuration config = new XmlConfiguration(configUrl);
+            cacheManager = CacheManagerBuilder.newCacheManager(config);
+            cacheManager.init();
+            notasCache = cacheManager.getCache("notasGasto", String.class, NotaGasto.class);
+            System.out.println("EhCache inicializado correctamente");
+        } catch (Exception e) {
+            System.err.println("Error al inicializar EhCache: " + e.getMessage());
+        }
+    }
+
+    // Method to close EhCache
+    public static void closeCache() {
+        if (cacheManager != null) {
+            cacheManager.close();
+            System.out.println("EhCache cerrado");
+        }
     }
 
     public int iniciarNota(NotaGasto ng) throws Exception {
@@ -80,6 +136,10 @@ public class ControllerNotaGasto {
                 pstmt.executeUpdate();
             }
 
+             if (notasCache != null) {
+                notasCache.clear();
+                System.out.println("Cache invalidado tras finalizarNota");
+            }
             return idNota;
         } finally {
             cstmt.close();
@@ -136,12 +196,17 @@ public class ControllerNotaGasto {
                     cstmtGasto.execute();
                 }
             }
+             if (notasCache != null) {
+                notasCache.clear();
+                System.out.println("Cache invalidado tras finalizarNota");
+            }
         } catch (SQLException e) {
             throw new Exception("Error executing stored procedures: " + e.getMessage(), e);
         } finally {
             connMySQL.close();
         }
     }
+
 
     public void updateContabilidad(Contabilidad ct) throws Exception {
         String sql = "{CALL update_contabilidadN(?, ?, ?, ?, ?, ?, ?, ?)}";
@@ -160,6 +225,12 @@ public class ControllerNotaGasto {
             cstmt.setDate(8, ct.getFechaPago() != null ? new java.sql.Date(ct.getFechaPago().getTime()) : null);
 
             cstmt.execute();
+
+            // Invalidate cache
+            if (notasCache != null) {
+                notasCache.clear();
+                System.out.println("Cache invalidado tras updateContabilidad");
+            }
         } catch (SQLException e) {
             throw new Exception("Error al actualizar contabilidad: " + e.getMessage(), e);
         } finally {
@@ -228,7 +299,6 @@ public class ControllerNotaGasto {
     }
 
     public NotaGasto getById(int idNota) throws Exception {
-        // CHANGED: Simple SELECT instead of v_nota_gasto
         String sql = "SELECT ng.idNota, ng.origen, ng.destino, ng.fechaLlenado, ng.fechaSalida, ng.fechaLlegada, "
                 + "ng.horaSalida, ng.horaLlegada, ng.kmInicio, ng.kmFinal, ng.noEntrega, ng.gasolinaInicio, "
                 + "ng.gasolinaLevel, ng.llantasInicio, ng.aceiteInicio, ng.anticongelanteInicio, ng.liquidoFrenosInicio, "
@@ -260,8 +330,31 @@ public class ControllerNotaGasto {
     }
 
     public List<NotaGasto> getAll(int page, int size) throws Exception {
+        String cacheKeyPrefix = "notasGasto-" + page + "-" + size + "-";
         List<NotaGasto> notas = new ArrayList<>();
-        // CHANGED: Added LIMIT and OFFSET for pagination
+        boolean cacheHit = true;
+
+        if (notasCache != null) {
+            // Try to retrieve from cache
+            for (int i = 0; i < size; i++) {
+                String key = cacheKeyPrefix + i;
+                NotaGasto nota = notasCache.get(key);
+                if (nota != null) {
+                    notas.add(nota);
+                } else {
+                    cacheHit = false;
+                    break;
+                }
+            }
+            if (cacheHit && notas.size() == size) {
+                System.out.println("Cache hit para page: " + page + ", size: " + size);
+                return notas;
+            }
+        }
+        System.out.println("Cache miss para page: " + page + ", size: " + size);
+
+        // Fetch from database
+        notas.clear();
         String sql = "SELECT ng.idNota, ng.origen, ng.destino, ng.fechaLlenado, ng.fechaSalida, ng.fechaLlegada, "
                 + "ng.horaSalida, ng.horaLlegada, ng.kmInicio, ng.kmFinal, ng.noEntrega, ng.gasolinaInicio, "
                 + "ng.gasolinaLevel, ng.llantasInicio, ng.aceiteInicio, ng.anticongelanteInicio, ng.liquidoFrenosInicio, "
@@ -278,28 +371,34 @@ public class ControllerNotaGasto {
         ConexionMySQL connMySQL = new ConexionMySQL();
 
         try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            // CHANGED: Set LIMIT and OFFSET parameters
             pstmt.setInt(1, size);
             pstmt.setInt(2, page * size);
             try (ResultSet rs = pstmt.executeQuery()) {
                 Set<Integer> notaIds = new HashSet<>();
+                int index = 0;
                 while (rs.next()) {
                     int idNota = rs.getInt("idNota");
                     if (notaIds.add(idNota)) {
                         NotaGasto nota = fill(rs);
                         nota.setGastos(getGastosByNotaId(idNota, conn));
                         notas.add(nota);
+                        // Cache individual NotaGasto
+                        if (notasCache != null) {
+                            notasCache.put(cacheKeyPrefix + index, nota);
+                        }
+                        index++;
                     }
                 }
             }
         } finally {
             connMySQL.close();
         }
+
+        System.out.println("Almacenado en caché " + notas.size() + " notas para page: " + page + ", size: " + size);
         return notas;
     }
 
     public long countAll() throws Exception {
-        // CHANGED: New method to count total notes
         String sql = "SELECT COUNT(*) FROM notaGasto";
         ConexionMySQL connMySQL = new ConexionMySQL();
         try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql); ResultSet rs = pstmt.executeQuery()) {
@@ -324,6 +423,7 @@ public class ControllerNotaGasto {
                 tipoGastos.add(tipoG);
             }
         } finally {
+            conn.close();
             connMySQL.close();
         }
         return tipoGastos;
@@ -338,7 +438,6 @@ public class ControllerNotaGasto {
 
     public List<NotaGasto> getAllByUser(int idUsuario) throws Exception {
         List<NotaGasto> notas = new ArrayList<>();
-        // CHANGED: Simple SELECT instead of v_nota_gasto
         String sql = "SELECT ng.idNota, ng.origen, ng.destino, ng.fechaLlenado, ng.fechaSalida, ng.fechaLlegada, "
                 + "ng.horaSalida, ng.horaLlegada, ng.kmInicio, ng.kmFinal, ng.noEntrega, ng.gasolinaInicio, "
                 + "ng.gasolinaLevel, ng.llantasInicio, ng.aceiteInicio, ng.anticongelanteInicio, ng.liquidoFrenosInicio, "
@@ -385,6 +484,12 @@ public class ControllerNotaGasto {
             if (rows == 0) {
                 throw new Exception("No se encontró la contabilidad para la nota con idNota: " + idNota);
             }
+
+            // Invalidate cache
+            if (notasCache != null) {
+                notasCache.clear();
+                System.out.println("Cache invalidado tras updateNumeroFactura");
+            }
         } finally {
             connMySQL.close();
         }
@@ -421,7 +526,6 @@ public class ControllerNotaGasto {
         ng.setManiobra(rs.getDouble("maniobra"));
         ng.setFechaPago(rs.getDate("fechaPago"));
         ng.setPago(rs.getBoolean("pago"));
-        // Removed: noFact, estadoViaje, ganancia, estado (not in SELECT)
         ng.setNombreOperador(rs.getString("nombreOperador") != null ? rs.getString("nombreOperador") : "");
 
         Cliente cl = new Cliente();
@@ -485,8 +589,9 @@ public class ControllerNotaGasto {
                 nota.setEstadoFact(rs.getString("estadoFact"));
                 notas.add(nota);
             }
+        } finally {
+            connMySQL.close();
         }
-
         return notas;
     }
 
@@ -497,6 +602,8 @@ public class ControllerNotaGasto {
         try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, token);
             pstmt.executeUpdate();
+        } finally {
+            connMySQL.close();
         }
     }
 
@@ -509,6 +616,12 @@ public class ControllerNotaGasto {
             try (CallableStatement cstmt = conn.prepareCall(sql)) {
                 cstmt.setInt(1, idNota);
                 cstmt.execute();
+            }
+
+            // Invalidate cache
+            if (notasCache != null) {
+                notasCache.clear();
+                System.out.println("Cache invalidado tras deleteNotaGasto");
             }
         } catch (SQLException e) {
             throw new Exception("Error al eliminar la nota: " + e.getMessage(), e);
@@ -527,11 +640,11 @@ public class ControllerNotaGasto {
             // Fetch existing note to get fields not sent by frontend
             NotaGasto existingNota = getById(ng.getIdNota());
             if (existingNota == null) {
-                throw new Exception("Nota con idNota " + ng.getIdNota() + " no encontrada");
+                throw new Exception("Nota con idNota: " + ng.getIdNota() + " no encontrada");
             }
 
             // Look up idCliente based on nombreCliente
-            String nombreCliente = ng.getNombreCliente()!= null ? ng.getCliente().getNombreCliente() : "";
+            String nombreCliente = ng.getNombreCliente() != null ? ng.getCliente().getNombreCliente() : "";
             int idCliente = 0;
             if (nombreCliente != null && !nombreCliente.trim().isEmpty()) {
                 String sqlCliente = "SELECT idCliente FROM cliente WHERE TRIM(nombreCliente) = TRIM(?) AND activoCliente = 1";
@@ -556,7 +669,7 @@ public class ControllerNotaGasto {
 
             cstmt.setInt(1, ng.getIdNota());
             cstmt.setString(2, ng.getOperador() != null ? ng.getOperador().getNombreOperador() : null);
-            cstmt.setString(3, nombreCliente);
+            cstmt.setString(3, ng.getCliente() != null ? ng.getCliente().getNombreCliente() : null);
             cstmt.setString(4, ng.getUnidad() != null ? ng.getUnidad().getTipoVehiculo() : null);
             String ruta = (ng.getOrigen() != null && ng.getDestino() != null)
                     ? ng.getOrigen() + " - " + ng.getDestino()
@@ -578,6 +691,12 @@ public class ControllerNotaGasto {
             cstmt.setString(19, ng.getComentarioEstado());
 
             cstmt.execute();
+
+            // Invalidate cache
+            if (notasCache != null) {
+                notasCache.clear();
+                System.out.println("Cache invalidado tras updateGeneralInfo");
+            }
         } catch (SQLException e) {
             throw new Exception("Error al actualizar información general: " + e.getMessage(), e);
         } finally {

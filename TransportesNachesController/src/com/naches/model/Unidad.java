@@ -1,7 +1,10 @@
 package com.naches.model;
 
-public class Unidad {
+import java.io.Serializable;
 
+public class Unidad implements Serializable{
+
+    private static final long serialVersionUID = 1L;
     private int idUnidad;
     private String tipoVehiculo;
     private String placas;
