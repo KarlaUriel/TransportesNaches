@@ -17,4 +17,8 @@
         <servlet-name>RESTNaches</servlet-name>
         <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
+    
+    <listener>
+        <listener-class>com.naches.controller.CacheShutdownListener</listener-class>
+    </listener>
 </web-app>

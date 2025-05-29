@@ -26,7 +26,7 @@ function clearCache() {
     console.log('Cache cleared');
 }
 
-async function cargarNotas(page = 0, size = 200) {
+async function cargarNotas(page = 0, size = 30) {
     try {
         console.time('cargarNotas');
         const response = await fetch(`https://transportesnaches.com.mx/api/nota/getAll?page=${page}&size=${size}`, {
@@ -48,15 +48,15 @@ async function cargarNotas(page = 0, size = 200) {
         }
 
         const newNotas = notasArray.map(nota => ({
-            ...nota,
-            noFact: nota.noFact || '',
-            estadoViaje: nota.estadoViaje || 'N/A',
-            ganancia: nota.ganancia || 0,
-            estado: nota.estado || 'PENDIENTE'
-        }));
+                ...nota,
+                noFact: nota.noFact || '',
+                estado: nota.estado || 'N/A',
+                ganancia: nota.ganancia || 0,
+                estadoFact: nota.estadoFact || 'PENDIENTE'
+            }));
 
         todasLasNotas = [...todasLasNotas.filter(n1 => !newNotas.some(n2 => n2.idNota === n1.idNota)), ...newNotas]
-            .sort((a, b) => b.idNota - a.idNota);
+                .sort((a, b) => b.idNota - a.idNota);
         console.log('Tamaño de todasLasNotas:', new Blob([JSON.stringify(todasLasNotas)]).size / 1024, 'KB');
 
         await cargarGastosAnuales();
@@ -75,7 +75,7 @@ async function cargarNotas(page = 0, size = 200) {
             confirmButtonText: 'Aceptar',
             confirmButtonColor: '#f97316',
         });
-    }
+}
 }
 
 async function cargarNotasPorFecha(mes, anio) {
@@ -103,15 +103,15 @@ async function cargarNotasPorFecha(mes, anio) {
         }
 
         const newNotas = notasArray.map(nota => ({
-            ...nota,
-            noFact: nota.noFact || '',
-            estadoViaje: nota.estadoViaje || 'N/A',
-            ganancia: nota.ganancia || 0,
-            estado: nota.estado || 'PENDIENTE'
-        }));
+                ...nota,
+                noFact: nota.noFact || '',
+                estadoViaje: nota.estadoViaje || 'N/A',
+                ganancia: nota.ganancia || 0,
+                estado: nota.estado || 'PENDIENTE'
+            }));
 
         todasLasNotas = [...todasLasNotas.filter(n1 => !newNotas.some(n2 => n2.idNota === n1.idNota)), ...newNotas]
-            .sort((a, b) => b.idNota - a.idNota);
+                .sort((a, b) => b.idNota - a.idNota);
         return true;
     } catch (error) {
         console.error("Error al cargar notas por fecha:", error);
@@ -198,8 +198,10 @@ function llenarSelectores(notas) {
     filtroOperador.innerHTML = '<option value="todos">Todos los operadores</option>';
     filtroCliente.innerHTML = '<option value="todos">Todos los clientes</option>';
     filtroSemana.innerHTML = '<option value="todos">Todas las semanas</option>';
-    if (filtroResumenMes) filtroResumenMes.innerHTML = '<option value="todos">Todos los meses</option>';
-    if (filtroResumenAnio) filtroResumenAnio.innerHTML = '<option value="todos">Todos los años</option>';
+    if (filtroResumenMes)
+        filtroResumenMes.innerHTML = '<option value="todos">Todos los meses</option>';
+    if (filtroResumenAnio)
+        filtroResumenAnio.innerHTML = '<option value="todos">Todos los años</option>';
 
     const mesesUnicos = new Set();
     const aniosUnicos = new Set();
@@ -222,8 +224,10 @@ function llenarSelectores(notas) {
             const semanaKey = semanaInicio.toISOString().split('T')[0];
             semanasUnicas.add(semanaKey);
         }
-        if (nota.nombreOperador) operadoresUnicos.add(nota.nombreOperador);
-        if (nota.cliente?.nombreCliente) clientesUnicos.add(nota.cliente.nombreCliente);
+        if (nota.nombreOperador)
+            operadoresUnicos.add(nota.nombreOperador);
+        if (nota.cliente?.nombreCliente)
+            clientesUnicos.add(nota.cliente.nombreCliente);
     });
 
     const mesesNombres = [
@@ -232,67 +236,67 @@ function llenarSelectores(notas) {
     ];
 
     Array.from(mesesUnicos)
-        .sort((a, b) => {
-            const [mesA, anioA] = a.split('-').map(Number);
-            const [mesB, anioB] = b.split('-').map(Number);
-            return anioA - anioB || mesA - mesB;
-        })
-        .forEach(mesAnio => {
-            const [mes, anio] = mesAnio.split('-').map(Number);
-            const option = document.createElement('option');
-            option.value = mesAnio;
-            option.textContent = `${mesesNombres[mes]} ${anio}`;
-            filtroMes.appendChild(option);
-            if (filtroResumenMes) {
-                const resumenOption = document.createElement('option');
-                resumenOption.value = mes;
-                resumenOption.textContent = mesesNombres[mes];
-                if (!Array.from(filtroResumenMes.options).some(opt => opt.value === String(mes))) {
-                    filtroResumenMes.appendChild(resumenOption);
+            .sort((a, b) => {
+                const [mesA, anioA] = a.split('-').map(Number);
+                const [mesB, anioB] = b.split('-').map(Number);
+                return anioA - anioB || mesA - mesB;
+            })
+            .forEach(mesAnio => {
+                const [mes, anio] = mesAnio.split('-').map(Number);
+                const option = document.createElement('option');
+                option.value = mesAnio;
+                option.textContent = `${mesesNombres[mes]} ${anio}`;
+                filtroMes.appendChild(option);
+                if (filtroResumenMes) {
+                    const resumenOption = document.createElement('option');
+                    resumenOption.value = mes;
+                    resumenOption.textContent = mesesNombres[mes];
+                    if (!Array.from(filtroResumenMes.options).some(opt => opt.value === String(mes))) {
+                        filtroResumenMes.appendChild(resumenOption);
+                    }
                 }
-            }
-        });
+            });
 
     Array.from(aniosUnicos)
-        .sort((a, b) => a - b)
-        .forEach(anio => {
-            if (filtroResumenAnio) {
-                const option = document.createElement('option');
-                option.value = anio;
-                option.textContent = anio;
-                filtroResumenAnio.appendChild(option);
-            }
-        });
+            .sort((a, b) => a - b)
+            .forEach(anio => {
+                if (filtroResumenAnio) {
+                    const option = document.createElement('option');
+                    option.value = anio;
+                    option.textContent = anio;
+                    filtroResumenAnio.appendChild(option);
+                }
+            });
 
     Array.from(semanasUnicas)
-        .sort((a, b) => new Date(a) - new Date(b))
-        .forEach(semanaKey => {
-            const semanaInicio = new Date(semanaKey);
-            const semanaFin = new Date(semanaInicio);
-            semanaFin.setDate(semanaInicio.getDate() + 6);
-            const option = document.createElement('option');
-            option.value = semanaKey;
-            option.textContent = `${semanaInicio.toLocaleDateString()} - ${semanaFin.toLocaleDateString()}`;
-            filtroSemana.appendChild(option);
-        });
+            .sort((a, b) => new Date(a) - new Date(b))
+            .forEach(semanaKey => {
+                const semanaInicio = new Date(semanaKey);
+                const semanaFin = new Date(semanaInicio);
+                semanaFin.setDate(semanaInicio.getDate() + 6);
+                const option = document.createElement('option');
+                option.value = semanaKey;
+                option.textContent = `${semanaInicio.toLocaleDateString()} - ${semanaFin.toLocaleDateString()}`;
+                filtroSemana.appendChild(option);
+            });
 
     Array.from(operadoresUnicos)
-        .sort()
-        .forEach(nombreOperador => {
-            const opcion = document.createElement('option');
-            opcion.value = nombreOperador;
-            opcion.textContent = nombreOperador;
-            filtroOperador.appendChild(opcion);
-        });
+            .sort()
+            .forEach(nombreOperador => {
+                const opcion = document.createElement('option');
+                opcion.value = nombreOperador;
+                opcion.textContent = nombreOperador;
+                filtroOperador.appendChild(opcion);
+            });
 
     Array.from(clientesUnicos)
-        .sort()
-        .forEach(nombreCliente => {
-            const option = document.createElement('option');
-            option.value = nombreCliente;
-            option.textContent = nombreCliente;
-            filtroCliente.appendChild(option);
-        });
+            .sort()
+            .forEach(nombreCliente => {
+                const option = document.createElement('option');
+                option.value = nombreCliente;
+                option.textContent = nombreCliente;
+                filtroCliente.appendChild(option);
+            });
 
     console.timeEnd('llenarSelectores');
 }
@@ -324,7 +328,8 @@ function filtrarNotas() {
     if (currentFilters.mes !== 'todos') {
         const [mes, anio] = currentFilters.mes.split('-').map(Number);
         notasFiltradas = notasFiltradas.filter(nota => {
-            if (!nota.fechaSalida) return false;
+            if (!nota.fechaSalida)
+                return false;
             const fecha = new Date(nota.fechaSalida);
             return fecha.getMonth() === mes && fecha.getFullYear() === anio;
         });
@@ -335,7 +340,8 @@ function filtrarNotas() {
         const semanaFin = new Date(semanaInicio);
         semanaFin.setDate(semanaInicio.getDate() + 6);
         notasFiltradas = notasFiltradas.filter(nota => {
-            if (!nota.fechaSalida) return false;
+            if (!nota.fechaSalida)
+                return false;
             const fecha = new Date(nota.fechaSalida);
             return fecha >= semanaInicio && fecha <= semanaFin;
         });
@@ -362,13 +368,13 @@ function filtrarNotas() {
             const unidad = nota.unidad?.tipoVehiculo?.toLowerCase() || '';
             const fecha = formatearFecha(nota.fechaSalida)?.toLowerCase() || '';
             return (
-                idNota.includes(currentFilters.search) ||
-                cliente.includes(currentFilters.search) ||
-                operador.includes(currentFilters.search) ||
-                ruta.includes(currentFilters.search) ||
-                unidad.includes(currentFilters.search) ||
-                fecha.includes(currentFilters.search)
-            );
+                    idNota.includes(currentFilters.search) ||
+                    cliente.includes(currentFilters.search) ||
+                    operador.includes(currentFilters.search) ||
+                    ruta.includes(currentFilters.search) ||
+                    unidad.includes(currentFilters.search) ||
+                    fecha.includes(currentFilters.search)
+                    );
         });
     }
 
@@ -404,7 +410,8 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
         const mes = parseInt(currentFilters.resumenMes);
         const anio = parseInt(currentFilters.resumenAnio);
         notasFiltradas = notasFiltradas.filter(nota => {
-            if (!nota.fechaSalida) return false;
+            if (!nota.fechaSalida)
+                return false;
             const fecha = new Date(nota.fechaSalida);
             return fecha.getMonth() === mes && fecha.getFullYear() === anio;
         });
@@ -453,11 +460,16 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
         if (nota.gastos) {
             nota.gastos.forEach(g => {
                 const desc = g.tipoGasto?.descripcion?.toLowerCase() || '';
-                if (desc.includes('combus')) gastoCategories.combus += g.total || 0;
-                else if (desc.includes('caseta')) gastoCategories.casetas += g.total || 0;
-                else if (desc.includes('consumo')) gastoCategories.consumo += g.total || 0;
-                else if (desc.includes('hospedaje')) gastoCategories.hospedaje += g.total || 0;
-                else gastoCategories.otros += g.total || 0;
+                if (desc.includes('combus'))
+                    gastoCategories.combus += g.total || 0;
+                else if (desc.includes('caseta'))
+                    gastoCategories.casetas += g.total || 0;
+                else if (desc.includes('consumo'))
+                    gastoCategories.consumo += g.total || 0;
+                else if (desc.includes('hospedaje'))
+                    gastoCategories.hospedaje += g.total || 0;
+                else
+                    gastoCategories.otros += g.total || 0;
             });
         }
 
@@ -486,45 +498,46 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
         };
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(datosExcel, { header: Object.keys(datosExcel[0]) });
+    const worksheet = XLSX.utils.json_to_sheet(datosExcel, {header: Object.keys(datosExcel[0])});
 
     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
     for (let row = range.s.r + 1; row <= range.e.r; row++) {
         const nota = notasFiltradas[row - 1];
         const isFinalized = !!nota.fechaLlegada;
-        const isPendingInvoice = nota.cliente?.factura === 1 && nota.estadoFact ? 'Pendiente' : 'PENDIENTE';
+        const isPendingInvoice = nota.cliente?.factura === 1 && nota.estadoFact ? 'Pendiente' : 'Facturado';
 
         const rowFill = {
             patternType: 'solid',
-            fgColor: { rgb: isFinalized ? 'CCFFCC' : 'FFCCCC' }
+            fgColor: {rgb: isFinalized ? 'CCFFCC' : 'FFCCCC'}
         };
 
         for (let col = range.s.c; col <= range.e.c; col++) {
-            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-            if (!worksheet[cellAddress]) continue;
+            const cellAddress = XLSX.utils.encode_cell({r: row, c: col});
+            if (!worksheet[cellAddress])
+                continue;
             worksheet[cellAddress].s = {
                 fill: rowFill,
-                alignment: { vertical: 'center', horizontal: 'center' }
+                alignment: {vertical: 'center', horizontal: 'center'}
             };
         }
 
         if (isPendingInvoice) {
-            const facturaCell = XLSX.utils.encode_cell({ r: row, c: 1 });
+            const facturaCell = XLSX.utils.encode_cell({r: row, c: 1});
             if (worksheet[facturaCell]) {
                 worksheet[facturaCell].s = {
-                    fill: { patternType: 'solid', fgColor: { rgb: 'FFFF99' } },
-                    alignment: { vertical: 'center', horizontal: 'center' }
+                    fill: {patternType: 'solid', fgColor: {rgb: 'FFFF99'}},
+                    alignment: {vertical: 'center', horizontal: 'center'}
                 };
             }
         }
     }
 
     for (let col = range.s.c; col <= range.e.c; col++) {
-        const headerCell = XLSX.utils.encode_cell({ r: 0, c: col });
+        const headerCell = XLSX.utils.encode_cell({r: 0, c: col});
         if (worksheet[headerCell]) {
             worksheet[headerCell].s = {
-                fill: { patternType: 'solid', fgColor: { rgb: 'FFFFFF' } },
-                alignment: { vertical: 'center', horizontal: 'center' }
+                fill: {patternType: 'solid', fgColor: {rgb: 'FFFFFF'}},
+                alignment: {vertical: 'center', horizontal: 'center'}
             };
         }
     }
@@ -533,10 +546,10 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Contabilidad');
 
     worksheet['!cols'] = [
-        { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 20 }, { wch: 20 },
-        { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 12 },
-        { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 12 }
+        {wch: 10}, {wch: 12}, {wch: 12}, {wch: 20}, {wch: 20},
+        {wch: 15}, {wch: 20}, {wch: 15}, {wch: 12}, {wch: 12},
+        {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 12},
+        {wch: 15}, {wch: 15}, {wch: 15}, {wch: 12}, {wch: 12}
     ];
 
     let nombreArchivo = 'Contabilidad_Todos.xlsx';
@@ -551,7 +564,8 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
 });
 
 function formatearFecha(fecha) {
-    if (!fecha) return null;
+    if (!fecha)
+        return null;
     const date = new Date(fecha);
     const dia = String(date.getDate()).padStart(2, '0');
     const mes = String(date.getMonth() + 1).padStart(2, '0');
@@ -560,7 +574,8 @@ function formatearFecha(fecha) {
 }
 
 function formatRuta(origen, destino) {
-    if (!origen || !destino) return 'N/A';
+    if (!origen || !destino)
+        return 'N/A';
     const formattedOrigen = origen.includes('León') ? 'León' : origen;
     const formattedDestino = destino.includes('León') ? 'León' : destino;
     return `${formattedOrigen} - ${formattedDestino}`;
@@ -584,13 +599,13 @@ async function actualizarNumeroFactura(idNota, numeroFactura) {
         const response = await fetch(`https://transportesnaches.com.mx/api/nota/updateFactura`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ idNota, numeroFactura })
+            body: JSON.stringify({idNota, numeroFactura})
         });
         if (!response.ok) {
             throw new Error('Error al actualizar número de factura');
         }
         todasLasNotas = todasLasNotas.map(nota =>
-            nota.idNota === idNota ? { ...nota, numeroFactura } : nota
+            nota.idNota === idNota ? {...nota, numeroFactura} : nota
         );
         return true;
     } catch (error) {
@@ -608,24 +623,24 @@ async function actualizarNumeroFactura(idNota, numeroFactura) {
 
 function generarNumeroFactura(notas) {
     const facturas = notas
-        .map(nota => nota.numeroFactura)
-        .filter(f => f && f.startsWith('FAC-'))
-        .map(f => parseInt(f.replace('FAC-', '')))
-        .filter(n => !isNaN(n));
+            .map(nota => nota.numeroFactura)
+            .filter(f => f && f.startsWith('FAC-'))
+            .map(f => parseInt(f.replace('FAC-', '')))
+            .filter(n => !isNaN(n));
     const maxNumero = facturas.length > 0 ? Math.max(...facturas) : 0;
     return `FAC-${String(maxNumero + 1).padStart(3, '0')}`;
 }
 
 function calcularGastosAnualesMensuales(mes, anio) {
     return gastosAnuales
-        .filter(gasto => gasto.anio === anio)
-        .reduce((suma, gasto) => suma + (gasto.monto / 12), 0);
+            .filter(gasto => gasto.anio === anio)
+            .reduce((suma, gasto) => suma + (gasto.monto / 12), 0);
 }
 
 function calcularGastosAnualesTotal(anio) {
     return gastosAnuales
-        .filter(gasto => gasto.anio === anio)
-        .reduce((suma, gasto) => suma + (gasto.monto || 0), 0);
+            .filter(gasto => gasto.anio === anio)
+            .reduce((suma, gasto) => suma + (gasto.monto || 0), 0);
 }
 
 function mostrarNotas(notas) {
@@ -651,7 +666,8 @@ function mostrarNotas(notas) {
     if (currentFilters.resumenMes !== 'todos' && currentFilters.resumenAnio !== 'todos') {
         const mes = parseInt(currentFilters.resumenMes);
         notasFiltradas = notasFiltradas.filter(nota => {
-            if (!nota.fechaSalida) return false;
+            if (!nota.fechaSalida)
+                return false;
             const fecha = new Date(nota.fechaSalida);
             return fecha.getMonth() === mes && fecha.getFullYear() === parseInt(currentFilters.resumenAnio);
         });
@@ -709,13 +725,15 @@ function mostrarNotas(notas) {
             estadoClase = 'text-gray-600';
             console.warn(`Nota ${nota.idNota}: Cliente o factura no definido`);
         } else if (nota.cliente.factura === 1) {
-            if (nota.estadoFact ? 'Pendiente' : 'PENDIENTE') {
+            if (nota.estadoFact === 'Pendiente' || nota.estadoFact === 'PENDIENTE') {
                 estadoTexto = 'PENDIENTE';
                 estadoClase = 'text-red-600';
                 fondoClase = 'bg-red-100';
             } else if (nota.estadoFact === 'Facturado') {
                 estadoTexto = 'FACTURADO';
                 estadoClase = 'text-green-600';
+                fondoClase = 'bg-green-100';
+
             } else {
                 estadoTexto = 'DESCONOCIDO';
                 estadoClase = 'text-yellow-600';
@@ -732,9 +750,9 @@ function mostrarNotas(notas) {
 
         const card = document.createElement('div');
         card.classList.add(
-            'card', 'bg-white', 'rounded-lg', 'p-4', 'shadow-md', 'border', 'border-orange-300', 'cursor-pointer',
-            fondoClase
-        );
+                'card', 'bg-white', 'rounded-lg', 'p-4', 'shadow-md', 'border', 'border-orange-300', 'cursor-pointer',
+                fondoClase
+                );
 
         const numeroFactura = nota.cliente?.factura === 1 ? (nota.numeroFactura || generarNumeroFactura(todasLasNotas)) : 'NO FACT';
         const porTipoGasto = nota.gastos?.map(g => `${g.tipoGasto?.descripcion}: $${(g.total || 0).toFixed(2)}`).join(', ') || 'N/A';
@@ -987,16 +1005,16 @@ function mostrarGastosAnuales(gastos) {
             document.getElementById('fechaInicio').value = gasto.fechaInicio || '';
             const fechasPagoInput = document.getElementById('fechasPago');
             fechasPagoInput._flatpickr.setDate(
-                Array.isArray(gasto.fechasPago)
+                    Array.isArray(gasto.fechasPago)
                     ? gasto.fechasPago
                     : gasto.fechasPago && typeof gasto.fechasPago === 'string'
                     ? gasto.fechasPago.split(',').map(f => f.trim())
                     : []
-            );
+                    );
             document.getElementById('submitGastoBtn').textContent = 'Actualizar';
             document.getElementById('cancelEditBtn').classList.remove('hidden');
             const formContainer = document.getElementById('gastosFormContainer');
-            formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            formContainer.scrollIntoView({behavior: 'smooth', block: 'start'});
         });
     });
 
@@ -1073,31 +1091,31 @@ document.addEventListener('DOMContentLoaded', () => {
     flatpickr(fechasPagoInput, {
         mode: 'multiple',
         dateFormat: 'Y-m-d',
-        onChange: function(selectedDates) {
+        onChange: function (selectedDates) {
             fechasPagoInput.value = selectedDates.map(date => date.toISOString().split('T')[0]).join(', ');
         }
     });
 
     if (btnGastos && modalGastos && spanGastos) {
-        btnGastos.onclick = function() {
+        btnGastos.onclick = function () {
             modalGastos.style.display = 'block';
         };
-        spanGastos.onclick = function() {
+        spanGastos.onclick = function () {
             modalGastos.style.display = 'none';
             resetFormGastos();
         };
     }
 
     if (btnResumen && modalResumen && spanResumen) {
-        btnResumen.onclick = function() {
+        btnResumen.onclick = function () {
             modalResumen.style.display = 'block';
         };
-        spanResumen.onclick = function() {
+        spanResumen.onclick = function () {
             modalResumen.style.display = 'none';
         };
     }
 
-    window.onclick = function(event) {
+    window.onclick = function (event) {
         if (event.target == modalGastos) {
             modalGastos.style.display = 'none';
             resetFormGastos();
@@ -1111,21 +1129,20 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (cancelBtnGastos && formGastos) {
-        cancelBtnGastos.onclick = function() {
+        cancelBtnGastos.onclick = function () {
             resetFormGastos();
         };
 
-        formGastos.onsubmit = async function(e) {
+        formGastos.onsubmit = async function (e) {
             e.preventDefault();
             const idGastoAnual = parseInt(document.getElementById('idGastoAnual').value) || 0;
             const descripcion = document.getElementById('descripcionGasto').value.trim();
             const monto = parseFloat(document.getElementById('montoGasto').value);
             const anio = parseInt(document.getElementById('anioGasto').value);
-            const fechaInicio = document.getElementById('fechaInicio').value;
-            const fechasPagoInput = document.getElementById('fechasPago').value.trim();
-            const fechasPago = fechasPagoInput ? fechasPagoInput.split(',').map(f => f.trim()) : [];
+            const fechaCreacion = document.getElementById('fechaInicio').value;
+            const fechaActualizacion = document.getElementById('fechasPago').value.trim();
 
-            if (!descripcion || isNaN(monto) || monto <= 0 || isNaN(anio) || !fechaInicio || !fechasPago.length) {
+            if (!descripcion || isNaN(monto) || monto <= 0 || isNaN(anio) || !fechaCreacion || !fechaActualizacion) {
                 Swal.fire({
                     title: 'Error',
                     text: 'Por favor, completa todos los campos correctamente',
@@ -1137,12 +1154,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 let response;
-                const payload = { idGastoAnual, descripcion, monto, anio, fechaInicio, fechasPago };
+                const payload = {idGastoAnual, descripcion, monto, anio, fechaCreacion, fechaActualizacion};
                 if (idGastoAnual) {
                     response = await fetch(`https://transportesnaches.com.mx/api/gastoAnual/update`, {
                         method: 'PUT',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(payload)
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: new URLSearchParams({ datosNota: JSON.stringify(payload) })
                     });
                 } else {
                     response = await fetch(`https://transportesnaches.com.mx/api/gastoAnual/insert`, {
@@ -1159,9 +1176,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (idGastoAnual) {
                     const index = gastosAnuales.findIndex(g => g.idGastoAnual === idGastoAnual);
-                    gastosAnuales[index] = { idGastoAnual, descripcion, monto, anio, fechaInicio, fechasPago };
+                    gastosAnuales[index] = {idGastoAnual, descripcion, monto, anio, fechaInicio, fechasPago};
                 } else {
-                    gastosAnuales.push({ idGastoAnual: result.idGastoAnual || (gastosAnuales.length + 1), descripcion, monto, anio, fechaInicio, fechasPago });
+                    gastosAnuales.push({idGastoAnual: result.idGastoAnual || (gastosAnuales.length + 1), descripcion, monto, anio, fechaInicio, fechasPago});
                 }
 
                 try {

@@ -374,6 +374,7 @@ async function guardarContabilidad() {
     const datosActualizados = {
         idNota,
         numeroFactura: numeroFactura === 'N/A' ? null : numeroFactura,
+        nombreCliente: nota.cliente?.nombreCliente,
         maniobra,
         comision,
         gananciaCalculada,

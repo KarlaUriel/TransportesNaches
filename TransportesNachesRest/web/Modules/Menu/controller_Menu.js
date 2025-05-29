@@ -52,4 +52,3 @@ export function inicializarMenu() {
 }
 
 document.addEventListener('DOMContentLoaded', inicializarMenu);
-
