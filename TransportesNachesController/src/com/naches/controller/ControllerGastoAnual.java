@@ -24,7 +24,7 @@ public class ControllerGastoAnual {
         cstmt.setBigDecimal(2, gastoAnual.getMonto());
         cstmt.setInt(3, gastoAnual.getAnio());
         cstmt.setDate(4, gastoAnual.getFechaCreacion() != null ? new java.sql.Date(gastoAnual.getFechaCreacion().getTime()) : null);
-        cstmt.setDate(5, gastoAnual.getFechaActualizacion() != null ? new java.sql.Date(gastoAnual.getFechaActualizacion().getTime()) : null);
+        cstmt.setString(5, gastoAnual.getFechaActualizacion());
         cstmt.registerOutParameter(6, java.sql.Types.INTEGER);
 
         cstmt.execute();
@@ -48,7 +48,7 @@ public class ControllerGastoAnual {
         cstmt.setBigDecimal(3, gastoAnual.getMonto());
         cstmt.setInt(4, gastoAnual.getAnio());
         cstmt.setDate(5, gastoAnual.getFechaCreacion() != null ? new java.sql.Date(gastoAnual.getFechaCreacion().getTime()) : null);
-        cstmt.setDate(6, gastoAnual.getFechaActualizacion() != null ? new java.sql.Date(gastoAnual.getFechaActualizacion().getTime()) : null);
+        cstmt.setString(6, gastoAnual.getFechaActualizacion());
 
         cstmt.execute();
 
@@ -103,7 +103,7 @@ public class ControllerGastoAnual {
         gasto.setMonto(rs.getBigDecimal("monto"));
         gasto.setAnio(rs.getInt("anio"));
         gasto.setFechaCreacion(rs.getDate("fechaCreacion"));
-        gasto.setFechaActualizacion(rs.getDate("fechaActualizacion"));
+        gasto.setFechaActualizacion(rs.getString("fechaActualizacion"));
 
         return gasto;
     }

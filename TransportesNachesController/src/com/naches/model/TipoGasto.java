@@ -1,7 +1,10 @@
 package com.naches.model;
 
-public class TipoGasto {
+import java.io.Serializable;
+
+public class TipoGasto implements Serializable {
     
+    private static final long serialVersionUID = 1L;
     private int idTipoGasto;
     private String descripcion;
 

@@ -1,10 +1,12 @@
 package com.naches.model;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-public class NotaGasto {
+public class NotaGasto implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private int idNota;
     private String origen;
     private String destino;
@@ -410,7 +412,7 @@ public class NotaGasto {
         return dias > 2; // Si han pasado más de 7 días, devolvemos true
     }
 
-    public NotaGasto(int idNota, Date fechaLlegada, String nombreCliente){
+    public NotaGasto(int idNota, Date fechaLlegada, String nombreCliente) {
         this.idNota = idNota;
         this.fechaLlenado = fechaLlenado;
         this.nombreCliente = nombreCliente;

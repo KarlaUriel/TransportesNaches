@@ -2,6 +2,7 @@ package com.naches.model;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 public class GastoAnual {
     private int idGastoAnual;
@@ -9,7 +10,7 @@ public class GastoAnual {
     private BigDecimal monto;
     private int anio;
     private Date fechaCreacion;
-    private Date fechaActualizacion;
+    private String fechaActualizacion;
 
     public Date getFechaCreacion() {
         return fechaCreacion;
@@ -19,11 +20,11 @@ public class GastoAnual {
         this.fechaCreacion = fechaCreacion;
     }
 
-    public Date getFechaActualizacion() {
+    public String getFechaActualizacion() {
         return fechaActualizacion;
     }
 
-    public void setFechaActualizacion(Date fechaActualizacion) {
+    public void setFechaActualizacion(String fechaActualizacion) {
         this.fechaActualizacion = fechaActualizacion;
     }
     
