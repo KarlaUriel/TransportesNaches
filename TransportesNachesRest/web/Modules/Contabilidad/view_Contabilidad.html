@@ -19,7 +19,9 @@
                             'primary-orange': '#f97316',
                             'secondary-orange': '#fb923c',
                             'dark-bg-start': '#1a202c',
-                            'dark-bg-end': '#2d3748'
+                            'dark-bg-end': '#2d3748',
+                            'accent-blue': '#1e40af',
+                            'accent-blue-hover': '#1e3a8a'
                         }
                     }
                 }
@@ -73,10 +75,10 @@
                 padding: 20px;
                 border: 1px solid #888;
                 width: 90%;
-                max-width: 800px;
+                max-width: 900px;
                 border-radius: 10px;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                max-height: 80vh;
+                max-height: 85vh;
                 overflow-y: auto;
             }
             .close {
@@ -101,6 +103,10 @@
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 border: none;
                 font-weight: 500;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
             }
             .action-btn:hover {
                 transform: translateY(-1px);
@@ -122,11 +128,158 @@
                 transition: all 0.3s ease;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 font-weight: 500;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
             }
             .filter-btn:hover {
                 background-color: #1e3a8a;
                 transform: translateY(-1px);
                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+            .filter-panel {
+                position: fixed;
+                top: 0;
+                right: -350px;
+                width: 350px;
+                height: 100%;
+                background: rgba(31, 41, 55, 0.9);
+                z-index: 50;
+                transition: right 0.3s ease-in-out;
+                box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
+                backdrop-filter: blur(5px);
+                overflow-y: auto;
+            }
+            .filter-panel.open {
+                right: 0;
+            }
+            .filter-panel-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 1.5rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .filter-panel-content {
+                padding: 1.5rem;
+            }
+            .filter-select {
+                background-color: rgba(55, 65, 81, 0.8);
+                border: 1px solid rgba(75, 85, 99, 0.5);
+                color: white;
+                border-radius: 0.5rem;
+                padding: 0.5rem;
+                width: 100%;
+                transition: border-color 0.3s ease;
+            }
+            .filter-select:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+            }
+            .custom-btn {
+                background: linear-gradient(90deg, #4b6cb7, #182848);
+                color: white;
+                padding: 0.75rem 1.5rem;
+                border-radius: 0.5rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                font-weight: 600;
+            }
+            .custom-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+                background: linear-gradient(90deg, #5a7cc4, #1e3a8a);
+            }
+            .custom-btn.green {
+                background: linear-gradient(90deg, #10b981, #064e3b);
+            }
+            .custom-btn.green:hover {
+                background: linear-gradient(90deg, #14d8a4, #0a7c5c);
+            }
+            .custom-btn.blue {
+                background: linear-gradient(90deg, #3b82f6, #1e40af);
+            }
+            .custom-btn.blue:hover {
+                background: linear-gradient(90deg, #60a5fa, #1e3a8a);
+            }
+            .custom-btn.orange {
+                background: linear-gradient(90deg, #f97316, #ea580c);
+            }
+            .custom-btn.orange:hover {
+                background: linear-gradient(90deg, #fb923c, #c2410c);
+            }
+            /* Enhanced Financial Summary Styles */
+            .financial-panel {
+                @apply bg-white border border-gray-200 rounded-xl shadow-md p-6 mb-6;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .financial-panel:hover {
+                @apply shadow-lg;
+                transform: translateY(-2px);
+            }
+            .financial-header {
+                @apply text-2xl font-bold text-gray-800 mb-4 border-b-2 border-primary-orange pb-2 flex items-center gap-2;
+            }
+            .financial-subheader {
+                @apply text-lg font-semibold text-gray-700 mb-3 border-l-4 border-primary-orange pl-3;
+            }
+            .financial-table {
+                @apply w-full border border-gray-300 rounded-lg overflow-hidden;
+            }
+            .financial-table th,
+            .financial-table td {
+                @apply py-3 px-4 text-left border-b border-gray-200;
+            }
+            .financial-table th {
+                @apply bg-primary-orange text-white font-semibold;
+            }
+            .financial-table td {
+                @apply text-gray-800;
+            }
+            .financial-table tr:hover {
+                @apply bg-gray-50;
+            }
+            .financial-table .value {
+                @apply font-medium;
+            }
+            .negative {
+                @apply text-red-600 font-semibold;
+            }
+            .positive {
+                @apply text-green-600 font-semibold;
+            }
+            .kpi-card {
+                @apply bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 p-4 rounded-lg shadow-sm flex-1 text-center hover-shadow-md transition-shadow;
+            }
+            .kpi-card h4 {
+                @apply text-sm font-medium text-gray-600 mb-1;
+            }
+            .kpi-card p {
+                @apply text-xl font-bold text-gray-800;
+            }
+            .chart-container {
+                @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm;
+                max-height: 300px !important;
+                max-width: 100% !important;
+                overflow: hidden;
+                position: relative;
+            }
+            .chart-container canvas {
+                max-height: 250px !important;
+                width: 100% !important;
+            }
+            #resumenFinancieroModal .modal-content {
+                @apply bg-gray-50;
+                max-width: 95vw !important;
+                max-height: 90vh !important;
+                overflow-y: auto;
             }
         </style>
     </head>
@@ -140,7 +293,7 @@
             <nav id="sidebar" class="fixed md:relative z-40 w-16 h-full flex flex-col items-center py-4 shadow-2xl transform -translate-x-full md:translate-x-0 transition-transform duration-300" style="background: linear-gradient(to bottom, #1a202c, #2d3748)">
                 <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-orange-400 mb-8">
                     <a href="/menu">
-                        <img src="../../Resource/transportesNaches.png" alt="logo" class="w-6 h-6 rounded-full hover:opacity-80 transition" />
+                        <img src="/Resource/transportesNaches.png" alt="logo" class="w-6 h-6 rounded-full hover:opacity-80 transition" />
                     </a>
                 </div>
                 <ul class="w-full px-2 space-y-6 flex-grow">
@@ -187,69 +340,78 @@
                         <div class="flex justify-end mb-2">
                             <input type="text" id="searchBar" placeholder="Buscar por cliente, operador, ruta, etc." class="border-2 border-gray-300 rounded-lg p-2 w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-orange-400">
                         </div>
-                        <!-- Action Buttons and Notes per Page -->
+                        <!-- Action Buttons -->
                         <div class="flex flex-col sm:flex-row items-center sm:justify-end space-y-4 sm:space-y-0 sm:space-x-4">
-                            <div class="flex items-center space-x-2">
-                                <label for="notasPorPagina" class="text-sm font-medium text-gray-700">Notas por página:</label>
-                                <select id="notasPorPagina" class="border-2 border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-orange-400">
-                                    <option value="20" selected>20</option>
-                                    <option value="50">50</option>
-                                    <option value="100">100</option>
-                                    <option value="150">150</option>
-                                    <option value="200">200</option>
-
-                                </select>
-                            </div>
-                            <button id="openFilterModal" class="filter-btn">Filtros</button>
-                            <button id="mostrarResumenBtn" class="action-btn bg-green-600 text-white hover:bg-green-700">
-                                Resumen Financiero
+                            <button id="toggleFilterPanel" class="filter-btn flex items-center space-x-2">
+                                <i class="fas fa-filter"></i>
+                                <span>Advanced Filters</span>
                             </button>
-                            <button id="gastosAnualesBtn" class="action-btn bg-blue-600 text-white hover:bg-blue-700">
-                                Gastos Anuales
+                            <button id="mostrarResumenBtn" class="custom-btn green">
+                                <i class="fas fa-chart-pie"></i>
+                                <span>Resumen Financiero</span>
                             </button>
-                            <button id="descargarExcel" class="action-btn bg-primary-orange text-white hover:bg-secondary-orange">
-                                Descargar Excel
+                            <button id="gastosAnualesBtn" class="custom-btn blue">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Gastos Anuales</span>
+                            </button>
+                            <button id="descargarExcel" class="custom-btn orange">
+                                <i class="fas fa-file-excel"></i>
+                                <span>Descargar Excel</span>
                             </button>
                         </div>
                     </div>
                     <div id="notasContainer" class="space-y-4">
                         <!-- Las tarjetas se generarán aquí -->
                     </div>
+                    <div id="cargarMasContainer" class="flex justify-center mt-4">
+                        <button id="cargarMasBtn" class="action-btn bg-primary-orange text-white hover:bg-secondary-orange hidden">
+                            Cargar más
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Filter Modal -->
-                <div id="filterModal" class="modal">
-                    <div class="modal-content">
-                        <span id="closeFilterModal" class="close">×</span>
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Filtros</h2>
-                        <div class="space-y-4">
+                <!-- Filter Panel -->
+                <div id="filterPanel" class="filter-panel">
+                    <div class="filter-panel-header">
+                        <h2 class="text-xl font-bold text-white">Advanced Filters</h2>
+                        <button id="closeFilterPanel" class="text-white text-2xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="filter-panel-content">
+                        <div class="space-y-6">
                             <div>
-                                <label for="filtroMes" class="block text-gray-800 font-semibold mb-1">Filtrar por mes:</label>
-                                <select id="filtroMes" class="border-2 border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400">
+                                <label for="filtroMes" class="block text-gray-300 font-semibold mb-2">Filtrar por mes:</label>
+                                <select id="filtroMes" class="filter-select">
                                     <option value="todos">Todos los meses</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="filtroSemana" class="block text-gray-800 font-semibold mb-1">Filtrar por semana:</label>
-                                <select id="filtroSemana" class="border-2 border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400">
+                                <label for="filtroSemana" class="block text-gray-300 font-semibold mb-2">Filtrar por semana:</label>
+                                <select id="filtroSemana" class="filter-select">
                                     <option value="todos">Todas las semanas</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="filtroOperador" class="block text-gray-800 font-semibold mb-1">Filtrar por operador:</label>
-                                <select id="filtroOperador" class="border-2 border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400">
+                                <label for="filtroOperador" class="block text-gray-300 font-semibold mb-2">Filtrar por operador:</label>
+                                <select id="filtroOperador" class="filter-select">
                                     <option value="todos">Todos los operadores</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="filtroCliente" class="block text-gray-800 font-semibold mb-1">Filtrar por cliente:</label>
-                                <select id="filtroCliente" class="border-2 border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400">
+                                <label for="filtroCliente" class="block text-gray-300 font-semibold mb-2">Filtrar por cliente:</label>
+                                <select id="filtroCliente" class="filter-select">
                                     <option value="todos">Todos los clientes</option>
                                 </select>
                             </div>
-                            <button id="applyFiltersBtn" class="action-btn bg-primary-orange text-white hover:bg-secondary-orange w-full mt-4">
-                                Aplicar Filtros
-                            </button>
+                            <div class="flex space-x-4">
+                                <button id="applyFiltersBtn" class="action-btn bg-blue-600 text-white hover:bg-blue-700 w-full">
+                                    Apply Filters
+                                </button>
+                                <button id="clearFiltersBtn" class="action-btn bg-gray-600 text-white hover:bg-gray-700 w-full">
+                                    Clear Filters
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -311,8 +473,170 @@
                 <div id="resumenFinancieroModal" class="modal">
                     <div class="modal-content">
                         <span id="spanResumen" class="close">×</span>
-                        <div id="resumenFinancieroContainer">
-                            <!-- El contenido del resumen se generará aquí -->
+                        <div id="resumenFinancieroContainer" class="space-y-6">
+                            <div class="financial-panel">
+                                <h2 class="financial-header">
+                                    <i class="fas fa-chart-line mr-2"></i> Resumen Financiero
+                                </h2>
+                               
+                            </div>
+
+                            <!-- Indicadores Clave (KPIs) -->
+                            <div class="financial-panel">
+                                <h3 class="financial-subheader">Indicadores Clave</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div class="kpi-card">
+                                        <h4>Total Ingresos</h4>
+                                        <p id="kpiIngresos">$0.00</p>
+                                    </div>
+                                    <div class="kpi-card">
+                                        <h4>Total Gastos</h4>
+                                        <p id="kpiGastos">$0.00</p>
+                                    </div>
+                                    <div class="kpi-card">
+                                        <h4>Ganancia Neta</h4>
+                                        <p id="kpiGananciaNeta">$0.00</p>
+                                    </div>
+                                    <div class="kpi-card">
+                                        <h4>Margen de Ganancia</h4>
+                                        <p id="kpiMargenGanancia">0%</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ingresos -->
+                            <div class="financial-panel">
+                                <h3 class="financial-subheader">Ingresos</h3>
+                                <table class="financial-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Concepto</th>
+                                            <th>Monto</th>
+                                            <th>% del Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Total de Ingresos</td>
+                                            <td class="value" id="totalIngresos">$0.00</td>
+                                            <td>100%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Gastos -->
+                            <div class="financial-panel">
+                                <h3 class="financial-subheader">Gastos</h3>
+                                <table class="financial-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Concepto</th>
+                                            <th>Monto</th>
+                                            <th>% del Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Gastos Operativos</td>
+                                            <td class="value" id="gastosOperativos">$0.00</td>
+                                            <td id="porcentajeGastosOperativos">0%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Maniobra</td>
+                                            <td class="value" id="maniobra">$0.00</td>
+                                            <td id="porcentajeManiobra">0%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Comisión</td>
+                                            <td class="value" id="comision">$0.00</td>
+                                            <td id="porcentajeComision">0%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Gastos Anuales Fijos (Diarios)</td>
+                                            <td class="value" id="gastosAnualesDiarios">$0.00</td>
+                                            <td id="porcentajeGastosAnualesDiarios">0%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Gastos Anuales Fijos (Total)</td>
+                                            <td class="value" id="gastosAnualesTotal">$0.00</td>
+                                            <td id="porcentajeGastosAnualesTotal">0%</td>
+                                        </tr>
+                                        <tr class="font-semibold bg-gray-50">
+                                            <td>Total de Gastos</td>
+                                            <td class="value" id="totalGastos">$0.00</td>
+                                            <td>100%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Ganancias -->
+                            <div class="financial-panel">
+                                <h3 class="financial-subheader">Ganancias</h3>
+                                <table class="financial-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Concepto</th>
+                                            <th>Monto</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Ganancia Neta</td>
+                                            <td class="value" id="gananciaNeta">$0.00</td>
+                                            <td id="estadoGananciaNeta"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Ganancia Mensual</td>
+                                            <td class="value" id="gananciaMensual">$0.00</td>
+                                            <td id="estadoGananciaMensual"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Ganancia Anual</td>
+                                            <td class="value" id="gananciaAnual">$0.00</td>
+                                            <td id="estadoGananciaAnual"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Nómina -->
+                            <div class="financial-panel">
+                                <h3 class="financial-subheader">Nómina</h3>
+                                <table class="financial-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Concepto</th>
+                                            <th>Monto</th>
+                                            <th>% del Total de Gastos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Total Nómina</td>
+                                            <td class="value" id="totalNomina">$0.00</td>
+                                            <td id="porcentajeNomina">0%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Gráficos -->
+                            <div class="financial-panel">
+                                <h3 class="financial-subheader">Análisis Gráfico</h3>
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div class="chart-container">
+                                        <h4 class="text-center font-medium text-gray-600 mb-2">Resumen General</h4>
+                                        <canvas id="financialChart" class="w-full"></canvas>
+                                    </div>
+                                    <div class="chart-container">
+                                        <h4 class="text-center font-medium text-gray-600 mb-2">Desglose de Gastos</h4>
+                                        <canvas id="expenseBreakdownChart" class="w-full"></canvas>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -337,15 +661,200 @@
                 menu.classList.toggle('hidden');
             }
 
+            function toggleFilterPanel() {
+                const filterPanel = document.getElementById('filterPanel');
+                filterPanel.classList.toggle('open');
+            }
+
+            function closeFilterPanel() {
+                const filterPanel = document.getElementById('filterPanel');
+                filterPanel.classList.remove('open');
+            }
+
             const userRole = 'administrador';
             document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.admin-only').forEach(el => {
                     el.style.display = userRole === 'administrador' ? '' : 'none';
                 });
+
+                // Eventos para el panel de filtros
+                document.getElementById('toggleFilterPanel').addEventListener('click', toggleFilterPanel);
+                document.getElementById('closeFilterPanel').addEventListener('click', closeFilterPanel);
+
+                // Eventos para modales
+                const modalGastos = document.getElementById('gastosAnualesModal');
+                const btnGastos = document.getElementById('gastosAnualesBtn');
+                const spanGastos = document.getElementById('spanGastos');
+                const modalResumen = document.getElementById('resumenFinancieroModal');
+                const btnResumen = document.getElementById('mostrarResumenBtn');
+                const spanResumen = document.getElementById('spanResumen');
+
+                if (btnGastos && modalGastos && spanGastos) {
+                    btnGastos.onclick = function () {
+                        modalGastos.style.display = 'block';
+                    };
+                    spanGastos.onclick = function () {
+                        modalGastos.style.display = 'none';
+                        resetForm();
+                    };
+                }
+
+                if (btnResumen && modalResumen && spanResumen) {
+                    btnResumen.onclick = function () {
+                        modalResumen.style.display = 'block';
+                    };
+                    spanResumen.onclick = function () {
+                        modalResumen.style.display = 'none';
+                    };
+                }
+
+                window.onclick = function (event) {
+                    if (event.target == modalGastos) {
+                        modalGastos.style.display = 'none';
+                        resetForm();
+                    }
+                    if (event.target == modalResumen) {
+                        modalResumen.style.display = 'none';
+                    }
+                };
+            });
+
+            function resetForm() {
+                const form = document.getElementById('gastosAnualesForm');
+                if (form) {
+                    form.reset();
+                    document.getElementById('idGastoAnual').value = '';
+                    document.getElementById('submitGastoBtn').textContent = 'Guardar';
+                    document.getElementById('cancelEditBtn').classList.add('hidden');
+                    const fechasPagoInput = document.getElementById('fechasPago');
+                    if (fechasPagoInput._flatpickr) {
+                        fechasPagoInput._flatpickr.setDate([]);
+                    }
+                }
+            }
+        </script>
+        <script>
+            // Inicialización de gráficos
+            document.addEventListener('DOMContentLoaded', () => {
+                // Gráfico de Resumen General (Barras)
+                const ctxFinancial = document.getElementById('financialChart').getContext('2d');
+                const financialChart = new Chart(ctxFinancial, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Ingresos', 'Gastos', 'Ganancia Neta'],
+                        datasets: [{
+                                label: 'Monto ($)',
+                                data: [0, 0, 0],
+                                backgroundColor: ['#10b981', '#ef4444', '#3b82f6'],
+                                borderColor: ['#064e3b', '#991b1b', '#1e40af'],
+                                borderWidth: 1
+                            }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Monto ($)'
+                                },
+                                ticks: {
+                                    callback: function (value) {
+                                        return new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(value);
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Gráfico de Desglose de Gastos (Pastel)
+                const ctxExpense = document.getElementById('expenseBreakdownChart').getContext('2d');
+                const expenseBreakdownChart = new Chart(ctxExpense, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Operativos', 'Maniobra', 'Comisión', 'Anuales Diarios', 'Anuales Total'],
+                        datasets: [{
+                                label: 'Gastos ($)',
+                                data: [0, 0, 0, 0, 0],
+                                backgroundColor: [
+                                    '#ff6384',
+                                    '#36a2eb',
+                                    '#ffcd56',
+                                    '#4bc0c0',
+                                    '#9966ff'
+                                ],
+                                borderColor: '#fff',
+                                borderWidth: 1
+                            }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(context.parsed);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Funciones para actualizar los gráficos
+                window.updateFinancialChart = function (totalIngresos, totalGastos, gananciaNeta) {
+                    financialChart.data.datasets[0].data = [totalIngresos, totalGastos, gananciaNeta];
+                    financialChart.update();
+                };
+
+                window.updateExpenseBreakdownChart = function (gastosOperativos, maniobra, comision, gastosAnualesDiarios, gastosAnualesTotal) {
+                    expenseBreakdownChart.data.datasets[0].data = [
+                        gastosOperativos,
+                        maniobra,
+                        comision,
+                        gastosAnualesDiarios,
+                        gastosAnualesTotal
+                    ];
+                    expenseBreakdownChart.update();
+                };
             });
         </script>
-        <script src="/Modules/Menu/controller_Menu.js" type="module" ></script>
-        <script src="/Modules/Contabilidad/controller_Contabilidad.js" type="module" ></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script src="/Modules/Menu/controller_Menu.js" type="module"></script>
+        <script src="/Modules/Contabilidad/controller_Contabilidad.js" type="module"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     </body>
 </html>

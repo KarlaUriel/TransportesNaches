@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.naches.controller.ControllerGastoAnual;
 import com.naches.model.GastoAnual;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -50,31 +51,29 @@ public class RESTGastoAnual {
 
     @PUT
     @Path("update")
-    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response update(String datosGastoAnual) {
-        String out = null;
+    public Response update(@FormParam("datosGastoAnual") @DefaultValue("") String datosGastoAnual) {
+        String out;
         ControllerGastoAnual controller = new ControllerGastoAnual();
         Gson gson = new Gson();
-
+        
+        System.out.println("Los datos llegados del servidor: " + datosGastoAnual);
+        
         try {
-            GastoAnual gasto = gson.fromJson(datosGastoAnual, GastoAnual.class);
-            if (gasto.getIdGastoAnual() < 1) {
-                out = """
-                      {"error":"ID de gasto anual inválido"}
-                      """;
-            } else {
-                controller.actualizar(gasto);
-                out = """
-                      {"Correcto":"Gasto anual actualizado correctamente."}
-                      """;
-            }
+            GastoAnual gasto = gson.fromJson(datosGastoAnual, GastoAnual.class);          
+            controller.actualizar(gasto);
+            
         } catch (Exception e) {
             e.printStackTrace();
             out = """
                   {"error":"Error interno del servidor, comunícate al área de sistemas"}
                   """;
+            System.out.println(e);
         }
+        
+        out = """
+                  {"success":"Actualizado correctamente."}
+                  """;
 
         return Response.ok(out)
                 .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
@@ -82,6 +81,7 @@ public class RESTGastoAnual {
                 .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
                 .header("Access-Control-Allow-Credentials", "true")
                 .build();
+        
     }
 
     @POST
