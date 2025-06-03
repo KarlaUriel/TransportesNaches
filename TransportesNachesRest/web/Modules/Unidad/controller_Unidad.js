@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // DOM elements
+// DOM elements
     const elements = {
         btnNuevaUnidad: document.getElementById("btnNuevaUnidad"),
         btnRecargar: document.getElementById("btnRecargar"),
@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
         btnCancelar: document.getElementById("btnCancelar"),
         formUnidad: document.getElementById("formUnidad"),
         tblUnidad: document.getElementById("tblUnidad"),
+        tblEncabezado: document.getElementById("tblEncabezado"),
         txtBuscar: document.getElementById("txtBuscar"),
         mantenimientoModal: document.getElementById("mantenimientoModal"),
         nuevoMantenimientoModal: document.getElementById("nuevoMantenimientoModal"),
@@ -17,14 +18,10 @@ document.addEventListener("DOMContentLoaded", function () {
         filtroFecha: document.getElementById("filtroFecha"),
         tablaMantenimientosBody: document.getElementById("tablaMantenimientosBody")
     };
-
-//toggle eliminado del js
-
     // Debug: Verify critical elements
     console.log('btnNuevoMantenimiento:', elements.btnNuevoMantenimiento);
     console.log('nuevoMantenimientoModal:', elements.nuevoMantenimientoModal);
     console.log('mantenimientoModal:', elements.mantenimientoModal);
-
     // State
     let unidades = [];
     let mantenimientos = [];
@@ -33,7 +30,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const MAINTENANCE_THRESHOLD = 500; // Alert 500 km before
     const POLICY_ALERT_DAYS = 7; // Alert 7 days before policy expiration
     const SESSION_KEY = 'unit_alerts_dismissed';
-
     // Event listeners
     if (elements.btnNuevaUnidad) {
         elements.btnNuevaUnidad.addEventListener('click', limpiarMostrarFormulario);
@@ -100,10 +96,8 @@ document.addEventListener("DOMContentLoaded", function () {
             cerrarNuevoMantenimiento();
         }
     });
-
     // Initialize
     inicializar();
-
     // Utility Functions
     function debounce(func, wait) {
         let timeout;
@@ -141,6 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     }
+
     // Core Functions
     async function inicializar() {
         setDetalleVisible(false);
@@ -179,43 +174,43 @@ document.addEventListener("DOMContentLoaded", function () {
         unidades.forEach(unidad => {
             const needsMaintenance = unidad._needsMaintenance || false;
             const policyExpiring = unidad._policyExpiring || false;
+            const imageUrl = `/images/unidades/${unidad.idUnidad}.jpg`; // Placeholder for dynamic images
             contenido += `
-                <tr>
-                    <td class="px-4 py-2 text-sm">${unidad.tipoVehiculo || ''}</td>
-                    <td class="px-4 py-2 text-sm">${unidad.fechaVencimientoPol || 'No especificado'}</td>
-                    <td class="px-4 py-2 text-sm text-gray-800">
-                        ${
-                    unidad.disponibilidad === 'Disponible' ? '<span class="activo">Disponible</span>' :
-                    unidad.disponibilidad === 'En viaje' ? '<span class="en-viaje">En viaje</span>' :
-                    unidad.disponibilidad === 'En reparación' ? '<span class="en-reparacion">En reparación</span>' :
-                    '<span class="desconocido">Estado desconocido</span>'
-                    }
-                    </td>
-                    <td class="px-4 py-2 text-sm text-gray-800">
-                        ${unidad.activoUnidad ? '<span class="activo">Activo</span>' : '<span class="inactivo">Inactivo</span>'}
-                    </td>
-                    <td class="px-4 py-2 text-sm text-gray-800 text-center">
-                        ${
-                    needsMaintenance || policyExpiring ?
-                    '<span class="text-red-500 mr-2"><i class="fas fa-exclamation-triangle"></i></span>' : ''
-                    }
-                        ${unidad.activoUnidad ? `
-                            <button onclick="cargarDetalleUnidad(${unidad.idUnidad})" class="text-blue-500 hover:text-blue-700 mr-2" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="mostrarMantenimientos(${unidad.idUnidad})" class="text-yellow-500 hover:text-yellow-700 mr-2" title="Mantenimientos">
-                                <i class="fas fa-wrench"></i>
-                            </button>
-                            <button onclick="eliminarUnidad(${unidad.idUnidad})" class="text-red-500 hover:text-red-700" title="Desactivar">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        ` : `
-                            <button onclick="reactivarUnidad(${unidad.idUnidad})" class="text-green-500 hover:text-green-700" title="Reactivar">
-                                <i class="fas fa-undo"></i> Reactivar
-                            </button>
-                        `}
-                    </td>
-                </tr>
+                <div class="unit-card bg-white rounded-xl overflow-hidden shadow-lg">
+                    <div class="unit-image" style="background-image: url('${imageUrl}');"></div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-500">${new Date().toLocaleDateString('es-MX')}</span>
+                            <span class="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">${unidad.disponibilidad}</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">${unidad.tipoVehiculo || 'Sin Nombre'}</h3>
+                        <p class="text-gray-600 text-sm mb-4">Placas: ${unidad.placas || 'N/A'}</p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                ${needsMaintenance || policyExpiring ? '<span class="text-red-500 mr-2"><i class="fas fa-exclamation-triangle"></i></span>' : ''}
+                                ${unidad.activoUnidad ? `
+                                    <button onclick="cargarDetalleUnidad(${unidad.idUnidad})" class="text-blue-500 hover:text-blue-700 mr-2" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="mostrarMantenimientos(${unidad.idUnidad})" class="text-yellow-500 hover:text-yellow-700 mr-2" title="Mantenimientos">
+                                        <i class="fas fa-wrench"></i>
+                                    </button>
+                                    <button onclick="eliminarUnidad(${unidad.idUnidad})" class="text-red-500 hover:text-red-700" title="Desactivar">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                ` : `
+                                    <button onclick="reactivarUnidad(${unidad.idUnidad})" class="text-green-500 hover:text-green-700" title="Reactivar">
+                                        <i class="fas fa-undo"></i> Reactivar
+                                    </button>
+                                `}
+                            </div>
+                            <div class="flex items-center">
+                                <img src="/Resource/transportesNaches.png" alt="" class="w-8 h-8 rounded-full mr-2">
+                                <span class="text-sm text-gray-600"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
         });
         elements.tblUnidad.innerHTML = contenido;
@@ -223,10 +218,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function buscarUnidades() {
         const termino = elements.txtBuscar.value.toLowerCase();
-        const filas = elements.tblUnidad.querySelectorAll("tr");
-        filas.forEach(fila => {
-            const tipoVehiculo = fila.querySelector("td:nth-child(2)").textContent.toLowerCase();
-            fila.style.display = tipoVehiculo.includes(termino) ? '' : 'none';
+        const cards = elements.tblUnidad.querySelectorAll(".unit-card");
+        cards.forEach(card => {
+            const tipoVehiculo = card.querySelector("h3").textContent.toLowerCase();
+            const placas = card.querySelector("p").textContent.toLowerCase().replace("Placas: ", "");
+            card.style.display = tipoVehiculo.includes(termino) || placas.includes(termino) ? '' : 'none';
         });
     }
 
@@ -260,7 +256,6 @@ document.addEventListener("DOMContentLoaded", function () {
             disponibilidad: document.getElementById("disponibilidad").value,
             activoUnidad: 1
         };
-
         if (!unidadData.tipoVehiculo || !unidadData.placas || !unidadData.capacidad || !unidadData.disponibilidad) {
             mostrarError('Error', 'Por favor, completa todos los campos obligatorios.');
             return;
@@ -375,13 +370,25 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         const fragment = document.createDocumentFragment();
+        
+        const toLocalDateFormat = (dateStr) => {
+            if (!dateStr)
+                return 'N/A';
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                console.error(`Invalid date format: ${dateStr}`);
+                return 'N/A';
+            }
+            const [year, month, day] = dateStr.split('-');
+            return `${day}-${month}-${year}`; // e.g., "2025-05-28" -> "28-05-2025"
+        };
+        
         mantenimientos.forEach(m => {
             console.log('Mantenimiento individual:', m);
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td class="px-4 py-2">${m.fechaMantenimiento}</td>
+                <td class="px-4 py-2">${toLocalDateFormat(m.fechaMantenimiento)}</td>
                 <td class="px-4 py-2">${m.tipoMantenimiento}</td>
-                <td class="px-4 py-2">${m.km }</td>
+                <td class="px-4 py-2">${m.kmActual }</td>
             `;
             fragment.appendChild(row);
         });
@@ -392,11 +399,26 @@ document.addEventListener("DOMContentLoaded", function () {
         const tipo = elements.filtroTipo.value;
         const fecha = elements.filtroFecha.value;
         let filteredMantenimientos = mantenimientos;
+        const toLocalDateFormat = (dateStr) => {
+            if (!dateStr)
+                return 'N/A';
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                console.error(`Invalid date format: ${dateStr}`);
+                return 'N/A';
+            }
+            const [year, month, day] = dateStr.split('-');
+            return `${day}-${month}-${year}`; // e.g., "2025-05-28" -> "28-05-2025"
+        };
         if (tipo) {
             filteredMantenimientos = filteredMantenimientos.filter(m => m.tipoMantenimiento === tipo);
         }
         if (fecha) {
-            filteredMantenimientos = filteredMantenimientos.filter(m => m.fechaMantenimiento === fecha);
+            const fechaLocal = toLocalDateFormat(fecha); // Convert to DD-MM-YYYYAdd commentMore actions
+            filteredMantenimientos = filteredMantenimientos.filter(m => {
+                const maintenanceDate = toLocalDateFormat(m.fechaMantenimiento); // Use the string fieldAdd commentMore actions
+                console.log(`Comparing fecha: ${fechaLocal} with maintenanceDate: ${maintenanceDate}`);
+                return maintenanceDate === fechaLocal;
+            });
         }
         console.log('Mantenimientos filtrados:', filteredMantenimientos);
         elements.tablaMantenimientosBody.innerHTML = '';
@@ -429,20 +451,20 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json();
             console.log(`Respuesta de kilometraje para unidad ${idUnidad}:`, data);
             console.log(`Tipo de data.data:`, typeof data.data);
-            let km;
+            let kmActual;
             if (data.data !== undefined) {
-                km = parseFloat(data.data);
+                kmActual = parseFloat(data.data);
             } else if (typeof data === 'number' || typeof data === 'string') {
-                km = parseFloat(data);
+                kmActual = parseFloat(data);
             } else {
-                km = 0;
+                kmActual = 0;
             }
-            if (isNaN(km) || km < 0) {
-                console.warn(`Kilometraje inválido para unidad ${idUnidad}: ${km}`);
-                km = 0;
+            if (isNaN(kmActual) || kmActual < 0) {
+                console.warn(`Kilometraje inválido para unidad ${idUnidad}: ${kmActual}`);
+                kmActual = 0;
             }
-            console.log(`Kilometraje parseado para unidad ${idUnidad}: ${km}`);
-            return km;
+            console.log(`Kilometraje parseado para unidad ${idUnidad}: ${kmActual}`);
+            return kmActual;
         } catch (error) {
             console.error(`Error al obtener kilometraje para unidad ${idUnidad}:`, error);
             if (retryCount > 0) {
@@ -455,12 +477,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function checkMaintenanceAlert(idUnidad, kmActual, tipoVehiculo) {
         try {
+
+
+            const unidad = unidades.find(u => u.idUnidad === idUnidad);
+            if (!unidad) {
+                console.error(`Unidad ${idUnidad} no encontrada`);
+                return {needsMaintenance: false};
+            }
+            // Ensure kmMantenimiento is a number, default to MAINTENANCE_INTERVAL if invalid
+            const kmMantenimiento = Number(unidad.kmMantenimiento) || MAINTENANCE_INTERVAL;
+            console.log(`Unidad ${idUnidad}: kmMantenimiento=${kmMantenimiento}`);
             const response = await fetch(`https://transportesnaches.com.mx/api/unidad/getMantenimientosPorUnidad/${idUnidad}`, {
                 method: 'GET',
                 headers: {'Content-Type': 'application/json'}
             });
-            if (!response.ok)
+            if (!response.ok) {
                 throw new Error('No se pudieron cargar los mantenimientos');
+            }
             const mantenimientos = await response.json();
             console.log(`Mantenimientos para unidad ${idUnidad}:`, mantenimientos);
             if (!Array.isArray(mantenimientos) || mantenimientos.length === 0) {
@@ -469,7 +502,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             const latestMantenimiento = mantenimientos[0]; // Sorted by fechaMantenimiento DESC
             const lastKmMantenimiento = Number(latestMantenimiento.kmActual) || 0;
-            const threshold = lastKmMantenimiento + MAINTENANCE_INTERVAL - MAINTENANCE_THRESHOLD;
+            const threshold = lastKmMantenimiento + (kmMantenimiento || MAINTENANCE_INTERVAL) - MAINTENANCE_THRESHOLD;
             if (kmActual >= threshold) {
                 return {
                     needsMaintenance: true,
@@ -506,17 +539,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const alerts = [];
             const activeUnits = unidades.filter(u => u.activoUnidad);
             console.log(`Verificando ${activeUnits.length} unidades activas`);
-
             const promises = activeUnits.map(async (unidad) => {
                 const [kmResult, maintenanceResult, policyResult] = await Promise.all([
                     fetchLatestKilometraje(unidad.idUnidad),
                     checkMaintenanceAlert(unidad.idUnidad, await fetchLatestKilometraje(unidad.idUnidad), unidad.tipoVehiculo),
                     Promise.resolve(checkPolicyExpiration(unidad))
                 ]);
-
                 unidad._needsMaintenance = maintenanceResult.needsMaintenance;
                 unidad._policyExpiring = policyResult.needsAlert;
-
                 if (maintenanceResult.needsMaintenance) {
                     alerts.push(maintenanceResult.message);
                 }
@@ -526,7 +556,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 return unidad;
             });
-
             await Promise.all(promises);
             mostrarUnidades(); // Update table with warning icons
 
@@ -591,7 +620,6 @@ document.addEventListener("DOMContentLoaded", function () {
             elements.nuevoMantenimientoModal.classList.add('show');
             console.log('nuevoMantenimientoModal displayed');
             document.getElementById("mantenimientoFecha").focus();
-
             const maintenanceResult = await checkMaintenanceAlert(currentIdUnidad, kmActual, unidad.tipoVehiculo);
             const policyResult = checkPolicyExpiration(unidad);
             const modalAlerts = [];
@@ -599,7 +627,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 modalAlerts.push(maintenanceResult.message);
             if (policyResult.needsAlert)
                 modalAlerts.push(policyResult.message);
-
             if (modalAlerts.length > 0) {
                 Swal.fire({
                     title: 'Alertas de Unidad',
@@ -624,33 +651,29 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     async function guardarMantenimiento() {
-        const inputs = {
-            fecha: document.getElementById("mantenimientoFecha"),
-            tipo: document.getElementById("mantenimientoTipo"),
-            idUnidad: document.getElementById("mantenimientoIdUnidad"),
-            kmActual: document.getElementById("mantenimientoKmActual")
-        };
-        if (!inputs.fecha || !inputs.tipo || !inputs.idUnidad || !inputs.kmActual) {
+        const fecha = document.getElementById("mantenimientoFecha").value;
+        const tipo = document.getElementById("mantenimientoTipo").value;
+        const idUnidad = parseInt(document.getElementById("mantenimientoIdUnidad").value);
+        const kmActual = document.getElementById("mantenimientoKmActual").value;
+
+        if (!fecha || !tipo || !idUnidad || !kmActual) {
             mostrarError('Error', 'Campos del formulario no encontrados.');
             return;
         }
-        const idUnidad = parseInt(inputs.idUnidad.value);
-        let kmActual = parseInt(inputs.kmActual.value);
-        // Validate inputs
         let isValid = true;
-        if (!inputs.fecha.value) {
+        if (!fecha) {
             showErrorMessage('mantenimientoFecha', 'fechaError', true);
             isValid = false;
         } else {
             showErrorMessage('mantenimientoFecha', 'fechaError', false);
         }
-        if (!inputs.tipo.value) {
+        if (!tipo) {
             showErrorMessage('mantenimientoTipo', 'tipoError', true);
             isValid = false;
         } else {
             showErrorMessage('mantenimientoTipo', 'tipoError', false);
         }
-        if (kmActual <= 0 || inputs.kmActual.value === '') {
+        if (kmActual <= 0 || kmActual.value === '') {
             showErrorMessage('mantenimientoKmActual', 'kmError', true);
             isValid = false;
         } else {
@@ -665,11 +688,12 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         const mantenimientoData = {
-            idUnidad: idUnidad,
-            fechaMantenimiento: inputs.fecha.value,
-            tipoMantenimiento: inputs.tipo.value,
-            kmActual: kmActual,
-            kilometraje: kmActual // Fallback for possible backend field name
+            unidad: {
+                idUnidad: idUnidad
+            },
+            fechaMantenimiento: fecha,
+            tipoMantenimiento: tipo,
+            kmActual: kmActual
         };
         console.log('Enviando mantenimiento:', mantenimientoData);
         try {
@@ -710,6 +734,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function setDetalleVisible(visible) {
         elements.formUnidad.classList.toggle('hidden', !visible);
+        elements.tblEncabezado.classList.toggle('hidden', visible);
         elements.tblUnidad.classList.toggle('hidden', visible);
         if (!visible)
             limpiarFormulario();
@@ -741,5 +766,3 @@ document.addEventListener("DOMContentLoaded", function () {
     window.reactivarUnidad = reactivarUnidad;
     window.mostrarMantenimientos = mostrarMantenimientos;
 });
-
-

@@ -13,8 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     inputEstado.addEventListener('input', async function () {
         const query = inputEstado.value.trim();
 
-        if (query.length < 2)
-            return; // Esperar al menos 2 letras
+        if (query.length < 2) return; // Esperar al menos 2 letras
 
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/ciudad/getAllCiudades?query=${encodeURIComponent(query)}`);
@@ -90,21 +89,27 @@ document.addEventListener("DOMContentLoaded", function () {
         let contenido = '';
         ciudades.forEach(ciudad => {
             contenido += `
-                <tr>
-                    <td class="px-4 py-2 text-sm">${ciudad.nombreCiudad || ''}</td>
-                    <td class="px-4 py-2 text-sm">${ciudad.estado?.nombreEstado || ''}</td>
-                    <td class="px-4 py-2 text-sm text-gray-800 text-center">
-                        <button onclick="cargarDetalleCiudad(${ciudad.idCiudad})" class="text-blue-500 hover:text-blue-700 mr-2" title="Editar">
+                <div class="ciudad-item bg-white rounded-lg p-3 flex items-center justify-between gap-3 border border-orange-100">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-city text-orange-600 text-lg"></i>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm">${ciudad.nombreCiudad || 'Sin Nombre'}</h3>
+                            <p class="text-xs text-gray-600">${ciudad.estado?.nombreEstado || 'Sin Estado'}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="cargarDetalleCiudad(${ciudad.idCiudad})" class="text-blue-500 hover:text-blue-700" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button onclick="eliminarCiudad(${ciudad.idCiudad})" class="text-red-500 hover:text-red-700" title="Eliminar">
                             <i class="fas fa-trash-alt"></i>
                         </button>
-                    </td>
-                </tr>
+                    </div>
+                </div>
             `;
         });
         tblCiudad.innerHTML = contenido;
+        buscarCiudades(); // Apply search filter after rendering
     }
 
     function normalizeString(str) {
@@ -116,12 +121,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function buscarCiudades() {
         const termino = normalizeString(txtBuscar.value);
-        const filas = tblCiudad.querySelectorAll("tr");
-
-        filas.forEach(fila => {
-            const nombreCiudad = normalizeString(fila.querySelector("td:nth-child(1)").textContent);
-            const nombreEstado = normalizeString(fila.querySelector("td:nth-child(2)").textContent);
-            fila.style.display = nombreCiudad.includes(termino) || nombreEstado.includes(termino) ? '' : 'none';
+        const items = tblCiudad.querySelectorAll(".ciudad-item");
+        items.forEach(item => {
+            const nombreCiudad = normalizeString(item.querySelector("h3").textContent);
+            const nombreEstado = normalizeString(item.querySelector("p").textContent);
+            item.style.display = nombreCiudad.includes(termino) || nombreEstado.includes(termino) ? "" : "none";
         });
     }
 

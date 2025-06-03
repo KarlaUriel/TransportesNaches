@@ -181,10 +181,10 @@ async function cargarDetallesNota() {
         const rendimiento = notaData.unidad?.rendimientoUnidad || 7;
         const precioLitro = notaData.precioLitro || 25.50;
         const noEntrega = parseInt(notaData.noEntrega) || 0;
-        const pagoViaje = ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
+        const pagoViaje = notaData.pagoVIaje ?? ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
 
         document.getElementById('idNota').textContent = notaData.idNota || 'N/A';
-        document.getElementById('numeroFactura').value = await fetchInvoiceNumber(idNota);
+        document.getElementById('numeroFactura').value = notaData.numeroFactura || 'FAC-001';
         document.getElementById('maniobra').textContent = notaData.maniobra ? `$${parseFloat(notaData.maniobra).toFixed(2)}` : 'N/A';
         document.getElementById('maniobraInput').value = notaData.maniobra || '0';
         document.getElementById('comision').textContent = notaData.comision ? `$${parseFloat(notaData.comision).toFixed(2)}` : 'N/A';
@@ -193,7 +193,7 @@ async function cargarDetallesNota() {
         document.getElementById('fechaPago').value = notaData.fechaPago ? new Date(notaData.fechaPago).toISOString().split('T')[0] : '';
         const estadoFactValue = notaData.estadoFact && ['Pendiente', 'Facturado'].includes(notaData.estadoFact) ? notaData.estadoFact : 'Pendiente';
         document.getElementById('estadoFact').value = estadoFactValue;
-        document.getElementById('pagoViaje').value = pagoViaje.toFixed(2);
+        document.getElementById('pagoViaje').value = notaData.pagoVIaje || ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
         document.getElementById('estado').textContent = notaData.fechaLlegada ? 'COMPLETADA' : 'PENDIENTE';
 
         const numeroFacturaInput = document.getElementById('numeroFactura');
@@ -270,7 +270,7 @@ async function cargarDetallesNota() {
         };
         const origenCity = processCityName(notaData.origen);
         const destinoCity = processCityName(notaData.destino);
-        document.getElementById('ruta').textContent = origenCity && destinoCity ? `${origenCity} - ${destinoCity}` : 'N/A';
+        document.getElementById('ruta').textContent = destinoCity || '';
         document.getElementById('origen').value = origenCity || '';
         document.getElementById('destino').value = destinoCity || '';
 
@@ -333,7 +333,7 @@ async function guardarContabilidad() {
     const pago = document.getElementById('isPaid').value === 'true';
     const fechaPago = document.getElementById('fechaPago').value || null;
     let estadoFact = document.getElementById('estadoFact').value;
-
+    const pagoViaje = document.getElementById('pagoViaje').value;
     const maniobra = parseFloat(maniobraInput) || 0;
     const comision = parseFloat(comisionInput) || 0;
     const gananciaCalculada = parseFloat(gananciaCalculadaInput) || 0;
@@ -363,17 +363,15 @@ async function guardarContabilidad() {
     const rendimiento = nota.unidad?.rendimientoUnidad || 7;
     const precioLitro = nota.precioLitro || 25.50;
     const noEntrega = parseInt(nota.noEntrega) || 0;
-    const pagoViaje = ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
+   //  const pagoViaje = ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
     const estado = nota.fechaLlegada ? 'COMPLETADA' : 'PENDIENTE';
 
     let numeroFactura = numeroFacturaInput.value;
-    if (factura === 0 || estadoFact === 'Facturado') {
-        numeroFactura = null;
-    }
+  
 
     const datosActualizados = {
         idNota,
-        numeroFactura: numeroFactura === 'N/A' ? null : numeroFactura,
+        numeroFactura,
         nombreCliente: nota.cliente?.nombreCliente,
         maniobra,
         comision,
@@ -405,7 +403,7 @@ async function guardarContabilidad() {
         const gastosOperativos = updatedNota.gastos ? updatedNota.gastos.reduce((sum, g) => sum + (g.total || 0), 0) : 0;
         const totalGastos = gastosOperativos + maniobra + comision;
 
-        document.getElementById('pagoViaje').value = pagoViaje.toFixed(2);
+        document.getElementById('pagoViaje').value = pagoViaje;
         document.getElementById('maniobra').textContent = maniobra ? `$${maniobra.toFixed(2)}` : 'N/A';
         document.getElementById('maniobraInput').value = maniobra;
         document.getElementById('comision').textContent = comision ? `$${comision.toFixed(2)}` : 'N/A';
@@ -444,7 +442,7 @@ async function guardarContabilidad() {
 function toggleEditContabilidad() {
     isEditingContabilidad = !isEditingContabilidad;
     const fields = ['maniobra', 'comision', 'gananciaCalculada'];
-    const inputs = ['numeroFactura', 'estadoFact', 'isPaid', 'fechaPago'];
+    const inputs = ['numeroFactura', 'pagoViaje', 'estadoFact', 'isPaid', 'fechaPago'];
 
     fields.forEach(field => {
         const span = document.getElementById(field);
@@ -693,6 +691,7 @@ function configurarBotones() {
             document.getElementById('gananciaCalculadaInput').value = notaData.gananciaCalculada || '0';
         });
     }
+    
 
     if (toggleSidebarBtn) {
         toggleSidebarBtn.addEventListener('click', toggleSidebar);

@@ -172,6 +172,7 @@ public class RESTUnidad {
 
         return Response.ok(out).build();
     }
+
     @POST
     @Path("registrarMantenimiento")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -216,8 +217,8 @@ public class RESTUnidad {
 
         return Response.ok(out).build();
     }
-    
-     @GET
+
+    @GET
     @Path("getLatestKilometraje/{idUnidad}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLatestKilometraje(@PathParam("idUnidad") int idUnidad) {
@@ -230,8 +231,8 @@ public class RESTUnidad {
                 out = "{\"error\":\"El ID de unidad no es válido.\"}";
                 return Response.status(Response.Status.BAD_REQUEST).entity(out).build();
             }
-            int kilometraje = cu.getLatestKilometraje(idUnidad);
-            out = gson.toJson(kilometraje);
+            int kmActual = cu.getLatestKilometraje(idUnidad);
+            out = gson.toJson(kmActual);
         } catch (Exception e) {
             e.printStackTrace();
             out = """
@@ -243,4 +244,3 @@ public class RESTUnidad {
     }
 
 }
-

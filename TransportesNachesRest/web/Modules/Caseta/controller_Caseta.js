@@ -55,30 +55,41 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         let contenido = '';
         casetas.forEach(caseta => {
+            const isValidUrl = validarURLGoogleMaps(caseta.ubicacion);
             contenido += `
-                <tr>
-                    <td class="px-4 py-2 text-sm">${caseta.nombre || ''}</td>
-                    <td class="px-4 py-2 text-sm text-gray-800">
-                        <button onclick="cargarDetalleCaseta(${caseta.idCaseta})" class="text-blue-500 hover:text-blue-700 mr-2">
+                <div class="caseta-item bg-white rounded-lg p-3 flex items-center justify-between gap-3 border border-orange-100">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-road text-orange-600 text-lg"></i>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm">${caseta.nombre || 'Sin Nombre'}</h3>
+                            <p class="text-xs text-gray-600">
+                                ${isValidUrl 
+                                    ? `<a href="${caseta.ubicacion}" target="_blank" class="text-blue-500 hover:underline">Ver en Google Maps</a>`
+                                    : caseta.ubicacion || 'Sin Ubicación'}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="cargarDetalleCaseta(${caseta.idCaseta})" class="text-blue-500 hover:text-blue-700">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button onclick="eliminarCaseta(${caseta.idCaseta})" class="text-red-500 hover:text-red-700">
                             <i class="fas fa-trash-alt"></i>
                         </button>
-                    </td>
-                </tr>
+                    </div>
+                </div>
             `;
         });
         tblCaseta.innerHTML = contenido;
+        buscarCasetas(); // Apply search filter after rendering
     }
 
     function buscarCasetas() {
-        const termino = txtBuscar.value.toLowerCase();
-        const filas = tblCaseta.querySelectorAll("tr");
-
-        filas.forEach(fila => {
-            const nombre = fila.querySelector("td:nth-child(1)").textContent.toLowerCase();
-            fila.style.display = nombre.includes(termino) ? '' : 'none';
+        const termino = txtBuscar.value.toLowerCase().trim();
+        const items = tblCaseta.querySelectorAll(".caseta-item");
+        items.forEach(item => {
+            const nombre = item.querySelector("h3").textContent.toLowerCase().trim();
+            item.style.display = nombre.includes(termino) ? "" : "none";
         });
     }
 
@@ -91,6 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.getElementById("idCaseta").value = caseta.idCaseta || '';
         document.getElementById("nombre").value = caseta.nombre || '';
+        document.getElementById("ubicacion").value = caseta.ubicacion || '';
         setDetalleVisible(true);
     }
 
@@ -131,18 +143,26 @@ document.addEventListener("DOMContentLoaded", function () {
             mostrarError('Error', 'No se pudo eliminar la caseta: ' + error.message);
         }
     }
+
     async function guardarCaseta() {
         const nombre = document.getElementById("nombre").value.trim().toLowerCase();
-        const casetaExistente = casetas.find(c => c.nombre.toLowerCase() === nombre);
+        const ubicacion = document.getElementById("ubicacion").value.trim();
+        const casetaExistente = casetas.find(c => c.nombre.toLowerCase() === nombre && c.idCaseta != (document.getElementById("idCaseta").value || 0));
 
         if (casetaExistente) {
             mostrarError('Duplicado', 'Ya existe una caseta con ese nombre');
             return;
         }
 
+        if (ubicacion && !validarURLGoogleMaps(ubicacion)) {
+            mostrarError('Error', 'La ubicación debe ser un enlace válido de Google Maps');
+            return;
+        }
+
         const casetaData = {
             idCaseta: document.getElementById("idCaseta").value || 0,
-            nombre: document.getElementById("nombre").value
+            nombre: document.getElementById("nombre").value,
+            ubicacion: ubicacion || null
         };
 
         try {
@@ -177,6 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function limpiarFormulario() {
         document.getElementById("idCaseta").value = '';
         document.getElementById("nombre").value = '';
+        document.getElementById("ubicacion").value = '';
     }
 
     function setDetalleVisible(visible) {
@@ -206,6 +227,12 @@ document.addEventListener("DOMContentLoaded", function () {
             icon: 'success',
             confirmButtonText: 'Aceptar'
         });
+    }
+
+    function validarURLGoogleMaps(url) {
+        if (!url) return false;
+        const regex = /^https:\/\/(www\.)?google\.com\/maps\//;
+        return regex.test(url);
     }
 
     window.cargarDetalleCaseta = cargarDetalleCaseta;

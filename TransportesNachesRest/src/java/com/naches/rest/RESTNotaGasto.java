@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.naches.controller.ControllerNotaGasto;
 import com.naches.model.Contabilidad;
 import com.naches.model.NotaGasto;
+import com.naches.model.NotaGastoResponse;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.FormParam;
@@ -30,19 +31,28 @@ public class RESTNotaGasto {
     @GET
     @Path("getAll")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAll(@QueryParam("page") @DefaultValue("0") int page,
-            @QueryParam("size") @DefaultValue("20") int size) {
+    public Response getAll(
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("20") int size,
+            @QueryParam("year") Integer year,
+            @QueryParam("month") Integer month,
+            @QueryParam("operator") String operator,
+            @QueryParam("weekStart") String weekStart) {
         String out;
         ControllerNotaGasto cng = new ControllerNotaGasto();
         try {
-            List<NotaGasto> notas = cng.getAll(page, size);
-            long totalElements = cng.countAll(); // Add method to count total notes
+            // Use the updated getAll method that returns NotaGastoResponse
+            NotaGastoResponse notaGastoResponse = cng.getAll(page, size, year, month, operator, weekStart);
+
+            // Build the response map
             Map<String, Object> response = new HashMap<>();
-            response.put("content", notas);
-            response.put("totalElements", totalElements);
-            response.put("totalPages", (int) Math.ceil((double) totalElements / size));
+            response.put("content", notaGastoResponse.getContent());
+            response.put("totalElements", notaGastoResponse.getTotalElements());
+            response.put("totalPages", (int) Math.ceil((double) notaGastoResponse.getTotalElements() / size));
             response.put("pageNumber", page);
             response.put("pageSize", size);
+            response.put("financialSummary", notaGastoResponse.getFinancialSummary());
+
             out = new Gson().toJson(response);
         } catch (Exception e) {
             e.printStackTrace();
@@ -207,8 +217,7 @@ public class RESTNotaGasto {
 
         return Response.ok(out).build();
     }
-    
-    
+
     @POST
     @Path("delete")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -238,5 +247,4 @@ public class RESTNotaGasto {
         return Response.ok(out).build();
     }
 
-    
 }

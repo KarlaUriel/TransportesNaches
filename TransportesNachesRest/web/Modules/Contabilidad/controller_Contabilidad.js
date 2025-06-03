@@ -64,7 +64,7 @@ async function cargarNotas() {
         notasMostradas = 0; // Reiniciar contador
         // Mostrar solo notas del mes actual
         const notasMesActual = getNotasMesActual();
-        mostrarNotas(notasMesActual.slice(0, notasPorPagina));
+        mostrarNotas(todasLasNotas.slice(0, notasPorPagina));
         actualizarBotonCargarMas(notasMesActual);
         setTimeout(() => {
             llenarSelectores(todasLasNotas); // Usar todas las notas para los filtros
@@ -107,7 +107,8 @@ function actualizarBotonCargarMas(notas) {
 function cargarMasNotas() {
     notasMostradas += notasPorPagina;
     const notasMesActual = getNotasMesActual();
-    mostrarNotas(notasMesActual.slice(0, notasMostradas));
+
+    mostrarNotas(notasMostradas);
     actualizarBotonCargarMas(notasMesActual);
 }
 
@@ -478,6 +479,31 @@ document.addEventListener('DOMContentLoaded', () => {
             cargarNotas(0, notasPorPagina);
         });
     }
+
+    // Configurar eventos para los botones de filtros
+    const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', applyFilters);
+    }
+
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', clearFilters);
+    }
+
+    // Configurar evento para el botón "Cargar más"
+    const cargarMasBtn = document.getElementById('cargarMasBtn');
+    if (cargarMasBtn) {
+        cargarMasBtn.addEventListener('click', cargarMasNotas);
+    }
+
+    // Configurar eventos para el panel de filtros
+    document.getElementById('toggleFilterPanel').addEventListener('click', toggleFilterPanel);
+    document.getElementById('closeFilterPanel').addEventListener('click', closeFilterPanel);
+
+    cargarNotas();
+
 });
 
 document.getElementById('descargarExcel').addEventListener('click', () => {
@@ -722,7 +748,7 @@ function calcularGastosAnualesTotal(anio) {
             .reduce((suma, gasto) => suma + (gasto.monto || 0), 0);
 }
 
-function mostrarNotas(notas) {
+function mostrarNotas(notas, financialSummary = {}) {
     console.time('mostrarNotas');
     const contenedor = document.getElementById('notasContainer');
     const fragment = document.createDocumentFragment();
@@ -742,70 +768,82 @@ function mostrarNotas(notas) {
     let totalGastosConAnuales = 0;
     let totalGastosConAnualesD = 0;
 
-    // Usar todasLasNotas para cálculos financieros
-    let notasFinancieras = [...todasLasNotas];
-    let anioSeleccionado = currentFilters.resumenAnio === 'todos' ? new Date().getFullYear() : parseInt(currentFilters.resumenAnio);
-    if (currentFilters.resumenMes !== 'todos' && currentFilters.resumenAnio !== 'todos') {
-        const mes = parseInt(currentFilters.resumenMes);
-        notasFinancieras = notasFinancieras.filter(nota => {
-            if (!nota.fechaSalida)
-                return false;
-            const fecha = new Date(nota.fechaSalida);
-            return fecha.getMonth() === mes && fecha.getFullYear() === parseInt(currentFilters.resumenAnio);
-        });
-    }
-
-    const operadorSeleccionado = currentFilters.operador;
-    const semanaSeleccionada = currentFilters.semana;
-
-    if (currentFilters.resumenMes !== 'todos' && currentFilters.resumenAnio !== 'todos') {
-        gastosAnualesTotal = calcularGastosAnualesTotal(anioSeleccionado);
-        gastosAnualesDiarios = gastosAnualesTotal / 365;
+    // Use financialSummary from API if available, otherwise calculate client-side
+    if (Object.keys(financialSummary).length > 0) {
+        totalIngresos = financialSummary.totalIngresos || 0;
+        totalGastosOperativos = financialSummary.totalGastosOperativos || 0;
+        totalManiobra = financialSummary.totalManiobra || 0;
+        totalComision = financialSummary.totalComision || 0;
+        totalGastos = financialSummary.totalGastos || 0;
+        totalGananciaNotas = financialSummary.totalGananciaNotas || 0;
+        totalNomina = financialSummary.totalNomina || 0;
+        gastosAnualesDiarios = financialSummary.gastosAnualesDiarios || 0;
+        gastosAnualesTotal = financialSummary.gastosAnualesTotal || 0;
+        totalGastosConAnuales = financialSummary.totalGastosConAnuales || 0;
+        totalGastosConAnualesD = financialSummary.totalGastosConAnualesDiarios || 0;
     } else {
-        gastosAnualesTotal = gastosAnuales.reduce((suma, gasto) => suma + (gasto.monto || 0), 0);
-        gastosAnualesDiarios = gastosAnualesTotal / 365;
-    }
-
-    // Calcular totales con todasLasNotas
-    notasFinancieras.forEach(nota => {
-        const distancia = (nota.kmFinal && nota.kmInicio) ? nota.kmFinal - nota.kmInicio : 0;
-        const rendimiento = nota.unidad?.rendimientoUnidad || 7;
-        const precioLitro = nota.valorLitro || 25.50;
-        const noEntrega = parseInt(nota.noEntrega) || 0;
-        const pagoViaje = ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
-        const gastosOperativos = nota.gastos ? nota.gastos.reduce((sum, g) => sum + (g.total || 0), 0) : 0;
-        const maniobra = parseFloat(nota.maniobra) || 0;
-        const comision = parseFloat(nota.comision) || 0;
-        const totalGastosNota = gastosOperativos + maniobra + comision;
-        
-
-        totalGastosOperativos += gastosOperativos;
-        totalManiobra += maniobra;
-        totalComision += comision;
-        totalIngresos += pagoViaje;
-        totalNomina += comision + maniobra;
-
-        totalGastos = totalGastosOperativos + totalManiobra + totalComision;
-        totalGastosConAnuales = totalGastos + gastosAnualesTotal;
-        totalGastosConAnualesD = totalGastosConAnuales / 365;
-
-
-
-        if (semanaSeleccionada !== 'todos') {
-            const semanaInicio = new Date(semanaSeleccionada);
-            const semanaFin = new Date(semanaInicio);
-            semanaFin.setDate(semanaInicio.getDate() + 6);
-            const fecha = new Date(nota.fechaSalida);
-            if (fecha >= semanaInicio && fecha <= semanaFin && (operadorSeleccionado === 'todos' || nota.nombreOperador === operadorSeleccionado)) {
-                totalNomina += comision + maniobra;
-            }
-        } else if (operadorSeleccionado !== 'todos' && nota.nombreOperador === operadorSeleccionado) {
-            totalNomina += comision + maniobra;
+        // Fallback to client-side calculations
+        let notasFinancieras = [...todasLasNotas];
+        let anioSeleccionado = currentFilters.resumenAnio === 'todos' ? new Date().getFullYear() : parseInt(currentFilters.resumenAnio);
+        if (currentFilters.resumenMes !== 'todos' && currentFilters.resumenAnio !== 'todos') {
+            const mes = parseInt(currentFilters.resumenMes);
+            notasFinancieras = notasFinancieras.filter(nota => {
+                if (!nota.fechaSalida)
+                    return false;
+                const fecha = new Date(nota.fechaSalida);
+                return fecha.getMonth() === mes && fecha.getFullYear() === parseInt(currentFilters.resumenAnio);
+            });
         }
 
-        const gananciaCalculada = pagoViaje - totalGastosNota;
-        totalGananciaNotas += gananciaCalculada;
-    });
+        const operadorSeleccionado = currentFilters.operador;
+        const semanaSeleccionada = currentFilters.semana;
+
+        if (currentFilters.resumenMes !== 'todos' && currentFilters.resumenAnio !== 'todos') {
+            gastosAnualesTotal = calcularGastosAnualesTotal ? calcularGastosAnualesTotal(anioSeleccionado) : gastosAnuales.reduce((suma, gasto) => suma + (gasto.monto || 0), 0);
+            gastosAnualesDiarios = gastosAnualesTotal / 365;
+        } else {
+            gastosAnualesTotal = gastosAnuales.reduce((suma, gasto) => suma + (gasto.monto || 0), 0);
+            gastosAnualesDiarios = gastosAnualesTotal / 365;
+        }
+
+        // Calcular totales con todasLasNotas
+        notasFinancieras.forEach(nota => {
+            const distancia = (nota.kmFinal && nota.kmInicio) ? nota.kmFinal - nota.kmInicio : 0;
+            const rendimiento = nota.unidad?.rendimientoUnidad || 7;
+            const precioLitro = nota.valorLitro || 25.50;
+            const noEntrega = parseInt(nota.noEntrega) || 0;
+            const pagoViaje = nota.pagoViaje != null ? nota.pagoViaje : ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
+            const gastosOperativos = nota.gastos ? nota.gastos.reduce((sum, g) => sum + (g.total || 0), 0) : 0;
+            const maniobra = parseFloat(nota.maniobra) || 0;
+            const comision = parseFloat(nota.comision) || 0;
+            const totalGastosNota = gastosOperativos + maniobra + comision;
+
+            totalGastosOperativos += gastosOperativos;
+            totalManiobra += maniobra;
+            totalComision += comision;
+            totalIngresos += pagoViaje;
+            totalNomina += comision + maniobra;
+
+            totalGastos = totalGastosOperativos + totalManiobra + totalComision;
+            totalGastosConAnuales = totalGastos + gastosAnualesTotal;
+            totalGastosConAnualesD = totalGastosConAnuales / 365;
+
+            if (semanaSeleccionada !== 'todos') {
+                const semanaInicio = new Date(semanaSeleccionada);
+                const semanaFin = new Date(semanaInicio);
+                semanaFin.setDate(semanaInicio.getDate() + 6);
+                const fecha = new Date(nota.fechaSalida);
+                if (fecha >= semanaInicio && fecha <= semanaFin && (operadorSeleccionado === 'todos' || nota.nombreOperador === operadorSeleccionado)) {
+                    totalNomina += comision + maniobra;
+                }
+            } else if (operadorSeleccionado !== 'todos' && nota.nombreOperador === operadorSeleccionado) {
+                totalNomina += comision + maniobra;
+            }
+
+            const gananciaCalculada = pagoViaje - totalGastosNota;
+            totalGananciaNotas += gananciaCalculada;
+        });
+    }
 
     // Mostrar solo las notas recibidas (del mes actual o filtradas)
     notas.forEach(nota => {
@@ -852,7 +890,7 @@ function mostrarNotas(notas) {
         const rendimiento = nota.unidad?.rendimientoUnidad || 7;
         const precioLitro = nota.valorLitro || 25.50;
         const noEntrega = parseInt(nota.noEntrega) || 0;
-        const pagoViaje = ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
+        const pagoViaje = nota.pagoViaje != null ? nota.pagoViaje : ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
         const gastosOperativos = nota.gastos ? nota.gastos.reduce((sum, g) => sum + (g.total || 0), 0) : 0;
         const maniobra = parseFloat(nota.maniobra) || 0;
         const comision = parseFloat(nota.comision) || 0;
@@ -875,7 +913,7 @@ function mostrarNotas(notas) {
             </div>
             <div class="grid grid-cols-2 gap-2 text-sm text-gray-800">
                 <div>
-                    <span class="font-semibold">N.º Nota.:</span> ${nota.idNota || 'N/A'}
+                    <span class="font-semibold">N.º Nota:</span> ${nota.idNota || 'N/A'}
                 </div>
                 <div class="flex items-center">
                     <span class="font-semibold mr-1">N.º Factura:</span> ${numeroFactura || 'N/A'}
@@ -925,8 +963,6 @@ function mostrarNotas(notas) {
             </div>
         `;
 
-
-
         card.addEventListener('click', (e) => {
             if (!e.target.closest('.delete-btn') && !e.target.closest('.factura-input')) {
                 window.location.href = `/detalle?id=${nota.idNota}`;
@@ -939,334 +975,408 @@ function mostrarNotas(notas) {
     contenedor.innerHTML = '';
     contenedor.appendChild(fragment);
 
-    const gananciaNeta = totalIngresos - totalGastos;
-    const margenGanancia = totalIngresos > 0 ? ((gananciaNeta / totalIngresos) * 100).toFixed(2) : 0;
-    const porcentajeGastosOperativos = totalGastos > 0 ? ((totalGastosOperativos / totalGastos) * 100).toFixed(2) : 0;
-    const porcentajeManiobra = totalGastos > 0 ? ((totalManiobra / totalGastos) * 100).toFixed(2) : 0;
-    const porcentajeComision = totalGastos > 0 ? ((totalComision / totalGastos) * 100).toFixed(2) : 0;
-    const porcentajeGastosAnualesDiarios = totalGastos > 0 ? ((gastosAnualesDiarios / totalGastos) * 100).toFixed(2) : 0;
-    const porcentajeGastosAnualesTotal = totalGastos > 0 ? ((gastosAnualesTotal / totalGastos) * 100).toFixed(2) : 0;
-    const porcentajeNomina = totalGastos > 0 ? ((totalNomina / totalGastos) * 100).toFixed(2) : 0;
-    const resumenContainer = document.getElementById('resumenFinancieroContainer');
+    // Remove existing modal if present to prevent duplicates
+    const existingOverlay = document.getElementById('resumenContainer');
+    if (existingOverlay) {
+        existingOverlay.remove();
+    }
 
+    // Create modal but keep it hidden initially
+    const overlay = document.createElement('div');
+    overlay.id = 'resumenContainer';
+    overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 hidden';
+
+    const content = document.createElement('div');
+    content.className = 'bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative p-6';
+
+    const closeButton = document.createElement('button');
+    closeButton.className = 'absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold';
+    closeButton.innerHTML = '×';
+    closeButton.onclick = () => {
+        overlay.classList.add('hidden');
+    };
+
+    const gananciaNeta = financialSummary.gananciaNeta || totalIngresos - totalGastos;
+    const margenGanancia = financialSummary.margenGanancia || (totalIngresos > 0 ? ((gananciaNeta / totalIngresos) * 100).toFixed(2) : 0);
+    const porcentajeGastosOperativos = financialSummary.porcentajeGastosOperativos || (totalGastos > 0 ? ((totalGastosOperativos / totalGastos) * 100).toFixed(2) : 0);
+    const porcentajeManiobra = financialSummary.porcentajeManiobra || (totalGastos > 0 ? ((totalManiobra / totalGastos) * 100).toFixed(2) : 0);
+    const porcentajeComision = financialSummary.porcentajeComision || (totalGastos > 0 ? ((totalComision / totalGastos) * 100).toFixed(2) : 0);
+    const porcentajeGastosAnualesDiarios = financialSummary.porcentajeGastosAnualesDiarios || (totalGastos > 0 ? ((gastosAnualesDiarios / totalGastos) * 100).toFixed(2) : 0);
+    const porcentajeGastosAnualesTotal = financialSummary.porcentajeGastosAnualesTotal || (totalGastos > 0 ? ((gastosAnualesTotal / totalGastos) * 100).toFixed(2) : 0);
+    const porcentajeNomina = financialSummary.porcentajeNomina || (totalGastos > 0 ? ((totalNomina / totalGastos) * 100).toFixed(2) : 0);
+
+    const resumenContainer = document.createElement('div');
+    resumenContainer.id = 'resumenFinancieroContainer';
+    resumenContainer.className = 'space-y-6';
 
     resumenContainer.innerHTML = `
-        <div class="financial-panel">
-            <h2 class="financial-header">
-                <i class="fas fa-chart-line mr-2"></i> Resumen Financiero
-            </h2>
-            
-
-        <div class="financial-panel">
-            <h3 class="financial-subheader">Indicadores Clave</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="kpi-card">
-                    <h4>Total Ingresos</h4>
-                    <p id="kpiIngresos">$${totalIngresos}</p>
-                </div>
-                <div class="kpi-card">
-                    <h4>Total Gastos</h4>
-                    <p id="kpiGastos">$${totalGastos.toFixed(2)}</p>
-                </div>
-                <div class="kpi-card">
-                    <h4>Ganancia Neta</h4>
-                    <p id="kpiGananciaNeta">$${gananciaNeta.toFixed(2)}</p>
-                </div>
-                <div class="kpi-card">
-                    <h4>Margen de Ganancia</h4>
-                    <p id="kpiMargenGanancia">${margenGanancia}%</p>
+        <!-- Header Card -->
+        <div class="card">
+            <div class="card-content">
+                <div class="flex items-center justify-between">
+                    <div class="widget-label">
+                        <h3 class="text-xl font-semibold text-gray-700">Resumen Financiero</h3>
+                    </div>
+                    <span class="icon widget-icon text-blue-500"><i class="mdi mdi-chart-line mdi-24px"></i></span>
                 </div>
             </div>
         </div>
 
-        <div class="financial-panel">
-            <h3 class="financial-subheader">Ingresos</h3>
-            <table class="financial-table">
-                <thead>
-                    <tr>
-                        <th>Concepto</th>
-                        <th>Monto</th>
-                        <th>% del Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Total de Ingresos</td>
-                        <td class="value" id="totalIngresos">$${totalIngresos}</td>
-                        <td>100%</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="financial-panel">
-            <h3 class="financial-subheader">Gastos</h3>
-            <table class="financial-table">
-                <thead>
-                    <tr>
-                        <th>Concepto</th>
-                        <th>Monto</th>
-                        <th>% del Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Gastos Operativos</td>
-                        <td class="value" id="gastosOperativos">$${totalGastosOperativos ? `${totalGastosOperativos.toFixed(2)}` : 'N/A'}</td>
-                        <td id="porcentajeGastosOperativos">${porcentajeGastosOperativos}%</td>
-                    </tr>
-                    <tr>
-                        <td>Maniobra</td>
-                        <td class="value" id="maniobra">$${totalManiobra ? `${totalManiobra.toFixed(2)}` : 'N/A' }</td>
-                        <td id="porcentajeManiobra">${porcentajeManiobra}%</td>
-                    </tr>
-                    <tr>
-                        <td>Comisión</td>
-                        <td class="value" id="comision">$${totalComision ? `${totalComision.toFixed(2)}` : 'N/A'}</td>
-                        <td id="porcentajeComision">${porcentajeComision}%</td>
-                    </tr>
-                    <tr>
-                        <td>Gastos Anuales Fijos (Diarios)</td>
-                        <td class="value" id="gastosAnualesDiarios">$${gastosAnualesDiarios.toFixed(2)}</td>
-                        <td id="porcentajeGastosAnualesDiarios">${porcentajeGastosAnualesDiarios}%</td>
-                    </tr>
-                    <tr>
-                        <td>Gastos Anuales Fijos (Total)</td>
-                        <td class="value" id="gastosAnualesTotal">$${gastosAnualesTotal.toFixed(2)}</td>
-                        <td id="porcentajeGastosAnualesTotal">${porcentajeGastosAnualesTotal}%</td>
-                    </tr>
-                    <tr class="font-semibold bg-gray-50">
-                        <td>Total de Gastos sin Anuales</td>
-                        <td class="value" id="totalGastos">$${totalGastos}</td>
-                        <td>100%</td>
-                    </tr>
-                    <tr class="font-semibold bg-gray-50">
-                        <td>Total de Gastos + Anuales (Diario) </td>
-                        <td class="value" id="totalGastosConAnualesD">$${totalGastosConAnualesD.toFixed(2)}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="financial-panel">
-            <h3 class="financial-subheader">Ganancias</h3>
-            <table class="financial-table">
-                <thead>
-                    <tr>
-                        <th>Concepto</th>
-                        <th>Monto</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Ganancia Neta</td>
-                        <td class="value" id="gananciaNeta">$${gananciaNeta.toFixed(2)}</td>
-                        <td id="estadoGananciaNeta" class="${gananciaNeta >= 0 ? 'positive' : 'negative'}">${gananciaNeta >= 0 ? 'Positiva' : 'Negativa'}</td>
-                    </tr>
-                    <tr>
-                        <td>Ganancia Mensual</td>
-                        <td class="value" id="gananciaMensual">$${gananciaNeta.toFixed(2)}</td>
-                        <td id="estadoGananciaMensual" class="${gananciaNeta >= 0 ? 'positive' : 'negative'}">${gananciaNeta >= 0 ? 'Positiva' : 'Negativa'}</td>
-                    </tr>
-                    <tr>
-                        <td>Ganancia Anual</td>
-                        <td class="value" id="gananciaAnual">$${gananciaNeta.toFixed(2)}</td>
-                        <td id="estadoGananciaAnual" class="${gananciaNeta >= 0 ? 'positive' : 'negative'}">${gananciaNeta >= 0 ? 'Positiva' : 'Negativa'}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="financial-panel">
-            <h3 class="financial-subheader">Nómina</h3>
-            <table class="financial-table">
-                <thead>
-                    <tr>
-                        <th>Concepto</th>
-                        <th>Monto</th>
-                        <th>% del Total de Gastos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Total Nómina</td>
-                        <td class="value" id="totalNomina">$${totalNomina.toFixed(2)}</td>
-                        <td id="porcentajeNomina">${porcentajeNomina}%</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="financial-panel">
-            <h3 class="financial-subheader">Análisis Gráfico</h3>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="chart-container">
-                    <h4 class="text-center font-medium text-gray-600 mb-2">Resumen General</h4>
-                    <canvas id="financialChart" class="w-full"></canvas>
+        <!-- KPIs Card -->
+        <div class="card">
+            <div class="card-content">
+                <h4 class="text-lg font-semibold text-gray-700 mb-4 border-b border-blue-200 pb-2">Indicadores Clave</h4>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="p-4 bg-gray-50 rounded-lg text-center">
+                        <h5 class="text-sm font-medium text-gray-600">Total Ingresos</h5>
+                        <p id="kpiIngresos">$${totalIngresos.toFixed(2)}</p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg text-center">
+                        <h5 class="text-sm font-medium text-gray-600">Total Gastos</h5>
+                        <p id="kpiGastos">$${totalGastos.toFixed(2)}</p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg text-center">
+                        <h5 class="text-sm font-medium text-gray-600">Ganancia Neta</h5>
+                        <p id="kpiGananciaNeta">$${gananciaNeta.toFixed(2)}</p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg text-center">
+                        <h5 class="text-sm font-medium text-gray-600">Margen de Ganancia</h5>
+                        <p id="kpiMargenGanancia">${margenGanancia}%</p>
+                    </div>
                 </div>
-                <div class="chart-container">
-                    <h4 class="text-center font-medium text-gray-600 mb-2">Desglose de Gastos</h4>
-                    <canvas id="expenseBreakdownChart" class="w-full"></canvas>
+            </div>
+        </div>
+
+        <!-- Ingresos Card -->
+        <div class="card">
+            <div class="card-content">
+                <h4 class="text-lg font-semibold text-gray-700 mb-4 border-b border-blue-200 pb-2">Ingresos</h4>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-blue-100">
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">Concepto</th>
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">Monto</th>
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">% del Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-4">Total de Ingresos</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="totalIngresos">$${totalIngresos.toFixed(2)}</td>
+                            <td class="py-2 px-4">100%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Gastos Card -->
+        <div class="card">
+            <div class="card-content">
+                <h4 class="text-lg font-semibold text-gray-700 mb-4 border-b border-blue-200 pb-2">Gastos</h4>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-blue-100">
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">Concepto</th>
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">Monto</th>
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">% del Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-4">Gastos Operativos</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="gastosOperativos">$${totalGastosOperativos ? totalGastosOperativos.toFixed(2) : 'N/A'}</td>
+                            <td class="py-2 px-4" id="porcentajeGastosOperativos">${porcentajeGastosOperativos}%</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-4">Maniobra</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="maniobra">$${totalManiobra ? totalManiobra.toFixed(2) : 'N/A'}</td>
+                            <td class="py-2 px-4" id="porcentajeManiobra">${porcentajeManiobra}%</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-4">Comisión</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="comision">$${totalComision ? totalComision.toFixed(2) : 'N/A'}</td>
+                            <td class="py-2 px-4" id="porcentajeComision">${porcentajeComision}%</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-4">Gastos Anuales Fijos (Diarios)</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="gastosAnualesDiarios">$${gastosAnualesDiarios.toFixed(2)}</td>
+                            <td class="py-2 px-4" id="porcentajeGastosAnualesDiarios">${porcentajeGastosAnualesDiarios}%</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-4">Gastos Anuales Fijos (Total)</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="gastosAnualesTotal">$${gastosAnualesTotal.toFixed(2)}</td>
+                            <td class="py-2 px-4" id="porcentajeGastosAnualesTotal">${porcentajeGastosAnualesTotal}%</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 bg-gray-100 font-semibold">
+                            <td class="py-2 px-4">Total de Gastos sin Anuales</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="totalGastos">$${totalGastos.toFixed(2)}</td>
+                            <td class="py-2 px-4">100%</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 bg-gray-100 font-semibold">
+                            <td class="py-2 px-4">Total de Gastos + Anuales (Diario)</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="totalGastosConAnualesD">$${totalGastosConAnualesD.toFixed(2)}</td>
+                            <td class="py-2 px-4">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Ganancias Card -->
+        <div class="card">
+            <div class="card-content">
+                <h4 class="text-lg font-semibold text-gray-700 mb-4 border-b border-blue-200 pb-2">Ganancias</h4>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-blue-100">
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">Concepto</th>
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">Monto</th>
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-4">Ganancia Neta</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="gananciaNeta">$${gananciaNeta.toFixed(2)}</td>
+                            <td class="py-2 px-4 ${gananciaNeta >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}" id="estadoGananciaNeta">${gananciaNeta >= 0 ? 'Positiva' : 'Negativa'}</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-4">Ganancia Mensual</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="gananciaMensual">$${gananciaNeta.toFixed(2)}</td>
+                            <td class="py-2 px-4 ${gananciaNeta >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}" id="estadoGananciaMensual">${gananciaNeta >= 0 ? 'Positiva' : 'Negativa'}</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-4">Ganancia Anual</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="gananciaAnual">$${gananciaNeta.toFixed(2)}</td>
+                            <td class="py-2 px-4 ${gananciaNeta >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}" id="estadoGananciaAnual">${gananciaNeta >= 0 ? 'Positiva' : 'Negativa'}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Nómina Card -->
+        <div class="card">
+            <div class="card-content">
+                <h4 class="text-lg font-semibold text-gray-700 mb-4 border-b border-blue-200 pb-2">Nómina</h4>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-blue-100">
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">Concepto</th>
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">Monto</th>
+                            <th class="py-2 px-4 text-sm font-semibold text-gray-700">% del Total de Gastos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-4">Total Nómina</td>
+                            <td class="py-2 px-4 font-medium text-gray-800" id="totalNomina">$${totalNomina.toFixed(2)}</td>
+                            <td class="py-2 px-4" id="porcentajeNomina">${porcentajeNomina}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Charts Card -->
+        <div class="card">
+            <div class="card-content">
+                <h4 class="text-lg font-semibold text-gray-700 mb-4 border-b border-blue-200 pb-2">Análisis Gráfico</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-white rounded-lg">
+                        <h5 class="text-sm font-medium text-gray-600 mb-2 text-center">Resumen General</h5>
+                        <div class="h-64">
+                            <canvas id="financialChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-white rounded-lg">
+                        <h5 class="text-sm font-medium text-gray-600 mb-2 text-center">Desglose de Gastos</h5>
+                        <div class="h-64">
+                            <canvas id="expenseBreakdownChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     `;
 
+    content.appendChild(closeButton);
+    content.appendChild(resumenContainer);
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
 
-    // Reinitialize charts
-    let financialChartInstance = Chart.getChart('financialChart');
-    if (financialChartInstance) {
-        financialChartInstance.destroy();
-    }
-    const ctxFinancial = document.getElementById('financialChart').getContext('2d');
-    financialChartInstance = new Chart(ctxFinancial, {
-        type: 'bar',
-        data: {
-            labels: ['Ingresos', 'Gastos', 'Ganancia Neta'],
-            datasets: [{
-                    label: 'Monto ($)',
-                    data: [totalIngresos, gastosAnualesTotal, gananciaNeta],
-                    backgroundColor: ['#10b981', '#ef4444', '#3b82f6'],
-                    borderColor: ['#064e3b', '#991b1b', '#1e40af'],
-                    borderWidth: 1
-                }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false, // Disable animations for cleaner rendering
-            scales: {
-                y: {
-                    type: 'logarithmic', // Use logarithmic scale for large numbers
-                    beginAtZero: false,
-                    min: 1, // Ensure positive values
-                    title: {
-                        display: true,
-                        text: 'Monto ($)'
-                    },
-                    ticks: {
-                        callback: function (value) {
-                            return new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN', notation: 'compact'}).format(value);
-                        }
-                    }
-                },
-                x: {
-                    ticks: {
-                        font: {
-                            size: 10 // Smaller font for labels
-                        }
-                    }
-                }
+    // Initialize charts with retry mechanism
+    function initializeCharts(retryCount = 0, maxRetries = 5) {
+        const financialCanvas = document.getElementById('financialChart');
+        const expenseCanvas = document.getElementById('expenseBreakdownChart');
+
+        if (!financialCanvas || !expenseCanvas) {
+            if (retryCount < maxRetries) {
+                console.warn(`Canvas elements not found, retrying (${retryCount + 1}/${maxRetries})...`);
+                setTimeout(() => initializeCharts(retryCount + 1, maxRetries), 100);
+            } else {
+                console.error('Failed to find canvas elements after maximum retries.');
+            }
+            return;
+        }
+
+        // Destroy existing charts if they exist
+        const existingFinancialChart = Chart.getChart(financialCanvas);
+        if (existingFinancialChart) {
+            existingFinancialChart.destroy();
+        }
+        const existingExpenseChart = Chart.getChart(expenseCanvas);
+        if (existingExpenseChart) {
+            existingExpenseChart.destroy();
+        }
+
+        // Initialize Financial Chart
+        const ctxFinancial = financialCanvas.getContext('2d');
+        const financialChart = new Chart(ctxFinancial, {
+            type: 'bar',
+            data: {
+                labels: ['Ingresos', 'Gastos', 'Ganancia Neta'],
+                datasets: [{
+                        label: 'Monto ($)',
+                        data: [totalIngresos, totalGastos, gananciaNeta],
+                        backgroundColor: ['#10b981', '#ef4444', '#3b82f6'],
+                        borderColor: ['#064e3b', '#991b1b', '#1e40af'],
+                        borderWidth: 1
+                    }]
             },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        font: {
-                            size: 10
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Monto ($)'
+                        },
+                        ticks: {
+                            callback: function (value) {
+                                return new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(value);
+                            }
                         }
                     }
                 },
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(context.parsed.y);
+                                }
+                                return label;
                             }
-                            if (context.parsed.y !== null) {
-                                label += new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(context.parsed.y);
-                            }
-                            return label;
                         }
                     }
                 }
             }
-        }
-    });
+        });
 
-    let expenseBreakdownChartInstance = Chart.getChart('expenseBreakdownChart');
-    if (expenseBreakdownChartInstance) {
-        expenseBreakdownChartInstance.destroy();
+        // Initialize Expense Breakdown Chart
+        const ctxExpense = expenseCanvas.getContext('2d');
+        const expenseBreakdownChart = new Chart(ctxExpense, {
+            type: 'pie',
+            data: {
+                labels: ['Operativos', 'Maniobra', 'Comisión', 'Anuales Diarios', 'Anuales Total'],
+                datasets: [{
+                        label: 'Gastos ($)',
+                        data: [
+                            totalGastosOperativos || 0,
+                            totalManiobra || 0,
+                            totalComision || 0,
+                            gastosAnualesDiarios || 0,
+                            gastosAnualesTotal || 0
+                        ],
+                        backgroundColor: [
+                            '#ff6384',
+                            '#36a2eb',
+                            '#ffcd56',
+                            '#4bc0c0',
+                            '#9966ff'
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed) {
+                                    label += new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(context.parsed);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Update chart functions
+        window.updateFinancialChart = function (totalIngresos, totalGastos, gananciaNeta) {
+            financialChart.data.datasets[0].data = [totalIngresos, totalGastos, gananciaNeta];
+            financialChart.update();
+        };
+
+        window.updateExpenseBreakdownChart = function (gastosOperativos, maniobra, comision, gastosAnualesDiarios, gastosAnualesTotal) {
+            expenseBreakdownChart.data.datasets[0].data = [
+                gastosOperativos,
+                maniobra,
+                comision,
+                gastosAnualesDiarios,
+                gastosAnualesTotal
+            ];
+            expenseBreakdownChart.update();
+        };
+
+        // Call update chart functions
+        window.updateFinancialChart(totalIngresos, totalGastosConAnuales, gananciaNeta);
+        window.updateExpenseBreakdownChart(totalGastosOperativos, totalManiobra, totalComision, gastosAnualesDiarios, gastosAnualesTotal);
     }
-    const ctxExpense = document.getElementById('expenseBreakdownChart').getContext('2d');
-    expenseBreakdownChartInstance = new Chart(ctxExpense, {
-        type: 'pie',
-        data: {
-            labels: ['Operativos', 'Maniobra', 'Comisión', 'Anuales Diarios', 'Anuales Total'],
-            datasets: [{
-                    label: 'Gastos ($)',
-                    data: [totalGastosOperativos, totalManiobra, totalComision, gastosAnualesDiarios, gastosAnualesTotal],
-                    backgroundColor: [
-                        '#ff6384',
-                        '#36a2eb',
-                        '#ffcd56',
-                        '#4bc0c0',
-                        '#9966ff'
-                    ],
-                    borderColor: '#fff',
-                    borderWidth: 1
-                }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false, // Disable animations
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        font: {
-                            size: 10
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            let label = context.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.parsed !== null) {
-                                label += new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(context.parsed);
-                            }
-                            return label;
-                        }
-                    }
-                }
-            }
-        }
-    });
 
-    // Update chart functions
-    window.updateFinancialChart = function (totalIngresos, totalGastos, gananciaNeta) {
-        financialChartInstance.data.datasets[0].data = [totalIngresos, totalGastos, gananciaNeta];
-        financialChartInstance.update('none'); // Update without animation
-    };
-
-    window.updateExpenseBreakdownChart = function (gastosOperativos, maniobra, comision, gastosAnualesDiarios, gastosAnualesTotal) {
-        expenseBreakdownChartInstance.data.datasets[0].data = [
-            gastosOperativos,
-            maniobra,
-            comision,
-            gastosAnualesDiarios,
-            gastosAnualesTotal
-        ];
-        expenseBreakdownChartInstance.update('none');
-    };
-
-    // Call update functions
-    window.updateFinancialChart(totalIngresos, totalGastosConAnuales, gananciaNeta);
-    window.updateExpenseBreakdownChart(totalGastosOperativos, totalManiobra, totalComision, gastosAnualesDiarios, gastosAnualesTotal);
+    // Set up mostrarResumenBtn to show modal and initialize charts
+    const mostrarResumenBtn = document.getElementById('mostrarResumenBtn');
+    if (mostrarResumenBtn) {
+        // Remove existing listeners to prevent duplicates
+        const newButton = mostrarResumenBtn.cloneNode(true);
+        mostrarResumenBtn.parentNode.replaceChild(newButton, mostrarResumenBtn);
+        newButton.addEventListener('click', () => {
+            overlay.classList.remove('hidden');
+            initializeCharts();
+        });
+    } else {
+        console.warn('mostrarResumenBtn not found in DOM');
+    }
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const idNota = parseInt(btn.dataset.id);
-            Swal.fire({
+            window.Swal.fire({
                 title: '¿Estás seguro?',
-                text: "No podrás deshacer esta acción",
+                text: 'No podrás deshacer esta acción',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#f97316',
@@ -1279,25 +1389,26 @@ function mostrarNotas(notas) {
                         const response = await fetch(`https://transportesnaches.com.mx/api/nota/delete`, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                            body: `idNota=${idNota}`
+                            body: `idNota=${encodeURIComponent(idNota)}`
                         });
-                        const result = await response.json();
-                        if (result.error) {
-                            throw new Error(result.error);
+                        const responseData = await response.json();
+                        if (responseData.error) {
+                            throw new Error(responseData.error);
                         }
                         todasLasNotas = todasLasNotas.filter(nota => nota.idNota !== idNota);
-                        notasMostradas = Math.min(notasMostradas, getNotasMesActual().length);
-                        const notas = currentFilters.mes === 'todos' ? getNotasMesActual() : filtrarNotasSinMostrar();
-                        mostrarNotas(notas.slice(0, notasMostradas));
-                        actualizarBotonCargarMas(notas);
-                        Swal.fire({
+                        const notasFiltradas = filtrarNotasSinMostrar();
+                        notasMostradas = Math.min(notasMostradas, notasFiltradas.length);
+                        const notasToShow = notasFiltradas.slice(0, notasMostradas);
+                        mostrarNotas(notasToShow, financialSummary);
+                        actualizarBotonCargarMas(todasLasNotas);
+                        window.Swal.fire({
                             title: 'Eliminado',
                             text: 'La nota ha sido eliminada.',
                             icon: 'success',
                             confirmButtonColor: '#f97316'
                         });
                     } catch (error) {
-                        Swal.fire({
+                        window.Swal.fire({
                             title: 'Error',
                             text: error.message || 'No se pudo eliminar la nota',
                             icon: 'error',
@@ -1307,14 +1418,6 @@ function mostrarNotas(notas) {
                 }
             });
         });
-    });
-
-    // Reinitialize charts when modal is opened
-    document.getElementById('mostrarResumenBtn').addEventListener('click', () => {
-        setTimeout(() => {
-            financialChartInstance.resize();
-            expenseBreakdownChartInstance.resize();
-        }, 100);
     });
 
     console.timeEnd('mostrarNotas');
@@ -1436,13 +1539,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const formGastos = document.getElementById('gastosAnualesForm');
     const cancelBtnGasto = document.getElementById('cancelEditBtn');
 
-    const modalResumen = document.getElementById('resumenFinancieroModal');
-    const btnResumen = document.getElementById('mostrarResumenBtn');
-    const spanResumen = document.getElementById('spanResumen');
-
     const fechasPagoInput = document.getElementById('fechasPago');
 
-    document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
 
     // Asegúrate de que applyFilters también esté asignado
     document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
@@ -1465,23 +1563,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    if (btnResumen && modalResumen && spanResumen) {
-        btnResumen.onclick = function () {
-            modalResumen.style.display = 'block';
-        };
-        spanResumen.onclick = function () {
-            modalResumen.style.display = 'none';
-        };
-    }
+
 
     window.onclick = function (event) {
         if (event.target == modalGastos) {
             modalGastos.style.display = 'none';
             resetForm();
         }
-        if (event.target == modalResumen) {
-            modalResumen.style.display = 'none';
-        }
+
     };
 
     if (cancelBtnGasto && formGastos) {

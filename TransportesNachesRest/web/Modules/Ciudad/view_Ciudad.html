@@ -6,7 +6,6 @@
         <title>Gestión de Ciudades | Transportes Naches</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="icon" type="image/png" sizes="16x16" href="/Resource/transportesNaches.png">
-
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
         <style>
@@ -33,16 +32,37 @@
                 visibility: visible;
                 opacity: 1;
             }
+            .ciudad-item {
+                transition: background-color 0.3s ease, transform 0.3s ease;
+            }
+            .ciudad-item:hover {
+                background-color: #fef3c7; /* Subtle orange-yellow on hover */
+                transform: translateX(5px);
+            }
+            .ciudad-list {
+                max-height: 500px;
+                overflow-y: auto;
+                scrollbar-width: thin;
+                scrollbar-color: #f97316 #e5e7eb;
+            }
+            .ciudad-list::-webkit-scrollbar {
+                width: 8px;
+            }
+            .ciudad-list::-webkit-scrollbar-track {
+                background: #e5e7eb;
+            }
+            .ciudad-list::-webkit-scrollbar-thumb {
+                background-color: #f97316;
+                border-radius: 10px;
+            }
         </style>
     </head>
     <body class="h-screen bg-gradient-to-r from-orange-400 to-orange-700 overflow-x-hidden">
-
         <div class="md:hidden fixed top-4 left-4 z-50 bg-transparent">
             <button id="menuButton" onclick="toggleSidebar()" class="text-white text-3xl bg-transparent">
                 <i id="menu-icon" class="fas fa-bars"></i>
             </button>
         </div>
-        <!-- 🔥 Overlay móvil (oculta el fondo cuando el menú está abierto) -->
         <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
 
         <div class="flex h-full w-full">
@@ -50,39 +70,29 @@
             <nav id="sidebar"
                  class="fixed md:relative z-40 w-16 h-full flex flex-col items-center py-4 shadow-2xl transform -translate-x-full md:translate-x-0 transition-transform duration-300"
                  style="background: linear-gradient(to bottom, #1a202c, #2d3748)">
-
-                <!-- Logo más pequeño -->
                 <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-orange-400 mb-8">
                     <a href="/menu">
                         <img src="../../Resource/transportesNaches.png" alt="logo" class="w-6 h-6 rounded-full hover:opacity-80 transition" />
                     </a>
                 </div>
-
-                <!-- Menú compacto (solo iconos) -->
                 <ul class="w-full px-2 space-y-6 flex-grow">
-                    <!-- Bitácora (visible para todos) -->
                     <li id="bitacora" class="tooltip">
                         <a href="/bitacora" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors">
                             <i class="fas fa-book text-xl"></i>
                             <span class="tooltiptext">Bitácora</span>
                         </a>
                     </li>
-
-                    <!-- Botones solo para Administrador -->
                     <li class="admin-only tooltip" id="contabilidad">
                         <a href="/contabilidad" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors">
                             <i class="fas fa-calculator text-xl"></i>
                             <span class="tooltiptext">Contabilidad</span>
                         </a>
                     </li>
-
                     <li id="gestionAdmin" class="admin-only tooltip">
                         <button onclick="toggleGestionMenu()" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors w-full">
                             <i class="fas fa-cogs text-xl"></i>
                             <span class="tooltiptext">Gestión</span>
                         </button>
-
-                        <!-- Submenú desplegable -->
                         <ul id="gestionSubmenu" class="hidden absolute left-16 top-0 bg-gray-800 text-white rounded-md shadow-lg py-2 w-48 space-y-2 z-50">
                             <li><a href="/cliente" class="block px-4 py-2 hover:bg-orange-500">Gestión Cliente</a></li>
                             <li><a href="/unidad" class="block px-4 py-2 hover:bg-orange-500">Gestión Unidad</a></li>
@@ -92,8 +102,6 @@
                         </ul>
                     </li>
                 </ul>
-
-                <!-- Botón de Cerrar Sesión con más espacio arriba -->
                 <div class="mt-16 mb-4 tooltip">
                     <button id="cerrarSesion" class="flex items-center justify-center p-3 text-white hover:text-red-300 transition-colors">
                         <i class="fas fa-sign-out-alt text-xl"></i>
@@ -105,12 +113,9 @@
             <!-- Contenido Principal -->
             <main class="flex-1 p-6 overflow-auto">
                 <div class="bg-white rounded-xl shadow-2xl p-6 max-w-full mx-auto">
-                    <!-- Título -->
                     <h1 class="text-center text-2xl font-bold text-gray-800 bg-orange-200 py-2 px-4 rounded-lg mb-6">
                         Gestión de Ciudades
                     </h1>
-
-                    <!-- Botones de Acción -->
                     <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
                         <div class="flex items-center gap-2">
                             <button id="btnNuevaCiudad" class="bg-orange-600 text-white py-2 px-4 rounded flex items-center gap-2 hover:bg-orange-700 transition">
@@ -125,8 +130,6 @@
                             <i class="fas fa-search absolute left-3 top-3 text-orange-400"></i>
                         </div>
                     </div>
-
-                    <!-- Formulario de Ciudad (oculto inicialmente) -->
                     <form id="formCiudad" class="hidden space-y-4 mb-6 bg-orange-50 p-4 rounded-lg">
                         <input type="hidden" id="idCiudad">
                         <input type="hidden" id="idEstado">
@@ -150,59 +153,45 @@
                             </button>
                         </div>
                     </form>
-
-                    <!-- Tabla de Ciudades -->
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white border border-orange-200 rounded-lg">
-                            <thead>
-                                <tr class="bg-gradient-to-r from-orange-500 to-yellow-500 text-white">
-                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Ciudad</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Estado</th>
-                                    <th class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tblCiudad" class="divide-y divide-orange-200">
-                                <!-- Los datos se cargarán dinámicamente con JavaScript -->
-                            </tbody>
-                        </table>
+                    <div class="ciudad-list">
+                        <div id="tblCiudad" class="space-y-2">
+                            <!-- Los datos se cargarán dinámicamente con JavaScript -->
+                        </div>
                     </div>
                 </div>
             </main>
         </div>
 
-        <!-- Scripts -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-                           function toggleSidebar() {
-                               const sidebar = document.getElementById('sidebar');
-                               const overlay = document.getElementById('overlay');
-                               const menuIcon = document.getElementById('menu-icon');
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('overlay');
+                const menuIcon = document.getElementById('menu-icon');
 
-                               sidebar.classList.toggle('-translate-x-full');
-                               overlay.classList.toggle('hidden');
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
 
-                               if (sidebar.classList.contains('-translate-x-full')) {
-                                   menuIcon.classList.remove('fa-times');
-                                   menuIcon.classList.add('fa-bars');
-                               } else {
-                                   menuIcon.classList.remove('fa-bars');
-                                   menuIcon.classList.add('fa-times');
-                               }
-                           }
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    menuIcon.classList.remove('fa-times');
+                    menuIcon.classList.add('fa-bars');
+                } else {
+                    menuIcon.classList.remove('fa-bars');
+                    menuIcon.classList.add('fa-times');
+                }
+            }
 
-                           function toggleGestionMenu() {
-                               const menu = document.getElementById('gestionSubmenu');
-                               menu.classList.toggle('hidden');
-                           }
+            function toggleGestionMenu() {
+                const menu = document.getElementById('gestionSubmenu');
+                menu.classList.toggle('hidden');
+            }
 
-                           // Simulación de rol: 'admin' o 'empleado'
-                           const userRole = 'Administrador'; // cambia a 'empleado' para probar visibilidad
-
-                           document.addEventListener('DOMContentLoaded', () => {
-                               document.querySelectorAll('.admin-only').forEach(el => {
-                                   el.style.display = userRole === 'Administrador' ? '' : 'none';
-                               });
-                           });
+            const userRole = 'Administrador';
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = userRole === 'Administrador' ? '' : 'none';
+                });
+            });
         </script>
         <script src="/Modules/Menu/controller_Menu.js" type="module"></script>
         <script src="/Modules/Ciudad/controller_Ciudad.js" type="module"></script>

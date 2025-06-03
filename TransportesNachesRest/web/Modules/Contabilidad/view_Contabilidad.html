@@ -52,11 +52,11 @@
                 opacity: 1;
             }
             .card {
+                @apply bg-white border border-gray-200 rounded-lg shadow-md;
                 transition: transform 0.2s, box-shadow 0.2s;
             }
             .card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                @apply shadow-lg transform -translate-y-1;
             }
             .modal {
                 display: none;
@@ -272,9 +272,40 @@
                 position: relative;
             }
             .chart-container canvas {
-                max-height: 250px !important;
-                width: 100% !important;
+                @apply w-full h-full;
             }
+            .card-content {
+                @apply p-4;
+            }
+
+            .widget-label h3 {
+                @apply text-lg font-semibold text-gray-700;
+            }
+
+            .widget-icon {
+                @apply text-2xl;
+            }
+
+            table {
+                @apply w-full text-sm;
+            }
+
+            table thead tr {
+                @apply bg-blue-100;
+            }
+
+            table th {
+                @apply py-2 px-4 font-semibold text-gray-700;
+            }
+
+            table td {
+                @apply py-2 px-4;
+            }
+
+            table tr:hover {
+                @apply bg-gray-50;
+            }
+
             #resumenFinancieroModal .modal-content {
                 @apply bg-gray-50;
                 max-width: 95vw !important;
@@ -469,177 +500,8 @@
                     </div>
                 </div>
 
-                <!-- Modal para Resumen Financiero -->
-                <div id="resumenFinancieroModal" class="modal">
-                    <div class="modal-content">
-                        <span id="spanResumen" class="close">×</span>
-                        <div id="resumenFinancieroContainer" class="space-y-6">
-                            <div class="financial-panel">
-                                <h2 class="financial-header">
-                                    <i class="fas fa-chart-line mr-2"></i> Resumen Financiero
-                                </h2>
-                               
-                            </div>
+              
 
-                            <!-- Indicadores Clave (KPIs) -->
-                            <div class="financial-panel">
-                                <h3 class="financial-subheader">Indicadores Clave</h3>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div class="kpi-card">
-                                        <h4>Total Ingresos</h4>
-                                        <p id="kpiIngresos">$0.00</p>
-                                    </div>
-                                    <div class="kpi-card">
-                                        <h4>Total Gastos</h4>
-                                        <p id="kpiGastos">$0.00</p>
-                                    </div>
-                                    <div class="kpi-card">
-                                        <h4>Ganancia Neta</h4>
-                                        <p id="kpiGananciaNeta">$0.00</p>
-                                    </div>
-                                    <div class="kpi-card">
-                                        <h4>Margen de Ganancia</h4>
-                                        <p id="kpiMargenGanancia">0%</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Ingresos -->
-                            <div class="financial-panel">
-                                <h3 class="financial-subheader">Ingresos</h3>
-                                <table class="financial-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Concepto</th>
-                                            <th>Monto</th>
-                                            <th>% del Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Total de Ingresos</td>
-                                            <td class="value" id="totalIngresos">$0.00</td>
-                                            <td>100%</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Gastos -->
-                            <div class="financial-panel">
-                                <h3 class="financial-subheader">Gastos</h3>
-                                <table class="financial-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Concepto</th>
-                                            <th>Monto</th>
-                                            <th>% del Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Gastos Operativos</td>
-                                            <td class="value" id="gastosOperativos">$0.00</td>
-                                            <td id="porcentajeGastosOperativos">0%</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Maniobra</td>
-                                            <td class="value" id="maniobra">$0.00</td>
-                                            <td id="porcentajeManiobra">0%</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Comisión</td>
-                                            <td class="value" id="comision">$0.00</td>
-                                            <td id="porcentajeComision">0%</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Gastos Anuales Fijos (Diarios)</td>
-                                            <td class="value" id="gastosAnualesDiarios">$0.00</td>
-                                            <td id="porcentajeGastosAnualesDiarios">0%</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Gastos Anuales Fijos (Total)</td>
-                                            <td class="value" id="gastosAnualesTotal">$0.00</td>
-                                            <td id="porcentajeGastosAnualesTotal">0%</td>
-                                        </tr>
-                                        <tr class="font-semibold bg-gray-50">
-                                            <td>Total de Gastos</td>
-                                            <td class="value" id="totalGastos">$0.00</td>
-                                            <td>100%</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Ganancias -->
-                            <div class="financial-panel">
-                                <h3 class="financial-subheader">Ganancias</h3>
-                                <table class="financial-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Concepto</th>
-                                            <th>Monto</th>
-                                            <th>Estado</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Ganancia Neta</td>
-                                            <td class="value" id="gananciaNeta">$0.00</td>
-                                            <td id="estadoGananciaNeta"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Ganancia Mensual</td>
-                                            <td class="value" id="gananciaMensual">$0.00</td>
-                                            <td id="estadoGananciaMensual"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Ganancia Anual</td>
-                                            <td class="value" id="gananciaAnual">$0.00</td>
-                                            <td id="estadoGananciaAnual"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Nómina -->
-                            <div class="financial-panel">
-                                <h3 class="financial-subheader">Nómina</h3>
-                                <table class="financial-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Concepto</th>
-                                            <th>Monto</th>
-                                            <th>% del Total de Gastos</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Total Nómina</td>
-                                            <td class="value" id="totalNomina">$0.00</td>
-                                            <td id="porcentajeNomina">0%</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Gráficos -->
-                            <div class="financial-panel">
-                                <h3 class="financial-subheader">Análisis Gráfico</h3>
-                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div class="chart-container">
-                                        <h4 class="text-center font-medium text-gray-600 mb-2">Resumen General</h4>
-                                        <canvas id="financialChart" class="w-full"></canvas>
-                                    </div>
-                                    <div class="chart-container">
-                                        <h4 class="text-center font-medium text-gray-600 mb-2">Desglose de Gastos</h4>
-                                        <canvas id="expenseBreakdownChart" class="w-full"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </main>
         </div>
         <script>
@@ -685,9 +547,6 @@
                 const modalGastos = document.getElementById('gastosAnualesModal');
                 const btnGastos = document.getElementById('gastosAnualesBtn');
                 const spanGastos = document.getElementById('spanGastos');
-                const modalResumen = document.getElementById('resumenFinancieroModal');
-                const btnResumen = document.getElementById('mostrarResumenBtn');
-                const spanResumen = document.getElementById('spanResumen');
 
                 if (btnGastos && modalGastos && spanGastos) {
                     btnGastos.onclick = function () {
@@ -699,23 +558,14 @@
                     };
                 }
 
-                if (btnResumen && modalResumen && spanResumen) {
-                    btnResumen.onclick = function () {
-                        modalResumen.style.display = 'block';
-                    };
-                    spanResumen.onclick = function () {
-                        modalResumen.style.display = 'none';
-                    };
-                }
+              
 
                 window.onclick = function (event) {
                     if (event.target == modalGastos) {
                         modalGastos.style.display = 'none';
                         resetForm();
                     }
-                    if (event.target == modalResumen) {
-                        modalResumen.style.display = 'none';
-                    }
+                    
                 };
             });
 

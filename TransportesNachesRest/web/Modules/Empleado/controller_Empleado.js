@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
         guardarOperador();
     });
 
-    //Inicialización
+    // Inicialización
     inicializar();
 
     function inicializar() {
@@ -56,19 +56,38 @@ document.addEventListener("DOMContentLoaded", function () {
         let contenido = '';
         operadores.forEach(operador => {
             const persona = operador.Persona || {};
+            const nombreCompleto = [
+                persona.nombre || '',
+                persona.apellidoPaterno || '',
+                persona.apellidoMaterno || ''
+            ].filter(Boolean).join(' ').trim() || 'Sin Nombre';
+            const telefono = persona.telefono || 'No especificado';
+            const correo = persona.correo || 'No especificado';
+            const estado = operador.activoOperador ? 'Activo' : 'Inactivo';
+            const estadoColor = operador.activoOperador ? 'text-green-600' : 'text-red-600';
+
             contenido += `
-                <tr>
-                    <td class="px-4 py-2 text-sm">${persona.nombre || ''} ${persona.apellidoPaterno || ''} ${persona.apellidoMaterno || ''}</td>
-                    <td class="px-4 py-2 text-sm">${persona.telefono || 'No especificado'}</td>
-                    <td class="px-4 py-2 text-sm">${persona.correo || 'No especificado'}</td>
-                    <td class="px-4 py-2 text-sm text-gray-800">
-                        ${operador.activoOperador ?
-                    '<span class="activo">Activo</span>' :
-                    '<span class="inactivo">Inactivo</span>'}
-                    </td>
-                    <td class="px-4 py-2 text-sm text-gray-800 text-center">
+                <div class="operator-card bg-white rounded-lg shadow-md p-4 flex flex-col gap-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-gray-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">${nombreCompleto}</h3>
+                            <p class="text-sm ${estadoColor}">${estado}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <i class="fas fa-phone text-orange-600"></i>
+                        <span>${telefono}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <i class="fas fa-envelope text-orange-600"></i>
+                        <span>${correo}</span>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-2">
                         ${operador.activoOperador ? `
-                            <button onclick="cargarDetalleOperador(${operador.idOperador})" class="text-blue-500 hover:text-blue-700 mr-2">
+                            <button onclick="cargarDetalleOperador(${operador.idOperador})" class="text-blue-500 hover:text-blue-700">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <button onclick="eliminarOperador(${operador.idOperador})" class="text-red-500 hover:text-red-700">
@@ -79,20 +98,20 @@ document.addEventListener("DOMContentLoaded", function () {
                                 <i class="fas fa-undo"></i> Reactivar
                             </button>
                         `}
-                    </td>
-                </tr>
+                    </div>
+                </div>
             `;
         });
-        tblOperador.innerHTML = contenido; // Agregar la fila a la tabla
+        tblOperador.innerHTML = contenido;
+        buscarOperadores(); // Apply search filter after rendering
     }
 
     function buscarOperadores() {
-        const termino = txtBuscar.value.toLowerCase();
-        const filas = tblOperador.querySelectorAll("tr");
-
-        filas.forEach(fila => {
-            const nombreCompleto = fila.querySelector("td:nth-child(2)").textContent.toLowerCase();
-            fila.style.display = nombreCompleto.includes(termino) ? '' : 'none';
+        const termino = txtBuscar.value.toLowerCase().trim();
+        const cards = tblOperador.querySelectorAll(".operator-card");
+        cards.forEach(card => {
+            const nombre = card.querySelector("h3").textContent.toLowerCase().trim();
+            card.style.display = nombre.includes(termino) ? "" : "none";
         });
     }
 
@@ -142,8 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch('https://transportesnaches.com.mx/api/operador/save', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'
-                },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(operadorData)
             });
 
@@ -161,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
- async function eliminarOperador(idOperador) {
+    async function eliminarOperador(idOperador) {
         const confirmacion = await Swal.fire({
             title: '¿Estás seguro?',
             text: "Esta acción desactivará el operador. ¿Deseas continuar?",
@@ -172,8 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
             confirmButtonText: 'Sí, desactivar'
         });
 
-        if (!confirmacion.isConfirmed)
-            return;
+        if (!confirmacion.isConfirmed) return;
 
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/operador/delete/${idOperador}`, {
@@ -193,12 +210,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-// Función para limpiar y mostrar el formulario
+    // Función para limpiar y mostrar el formulario
     function limpiarMostrarFormulario() {
         limpiarFormulario();
         setDetalleVisible(true);
     }
-
 
     function limpiarFormulario() {
         document.getElementById("idOperador").value = '';
@@ -212,7 +228,8 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("usuario").value = '';
         document.getElementById("contrasenia").value = '';
     }
-// Función para mostrar u ocultar el detalle del formulario
+
+    // Función para mostrar u ocultar el detalle del formulario
     function setDetalleVisible(visible) {
         if (visible) {
             formOperador.classList.remove("hidden");
@@ -233,21 +250,22 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function mostrarExito(mensaje) {
+    function mostrarExito(titulo, mensaje) {
         Swal.fire({
-            title: 'Éxito',
+            title: titulo,
             text: mensaje,
             icon: 'success',
             confirmButtonText: 'Aceptar'
         });
     }
-// Función para reactivar un operador
+
+    // Función para reactivar un operador
     async function reactivarOperador(idOperador) {
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/operador/reactivar/${idOperador}`, {
-                method: 'POST', // POST para reactivar
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json' // Establece el tipo de contenido
+                    'Content-Type': 'application/json'
                 }
             });
 
@@ -269,11 +287,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-// Hacer funciones disponibles globalmente para los eventos onclick en HTML
+    // Hacer funciones disponibles globalmente para los eventos onclick en HTML
     window.cargarDetalleOperador = cargarDetalleOperador;
     window.eliminarOperador = eliminarOperador;
     window.reactivarOperador = reactivarOperador;
 });
-
-
-

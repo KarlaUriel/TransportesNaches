@@ -1,207 +1,125 @@
-/* Estilos generales */
-body {
-    margin: 0;
-    padding: 0;
-    display: flex;
-    height: 100vh;
-    background: linear-gradient(to right, #ff4e50, #fc913a);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    justify-content: center; /* Centra el contenido horizontalmente */
-    align-items: center; /* Centra el contenido verticalmente */
-}
-
-/* Animación de entrada */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Animación de entrada del contenedor */
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-/* Asegúrate de que el contenedor .content esté correctamente configurado */
-.content {
-    display: flex;
-    width: 100%;
-    height: 100vh; /* Ocupa toda la altura de la ventana */
-}
-
-/* Asegúrate de que el slidebar esté visible */
-.sidebar {
-    width: 250px;
-    background-color: rgba(0, 0, 0, 0.8);
+/* SIDEBAR */
+/*INTENTO 1 DE SUBIR ESTO*/
+#sidebar {
+    position: fixed;
+    z-index: 1070;
+    width: 9rem;
+    min-width: 6rem;
+    height: 100%;
+    background: linear-gradient(to bottom, #1a202c, #2d3748);
     color: white;
     display: flex;
     flex-direction: column;
+    justify-content: space-between; /*justify-between*/
     align-items: center;
-    justify-content: flex-start;
-    padding-top: 20px;
-    height: 100vh; /* Ocupa toda la altura de la ventana */
-    position: fixed; /* Fija el slidebar en su posición */
-    left: 0; /* Alinea el slidebar a la izquierda */
-    top: 0; /* Alinea el slidebar en la parte superior */
-    z-index: 1000; /* Asegura que el slidebar esté por encima de otros elementos */
+    padding-bottom: 35px;
+    box-shadow: 0 0px 200px rgba(0, 0, 0, 0.5);
+    overflow: visible;
+    transition: transform 0.3s ease-in-out;
+}
+#logo {
+    margin-top: 2rem;
+    height: 5rem;
+    width: 5rem;
 }
 
-/* Asegúrate de que el contenido principal no se solape con el slidebar */
-main.content {
-    margin-left: 250px; /* Deja espacio para el slidebar */
-    width: calc(100% - 250px); /* Ajusta el ancho del contenido principal */
+#logo img{
+    border-radius: 50%;
+}
+#sidebar i ,
+#cerrarSesion{
+    font-size: 50px; /* Cambia esto según el tamaño que desees */
     display: flex;
     justify-content: center;
     align-items: center;
-}
-/* Título de la barra lateral */
-.sidebar h2 {
-    margin-bottom: 20px;
-    font-size: 1.5em;
-    animation: fadeIn 1s ease-out; /* Aplicar animación de entrada */
+    transition: transform 0.3s; /* Efecto de escala al pasar el ratón */
+    margin-top: 2rem;
 }
 
-/* Estilos de la lista de la barra lateral */
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
+/* SUBMENU */
+#gestionSubmenu {
+    position: flex;
+    left: 10rem !important; /* Increase this value to move the submenu further away from the sidebar */
+    top: 50% !important;
+    background-color: #2d3748; /* Match the sidebar's gradient for consistency */
+    border-radius: 0.375rem; /* Tailwind's rounded-md */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Tailwind's shadow-lg */
+    padding: 0.5rem 0; /* Tailwind's py-2 */
+    width: 12rem !important; /* Maintain the width */
+    min-width: 7rem !important;
+    z-index: 50;
+    transition: transform 0.3s; /* Efecto de escala al pasar el ratón */
     align-items: center;
-    gap: 15px; /* Espaciado igual entre todos los iconos */
+}
+#gestionSubmenu a, #gestionSubmenu i{
+    font-size: 30px; /* Cambia esto según el tamaño que desees */
+    border-radius: 12px;
+}
+#gestionSubmenu li, #gestionSubmenu a, #gestionSubmenu i{
+    margin-top: 5px;
+}
+#logo:hover,
+#cerrarSesion:hover,
+#sidebar i:hover,
+#gestionSubmenu li:hover,
+#menuButton i:hover{
+    transform: scale(1.1);
 }
 
-/* Estilos de los elementos de la lista */
-.sidebar ul li {
-    width: 100%;
+/* TOOLTIP */
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: auto;
+    background-color: #4a5568;
+    color: #fff;
     text-align: center;
-    padding: 10px 0; /* Reduce padding para que todos sean proporcionales */
-    transition: background 0.3s;
-    position: relative; /* Necesario para mostrar el tooltip */
-    animation: fadeIn 1s ease-out; /* Animación de desvanecimiento (solo una vez) */
-}
-
-/* Efecto hover para los elementos de la lista */
-.sidebar ul li:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Estilos para los enlaces */
-.sidebar ul li a {
-    text-decoration: none;
-    color: white;
-    font-size: 1.5em; /* Tamaño del icono */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
-
-/* Estilos para los iconos dentro de un círculo blanco */
-.sidebar ul li a i,
-button#cerrarSesion i {
-    background-color: white;
-    color: black;
-    border-radius: 50%; /* Forma circular */
-    padding: 20px; /* Tamaño del círculo */
-    font-size: 1.5em; /* Tamaño uniforme */
-    width: 50px; /* Tamaño uniforme */
-    height: 50px; /* Tamaño uniforme */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: transform 0.3s; /* Efecto de escala al pasar el ratón */
-    animation: fadeIn 1s ease-out; /* Aplicar animación de entrada */
-}
-
-/* Efecto de escala cuando se pasa el ratón sobre el icono */
-.sidebar ul li:hover i {
-    transform: scale(1.1); /* Aumenta el tamaño del icono */
-}
-
-/* Estilos del tooltip (texto que aparece al pasar el ratón) */
-.tooltip {
-    display: none;
+    border-radius: 6px;
+    padding: 5px 10px;
     position: absolute;
-    top: 100%; /* Posición debajo del ícono */
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 5px;
-    border-radius: 5px;
-    font-size: 14px;
+    z-index: 1;
+    font-size: 20px;
+    left: 110%;
+    opacity: 0;
+    transition: opacity 0.3s;
     white-space: nowrap;
-    z-index: 10; /* Asegura que el tooltip esté por encima de otros elementos */
+}
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+/* Suppress the Gestión tooltip when submenu is open */
+#gestionAdmin.suppress-tooltip .tooltiptext {
+    visibility: hidden !important;
+    opacity: 0 !important;
 }
 
-/* Mostrar el tooltip cuando se pasa el ratón sobre el enlace o el botón */
-.sidebar ul li:hover .tooltip,
-button#cerrarSesion:hover .tooltip {
-    display: block;
-}
-
-/* Estilos del botón de cerrar sesión */
-button#cerrarSesion {
-    margin-top: auto;
-    margin-bottom: 10%;
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    padding: 10px 0;
-    transition: background 0.3s;
-    position: relative; /* Necesario para el tooltip */
-    animation: fadeIn 1s ease-out; /* Aplicar animación de entrada */
-}
-
-/* Efecto hover para el botón de cerrar sesión */
-button#cerrarSesion:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Efecto de escala solo en el ícono del botón */
-button#cerrarSesion:hover i {
-    transform: scale(1.1); /* Aumenta el tamaño del ícono */
-}
-
-/* Estilos para la imagen del logo */
-.logo-icon {
-    background-color: white; /* Fondo blanco */
-    border-radius: 50%; /* Forma circular */
-    padding: 20px; /* Espaciado dentro del círculo */
-    width: 50px; /* Tamaño del círculo */
-    height: 50px; /* Tamaño uniforme */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: transform 0.3s; /* Efecto de escala al pasar el ratón */
-    animation: fadeIn 1s ease-out; /* Aplicar animación de entrada */
-}
-
-/* Estilos para la imagen dentro del main */
-main.content img {
-    max-width: 80%; /* Ajusta el tamaño de la imagen */
-    height: auto; /* Mantiene la proporción */
-    border-radius: 15px; /* Bordes redondeados */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra suave */
-    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transición suave */
-    display: block; /* Asegura que la imagen esté centrada */
-    margin: 0 auto; /* Centra la imagen horizontalmente */
-    animation: fadeIn 1s ease-out; /* Aplicar animación de entrada */
+/* RESPONSIVE VISTA MOVIL*/
+@media(max-width: 768px) {
+    #sidebar {
+        width: 3rem;
+        padding-top: 1rem;
+    }
+    #logo {
+        height: 3rem;
+        width: 3rem;
+    }
+    #sidebar i,
+    #cerrarSesion {
+        font-size: 35px;
+        margin-top: 1rem;
+    }
+    #gestionSubmenu {
+        left: 7rem !important; /* Adjust to create a gap from the 4rem sidebar */
+        width: 8rem !important; /* Maintain the width */
+    }
+    #gestionSubmenu a{
+        font-size: 15px;
+    }
+     #gestionSubmenu a i{
+        font-size: 20px;
+    }
+   
+    #gestionSubmenu li {
+        margin-top: 1px;
+    }
 }

@@ -191,7 +191,7 @@ function agregarDestinoInput() {
 // Interceptar clics en enlaces de navegación
 function interceptarNavegacion() {
     document.querySelectorAll('a[href], button:not(#iniciarViaje, #finalizarViaje, \n\
-#agregarGasto, #btnVolver,#menuButton, #sidebarMenuButton, .gas-level-btn,\n\
+#agregarGasto, #btnVolver,#menuButton, #sidebarMenuButton, .fuel-level-btn,\n\
  .btnAgregarDestino, #registrarOtroViaje, #gestionAdmin, #gestionSubmenu, #btnGestion)').forEach(element => {
         element.addEventListener('click', function (e) {
             if (hayDatosNoGuardados()) {
@@ -934,10 +934,12 @@ async function finalizarViaje(event) {
         }).then((result) => {
             if (iniciarForm) {
                 iniciarForm.reset();
+                iniciarForm.scrollIntoView({behavior: 'smooth'});
+
                 console.log('iniciarViajeForm reseteado');
             }
             if (finalizarForm) {
-            window.location.href = '/menu';
+                window.location.href = '/menu';
 
             }
             const fotoTablero = document.getElementById('fotoTablero');

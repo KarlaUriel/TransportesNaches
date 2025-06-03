@@ -80,7 +80,6 @@ document.addEventListener("DOMContentLoaded", function () {
         clientes.forEach(cliente => {
             const persona = cliente.persona || cliente.Persona || {};
             const tipoMostrar = cliente.tipoCliente === 'M' ? 'Moral' : cliente.tipoCliente === 'F' ? 'Física' : 'Desconocido';
-
             const nombreCompleto = [
                 persona.nombre || '',
                 persona.apellidoPaterno || '',
@@ -90,39 +89,51 @@ document.addEventListener("DOMContentLoaded", function () {
             const correo = persona.correo || 'Sin Correo';
 
             contenido += `
-                <tr>
-                    <td class="px-4 py-2 text-sm text-gray-800">${nombreCompleto}</td>
-                    <td class="px-4 py-2 text-sm text-gray-800">${telefono}</td>
-                    <td class="px-4 py-2 text-sm text-gray-800">${correo}</td>
-                    <td class="px-4 py-2 text-sm text-gray-800">${tipoMostrar}</td>
-                    <td class="px-4 py-2 text-sm text-gray-800">
+                <div class="client-card bg-white rounded-lg shadow-md p-4 flex flex-col gap-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-gray-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-800">${nombreCompleto}</h3>
+                            <p class="text-sm text-gray-600 capitalize">${tipoMostrar}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <i class="fas fa-phone text-orange-600"></i>
+                        <span>${telefono}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <i class="fas fa-envelope text-orange-600"></i>
+                        <span>${correo}</span>
+                    </div>
+                    <div class="flex justify-between mt-2">
                         <button onclick="mostrarSubclientes(${cliente.idCliente})" class="text-blue-500 hover:text-blue-700">
                             <i class="fas fa-users"></i> Ver Subclientes
                         </button>
-                    </td>
-                    <td class="px-4 py-2 text-sm text-gray-800 text-center">
-                        <button onclick="cargarDetalleCliente(${cliente.idCliente})" class="text-blue-500 hover:text-blue-700 mr-2">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="eliminarCliente(${cliente.idCliente})" class="text-red-500 hover:text-red-700">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                </tr>
+                        <div>
+                            <button onclick="cargarDetalleCliente(${cliente.idCliente})" class="text-blue-500 hover:text-blue-700 mr-2">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="eliminarCliente(${cliente.idCliente})" class="text-red-500 hover:text-red-700">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             `;
         });
 
         tblClientes.innerHTML = contenido;
+        buscarClientes(); // Apply search filter after rendering
     }
 
     function buscarClientes() {
         const termino = txtBuscar.value.toLowerCase().trim();
-        const filas = tblClientes.querySelectorAll("tr");
-
-        filas.forEach(fila => {
-            const celdaNombre = fila.querySelector("td:nth-child(1)");
-            const nombre = celdaNombre ? celdaNombre.textContent.toLowerCase().trim() : '';
-            fila.style.display = nombre.includes(termino) ? "" : "none";
+        const cards = tblClientes.querySelectorAll(".client-card");
+        cards.forEach(card => {
+            const nombre = card.querySelector("h3").textContent.toLowerCase().trim();
+            card.style.display = nombre.includes(termino) ? "" : "none";
         });
     }
 
@@ -181,11 +192,25 @@ document.addEventListener("DOMContentLoaded", function () {
         const div = document.createElement('div');
         div.className = 'flex flex-col md:flex-row gap-4 mb-2 subcliente-entry';
         div.innerHTML = `
-            <input type="text" class="w-full p-2 border border-orange-300 rounded bg-white text-gray-800 text-sm subcliente-nombre" placeholder="Nombre del subcliente" value="${nombre || ''}" data-id="${id || ''}">
-            <input type="text" class="w-full p-2 border border-orange-300 rounded bg-white text-gray-800 text-sm subcliente-ubicacion" placeholder="Ubicación (Google Maps)" value="${ubicacion || ''}">
-            <button type="button" class="bg-red-600 text-white py-1 px-2 rounded hover:bg-red-700 transition remove-subcliente">
-                <i class="fas fa-trash"></i>
-            </button>
+            <div class="client-card bg-white rounded-lg shadow-md p-4 flex flex-col gap-2 w-full">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-gray-500 text-xl"></i>
+                    </div>
+                    <div>
+                        <input type="text" class="w-full p-2 border border-orange-300 rounded bg-white text-gray-800 text-sm subcliente-nombre font-bold" placeholder="Nombre del subcliente" value="${nombre || ''}" data-id="${id || ''}">
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <i class="fas fa-map-marker-alt text-orange-600"></i>
+                    <input type="text" class="w-full p-2 border border-orange-300 rounded bg-white text-gray-800 text-sm subcliente-ubicacion" placeholder="Ubicación (Google Maps)" value="${ubicacion || ''}">
+                </div>
+                <div class="flex justify-end mt-2">
+                    <button type="button" class="bg-red-600 text-white py-1 px-2 rounded hover:bg-red-700 transition remove-subcliente">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
         `;
         subclientesList.appendChild(div);
 
@@ -249,20 +274,22 @@ document.addEventListener("DOMContentLoaded", function () {
             subclientes.forEach(sub => {
                 const isValidUrl = validarURLGoogleMaps(sub.ubicacion);
                 contenido += `
-                    <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-user text-orange-500 text-2xl mr-3"></i>
-                            <h3 class="text-lg font-semibold text-gray-800">${sub.nombre || 'Sin Nombre'}</h3>
+                    <div class="client-card bg-white rounded-lg shadow-md p-4 flex flex-col gap-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-gray-500 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800">${sub.nombre || 'Sin Nombre'}</h3>
+                            </div>
                         </div>
-                        <div class="text-sm text-gray-600 mb-4">
-                            <p><strong>Ubicación:</strong></p>
-                            <p>
-                                ${isValidUrl 
-                                    ? `<a href="${sub.ubicacion}" target="_blank" class="text-blue-500 hover:underline">Ver en Google Maps</a>`
-                                    : sub.ubicacion || 'Sin Ubicación'}
-                            </p>
+                        <div class="flex items-center gap-2 text-sm">
+                            <i class="fas fa-map-marker-alt text-orange-600"></i>
+                            <span>${isValidUrl 
+                                ? `<a href="${sub.ubicacion}" target="_blank" class="text-blue-500 hover:underline">Ver en Google Maps</a>`
+                                : sub.ubicacion || 'Sin Ubicación'}</span>
                         </div>
-                        <div class="flex justify-end">
+                        <div class="flex justify-end mt-2">
                             <button onclick="cargarSubclienteParaEdicion(${sub.idSubcliente}, '${sub.nombre}', '${sub.ubicacion}')" 
                                     class="text-blue-500 hover:text-blue-700">
                                 <i class="fas fa-edit"></i> Editar

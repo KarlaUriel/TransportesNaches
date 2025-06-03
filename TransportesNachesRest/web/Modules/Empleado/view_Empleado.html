@@ -6,7 +6,6 @@
         <title>Gestión de Operadores | Transportes Naches</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="icon" type="image/png" sizes="16x16" href="/Resource/transportesNaches.png">
-
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
         <style>
@@ -33,38 +32,44 @@
                 visibility: visible;
                 opacity: 1;
             }
+            .operator-card {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            .operator-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            }
+            @media (max-width: 768px) {
+                .operator-card {
+                    width: 100%;
+                }
+            }
         </style>
     </head>
     <body class="h-screen bg-gradient-to-r from-orange-400 to-orange-700 overflow-x-hidden">
-
-        <!-- Botón Hamburguesa -->
         <!-- Botón Hamburguesa -->
         <div class="md:hidden fixed top-4 left-4 z-50 bg-transparent">
             <button id="menuButton" onclick="toggleSidebar()" class="text-white text-3xl bg-transparent">
-                <i class="fas fa-bars"></i>
+                <i id="menu-icon" class="fas fa-bars"></i>
             </button>
         </div>
+        <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
 
         <div class="flex h-full w-full">
             <!-- Barra de Navegación Lateral Compacta -->
             <nav id="sidebar"
                  class="fixed md:relative z-40 w-16 h-full flex flex-col items-center py-4 shadow-2xl transform -translate-x-full md:translate-x-0 transition-transform duration-300"
                  style="background: linear-gradient(to bottom, #1a202c, #2d3748)">
-
                 <!-- Botón hamburguesa abajo del logo (solo visible en móviles) -->
                 <div class="md:hidden mb-8">
-                    <button onclick="toggleSidebar()">
-
-                    </button>
+                    <button onclick="toggleSidebar()"></button>
                 </div>
-
                 <!-- Logo más pequeño -->
                 <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-orange-400 mb-8">
                     <a href="/menu">
                         <img src="../../Resource/transportesNaches.png" alt="logo" class="w-6 h-6 rounded-full hover:opacity-80 transition" />
                     </a>
                 </div>
-
                 <!-- Menú compacto (solo iconos) -->
                 <ul class="w-full px-2 space-y-6 flex-grow">
                     <!-- Bitácora (visible para todos) -->
@@ -74,7 +79,6 @@
                             <span class="tooltiptext">Bitácora</span>
                         </a>
                     </li>
-
                     <!-- Botones solo para Administrador -->
                     <li class="admin-only tooltip" id="contabilidad">
                         <a href="/contabilidad" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors">
@@ -82,13 +86,11 @@
                             <span class="tooltiptext">Contabilidad</span>
                         </a>
                     </li>
-
                     <li id="gestionAdmin" class="admin-only tooltip">
                         <button onclick="toggleGestionMenu()" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors w-full">
                             <i class="fas fa-cogs text-xl"></i>
                             <span class="tooltiptext">Gestión</span>
                         </button>
-
                         <!-- Submenú desplegable -->
                         <ul id="gestionSubmenu" class="hidden absolute left-16 top-0 bg-gray-800 text-white rounded-md shadow-lg py-2 w-48 space-y-2 z-50">
                             <li><a href="/cliente" class="block px-4 py-2 hover:bg-orange-500">Gestión Cliente</a></li>
@@ -99,7 +101,6 @@
                         </ul>
                     </li>
                 </ul>
-
                 <!-- Botón de Cerrar Sesión con más espacio arriba -->
                 <div class="mt-16 mb-4 tooltip">
                     <button id="cerrarSesion" class="flex items-center justify-center p-3 text-white hover:text-red-300 transition-colors">
@@ -116,7 +117,6 @@
                     <h1 class="text-center text-2xl font-bold text-gray-800 bg-orange-200 py-2 px-4 rounded-lg mb-6">
                         Gestión de Operadores
                     </h1>
-
                     <!-- Botones de Acción -->
                     <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
                         <div class="flex items-center gap-2">
@@ -132,12 +132,11 @@
                             <i class="fas fa-search absolute left-3 top-3 text-orange-400"></i>
                         </div>
                     </div>
-                    <!-- Formulario de Cliente (oculto inicialmente) -->
+                    <!-- Formulario de Operador (oculto inicialmente) -->
                     <form id="formOperador" class="hidden space-y-4 mb-6 bg-orange-50 p-4 rounded-lg">
                         <input type="hidden" id="idOperador">
                         <input type="hidden" id="idPersona">
                         <input type="hidden" id="idUsuario">
-
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label for="nombre" class="block text-sm font-bold text-gray-800 mb-2">Nombre(s):</label>
@@ -152,7 +151,6 @@
                                 <input type="text" id="apellidoMaterno" class="w-full p-2 border border-orange-300 rounded bg-white text-gray-800 text-sm">
                             </div>
                         </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="telefono" class="block text-sm font-bold text-gray-800 mb-2">Teléfono:</label>
@@ -163,7 +161,6 @@
                                 <input type="email" id="correo" class="w-full p-2 border border-orange-300 rounded bg-white text-gray-800 text-sm">
                             </div>
                         </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label for="usuario" class="block text-sm font-bold text-gray-800 mb-2">Usuario:</label>
@@ -187,30 +184,16 @@
                             </button>
                         </div>
                     </form>
-
-                    <!-- Tabla de Operador -->
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white border border-orange-200 rounded-lg">
-                            <thead>
-                                <tr class="bg-gradient-to-r from-orange-500 to-yellow-500 text-white">
-
-                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Nombre Completo</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Teléfono</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Correo</th>
-                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Estado</th>
-                                    <th class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tblOperador" class="divide-y divide-orange-200">
-                                <!-- Los datos se cargarán dinámicamente con JavaScript -->
-                            </tbody>
-                        </table>
+                    <!-- Grid de Operadores -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="tblOperador">
+                        <!-- Los datos se cargarán dinámicamente con JavaScript -->
                     </div>
                 </div>
             </main>
         </div>
 
         <!-- Scripts -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             function toggleSidebar() {
                 const sidebar = document.getElementById('sidebar');
@@ -245,8 +228,5 @@
         </script>
         <script src="/Modules/Menu/controller_Menu.js" type="module"></script>
         <script src="/Modules/Empleado/controller_Empleado.js" type="module"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     </body>
 </html>
-
-
