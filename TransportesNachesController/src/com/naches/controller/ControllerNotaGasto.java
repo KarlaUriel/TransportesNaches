@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Properties;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
@@ -20,6 +21,7 @@ public class ControllerNotaGasto {
 
     // Utility to load application.properties
     private static class ConfigUtil {
+
         private static final Properties props = new Properties();
 
         static {
@@ -136,7 +138,7 @@ public class ControllerNotaGasto {
                 pstmt.executeUpdate();
             }
 
-             if (notasCache != null) {
+            if (notasCache != null) {
                 notasCache.clear();
                 System.out.println("Cache invalidado tras finalizarNota");
             }
@@ -167,9 +169,52 @@ public class ControllerNotaGasto {
             }
 
             // Actualizar estado en contabilidadN
-            String sqlUpdateEstado = "UPDATE contabilidadN SET estadoFact = 'Pendiente' WHERE idNota = ? AND idGasto IS NULL";
+            String sqlUpdateEstado = """
+                                     UPDATE contabilidadN cn
+                                     JOIN notaGasto n ON cn.idNota = n.idNota
+                                     LEFT JOIN unidad u ON n.idUnidad = u.idUnidad
+                                     LEFT JOIN cliente c ON n.idCliente = c.idCliente
+                                     SET 
+                                         cn.estadoFact = CASE WHEN c.factura = 1 THEN 'Pendiente' ELSE 'No Facturable' END,
+                                         cn.maniobra = 0,
+                                         cn.comision = 0,
+                                         cn.pagoViaje = (
+                                             (COALESCE(n.kmFinal - n.kmInicio, 0) / COALESCE(u.rendimientoUnidad, 7)) * 
+                                             COALESCE(
+                                                 (SELECT g.valorLitro 
+                                                  FROM gasto g 
+                                                  WHERE g.idNota = n.idNota 
+                                                  AND g.idTipoGasto = (SELECT idTipoGasto FROM tipoGasto WHERE descripcion = 'Combustible') 
+                                                  LIMIT 1),
+                                                 25.50
+                                             ) * 3.5 + (COALESCE(n.noEntrega, 0) * 289)
+                                         ),
+                                         cn.ganancia = (
+                                             (
+                                                 (COALESCE(n.kmFinal - n.kmInicio, 0) / COALESCE(u.rendimientoUnidad, 7)) * 
+                                                 COALESCE(
+                                                     (SELECT g.valorLitro 
+                                                      FROM gasto g 
+                                                      WHERE g.idNota = n.idNota 
+                                                      AND g.idTipoGasto = (SELECT idTipoGasto FROM tipoGasto WHERE descripcion = 'Combustible') 
+                                                      LIMIT 1),
+                                                     25.50
+                                                 ) * 3.5 + (COALESCE(n.noEntrega, 0) * 289)
+                                             ) - 
+                                             (
+                                                 COALESCE(
+                                                     (SELECT SUM(g.total) 
+                                                      FROM gasto g 
+                                                      WHERE g.idNota = n.idNota),
+                                                     0
+                                                 ) + 0 + 0  -- Use new maniobra and comision values (0)
+                                             )
+                                         )
+                                     WHERE cn.idNota = ? AND cn.idGasto IS NULL;
+                                     """;
             try (PreparedStatement pstmt = conn.prepareStatement(sqlUpdateEstado)) {
                 pstmt.setInt(1, ng.getIdNota());
+                
                 pstmt.executeUpdate();
             }
 
@@ -196,7 +241,7 @@ public class ControllerNotaGasto {
                     cstmtGasto.execute();
                 }
             }
-             if (notasCache != null) {
+            if (notasCache != null) {
                 notasCache.clear();
                 System.out.println("Cache invalidado tras finalizarNota");
             }
@@ -206,7 +251,6 @@ public class ControllerNotaGasto {
             connMySQL.close();
         }
     }
-
 
     public void updateContabilidad(Contabilidad ct) throws Exception {
         String sql = "{CALL update_contabilidadN(?, ?, ?, ?, ?, ?, ?, ?)}";
@@ -329,73 +373,220 @@ public class ControllerNotaGasto {
         }
     }
 
-    public List<NotaGasto> getAll(int page, int size) throws Exception {
-        String cacheKeyPrefix = "notasGasto-" + page + "-" + size + "-";
+    public NotaGastoResponse getAll(int page, int size, Integer year, Integer month, String operator, String weekStart) throws Exception {
+        // Ensure unique cache keys for notes and summary
+        String cacheKeyPrefix = "notasGasto-page" + page + "-size" + size + "-y" + year + "-m" + month + "-o" + operator + "-w" + weekStart + "-";
+        String summaryCacheKey = "finanzaSummary-page" + page + "-size" + size + "-y" + year + "-m" + month + "-o" + operator + "-w" + weekStart;
         List<NotaGasto> notas = new ArrayList<>();
+        Finanza summary = new Finanza();
         boolean cacheHit = true;
 
         if (notasCache != null) {
-            // Try to retrieve from cache
+            // Try to retrieve notes from cache
             for (int i = 0; i < size; i++) {
                 String key = cacheKeyPrefix + i;
-                NotaGasto nota = notasCache.get(key);
-                if (nota != null) {
-                    notas.add(nota);
+                Object cachedObject = notasCache.get(key);
+                if (cachedObject instanceof NotaGasto) {
+                    notas.add((NotaGasto) cachedObject);
                 } else {
                     cacheHit = false;
                     break;
                 }
             }
-            if (cacheHit && notas.size() == size) {
+            // Try to retrieve financial summary from cache
+            Object cachedSummaryObject = notasCache.get(summaryCacheKey);
+            if (cachedSummaryObject instanceof Finanza) {
+                summary = (Finanza) cachedSummaryObject;
+            } else {
+                cacheHit = false;
+            }
+
+            if (cacheHit && notas.size() == size && summary != null) {
                 System.out.println("Cache hit para page: " + page + ", size: " + size);
-                return notas;
+                return new NotaGastoResponse(notas, countAll(), summary);
             }
         }
         System.out.println("Cache miss para page: " + page + ", size: " + size);
 
-        // Fetch from database
         notas.clear();
-        String sql = "SELECT ng.idNota, ng.origen, ng.destino, ng.fechaLlenado, ng.fechaSalida, ng.fechaLlegada, "
-                + "ng.horaSalida, ng.horaLlegada, ng.kmInicio, ng.kmFinal, ng.noEntrega, ng.gasolinaInicio, "
-                + "ng.gasolinaLevel, ng.llantasInicio, ng.aceiteInicio, ng.anticongelanteInicio, ng.liquidoFrenosInicio, "
-                + "ng.comentarioEstado, ng.fotoTablero, ng.fotoAcuse, ng.fotoOtraInicio, ng.fotoOtraFin, "
-                + "c.numeroFactura, c.estadoFact, c.pagoViaje, c.comision, c.maniobra, c.fechaPago, c.pago, "
-                + "ng.nombreOperador, cl.idCliente, cl.nombreCliente, cl.factura, u.idUnidad, u.tipoVehiculo, "
-                + "u.rendimientoUnidad, u.activoUnidad "
-                + "FROM notaGasto ng "
-                + "LEFT JOIN contabilidadN c ON ng.idNota = c.idNota AND c.idGasto IS NULL "
-                + "LEFT JOIN cliente cl ON ng.idCliente = cl.idCliente "
-                + "LEFT JOIN unidad u ON ng.idUnidad = u.idUnidad "
-                + "ORDER BY ng.idNota DESC "
-                + "LIMIT ? OFFSET ?";
         ConexionMySQL connMySQL = new ConexionMySQL();
+        Connection conn = null;
 
-        try (Connection conn = connMySQL.open(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, size);
-            pstmt.setInt(2, page * size);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                Set<Integer> notaIds = new HashSet<>();
-                int index = 0;
-                while (rs.next()) {
-                    int idNota = rs.getInt("idNota");
-                    if (notaIds.add(idNota)) {
-                        NotaGasto nota = fill(rs);
-                        nota.setGastos(getGastosByNotaId(idNota, conn));
-                        notas.add(nota);
-                        // Cache individual NotaGasto
-                        if (notasCache != null) {
-                            notasCache.put(cacheKeyPrefix + index, nota);
+        try {
+            conn = connMySQL.open();
+            // Fetch notes
+            StringBuilder sqlNotas = new StringBuilder(
+                    "SELECT ng.idNota, ng.origen, ng.destino, ng.fechaLlenado, ng.fechaSalida, ng.fechaLlegada, "
+                    + "ng.horaSalida, ng.horaLlegada, ng.kmInicio, ng.kmFinal, ng.noEntrega, ng.gasolinaInicio, "
+                    + "ng.gasolinaLevel, ng.llantasInicio, ng.aceiteInicio, ng.anticongelanteInicio, ng.liquidoFrenosInicio, "
+                    + "ng.comentarioEstado, ng.fotoTablero, ng.fotoAcuse, ng.fotoOtraInicio, ng.fotoOtraFin, "
+                    + "c.numeroFactura, c.estadoFact, c.pagoViaje, c.comision, c.maniobra, c.fechaPago, c.pago, "
+                    + "ng.nombreOperador, cl.idCliente, cl.nombreCliente, cl.factura, u.idUnidad, u.tipoVehiculo, "
+                    + "u.rendimientoUnidad, u.activoUnidad "
+                    + "FROM notaGasto ng "
+                    + "LEFT JOIN contabilidadN c ON ng.idNota = c.idNota "
+                    + "LEFT JOIN cliente cl ON ng.idCliente = cl.idCliente "
+                    + "LEFT JOIN unidad u ON ng.idUnidad = u.idUnidad "
+                    + "WHERE 1=1 "
+            );
+            List<Object> paramsNotas = new ArrayList<>();
+
+            // Apply filters
+            if (year != null) {
+                sqlNotas.append(" AND YEAR(ng.fechaSalida) = ?");
+                paramsNotas.add(year);
+            }
+            if (month != null) {
+                sqlNotas.append(" AND MONTH(ng.fechaSalida) = ?");
+                paramsNotas.add(month + 1); // Adjust for 1-based SQL months
+            }
+            if (operator != null && !operator.equals("todos")) {
+                sqlNotas.append(" AND ng.nombreOperador = ?");
+                paramsNotas.add(operator);
+            }
+            if (weekStart != null && !weekStart.equals("todos")) {
+                sqlNotas.append(" AND ng.fechaSalida BETWEEN ? AND DATE_ADD(?, INTERVAL 6 DAY)");
+                paramsNotas.add(weekStart);
+                paramsNotas.add(weekStart);
+            }
+
+            sqlNotas.append(" ORDER BY ng.idNota DESC LIMIT ? OFFSET ?");
+            paramsNotas.add(size);
+            paramsNotas.add(page * size);
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlNotas.toString())) {
+                for (int i = 0; i < paramsNotas.size(); i++) {
+                    pstmt.setObject(i + 1, paramsNotas.get(i));
+                }
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    Set<Integer> notaIds = new HashSet<>();
+                    int index = 0;
+                    while (rs.next()) {
+                        int idNota = rs.getInt("idNota");
+                        if (notaIds.add(idNota)) {
+                            NotaGasto nota = fill(rs);
+                            nota.setGastos(getGastosByNotaId(idNota, conn));
+                            notas.add(nota);
+                            if (notasCache != null) {
+                                notasCache.put(cacheKeyPrefix + index, nota);
+                            }
+                            index++;
                         }
-                        index++;
                     }
                 }
             }
-        } finally {
-            connMySQL.close();
-        }
 
-        System.out.println("Almacenado en caché " + notas.size() + " notas para page: " + page + ", size: " + size);
-        return notas;
+            // Fetch financial summary
+            StringBuilder sqlSummary = new StringBuilder(
+                    "SELECT "
+                    + "COALESCE(SUM(c.pagoViaje), 0) AS totalIngresos, "
+                    + "COALESCE(SUM(g.total), 0) AS totalGastosOperativos, "
+                    + "COALESCE(SUM(c.maniobra), 0) AS totalManiobra, "
+                    + "COALESCE(SUM(c.comision), 0) AS totalComision, "
+                    + "COALESCE(SUM(g.total + c.maniobra + c.comision), 0) AS totalGastos, "
+                    + "COALESCE(SUM(c.pagoViaje - (g.total + c.maniobra + c.comision)), 0) AS totalGananciaNotas, "
+                    + "COALESCE(SUM(c.comision + c.maniobra), 0) AS totalNomina, "
+                    + "(SELECT COALESCE(SUM(monto), 0) FROM GastosAnuales WHERE YEAR(fechaCreacion) = ? OR ? IS NULL) AS gastosAnualesTotal, "
+                    + "(SELECT COALESCE(SUM(monto)/365, 0) FROM GastosAnuales WHERE YEAR(fechaCreacion) = ? OR ? IS NULL) AS gastosAnualesDiarios "
+                    + "FROM notaGasto ng "
+                    + "LEFT JOIN contabilidadN c ON ng.idNota = c.idNota AND c.idGasto IS NULL "
+                    + "LEFT JOIN gasto g ON ng.idNota = g.idNota "
+                    + "LEFT JOIN cliente cl ON ng.idCliente = cl.idCliente "
+                    + "LEFT JOIN unidad u ON ng.idUnidad = u.idUnidad "
+                    + "WHERE 1=1 "
+            );
+            List<Object> paramsSummary = new ArrayList<>();
+            paramsSummary.add(year != null ? year : null);
+            paramsSummary.add(year != null ? year : null);
+            paramsSummary.add(year != null ? year : null);
+            paramsSummary.add(year != null ? year : null);
+
+            // Apply same filters
+            if (year != null) {
+                sqlSummary.append(" AND YEAR(ng.fechaSalida) = ?");
+                paramsSummary.add(year);
+            }
+            if (month != null) {
+                sqlSummary.append(" AND MONTH(ng.fechaSalida) = ?");
+                paramsSummary.add(month + 1);
+            }
+            if (operator != null && !operator.equals("todos")) {
+                sqlSummary.append(" AND ng.nombreOperador = ?");
+                paramsSummary.add(operator);
+            }
+            if (weekStart != null && !weekStart.equals("todos")) {
+                sqlSummary.append(" AND ng.fechaSalida BETWEEN ? AND DATE_ADD(?, INTERVAL 6 DAY)");
+                paramsSummary.add(weekStart);
+                paramsSummary.add(weekStart);
+            }
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlSummary.toString())) {
+                for (int i = 0; i < paramsSummary.size(); i++) {
+                    pstmt.setObject(i + 1, paramsSummary.get(i));
+                }
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        summary.setTotalIngresos(rs.getBigDecimal("totalIngresos"));
+                        summary.setTotalGastosOperativos(rs.getBigDecimal("totalGastosOperativos"));
+                        summary.setTotalManiobra(rs.getBigDecimal("totalManiobra"));
+                        summary.setTotalComision(rs.getBigDecimal("totalComision"));
+                        summary.setTotalGastos(rs.getBigDecimal("totalGastos"));
+                        summary.setTotalGananciaNotas(rs.getBigDecimal("totalGananciaNotas"));
+                        summary.setTotalNomina(rs.getBigDecimal("totalNomina"));
+                        summary.setGastosAnualesTotal(rs.getBigDecimal("gastosAnualesTotal"));
+                        summary.setGastosAnualesDiarios(rs.getBigDecimal("gastosAnualesDiarios"));
+
+                        // Compute derived metrics
+                        BigDecimal totalGastos = summary.getTotalGastos() != null ? summary.getTotalGastos() : BigDecimal.ZERO;
+                        BigDecimal totalIngresos = summary.getTotalIngresos() != null ? summary.getTotalIngresos() : BigDecimal.ZERO;
+                        BigDecimal gastosAnualesTotal = summary.getGastosAnualesTotal() != null ? summary.getGastosAnualesTotal() : BigDecimal.ZERO;
+                        BigDecimal gastosAnualesDiarios = summary.getGastosAnualesDiarios() != null ? summary.getGastosAnualesDiarios() : BigDecimal.ZERO;
+                        BigDecimal totalNomina = summary.getTotalNomina() != null ? summary.getTotalNomina() : BigDecimal.ZERO;
+
+                        summary.setTotalGastosConAnuales(totalGastos.add(gastosAnualesTotal));
+                        summary.setTotalGastosConAnualesDiarios(totalGastos.add(gastosAnualesDiarios));
+                        summary.setGananciaNeta(totalIngresos.subtract(totalGastos));
+
+                        // Percentages
+                        summary.setMargenGanancia(totalIngresos.compareTo(BigDecimal.ZERO) > 0
+                                ? summary.getGananciaNeta().divide(totalIngresos, 4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal("100"))
+                                : BigDecimal.ZERO);
+                        summary.setPorcentajeGastosOperativos(totalGastos.compareTo(BigDecimal.ZERO) > 0
+                                ? summary.getTotalGastosOperativos().divide(totalGastos, 4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal("100"))
+                                : BigDecimal.ZERO);
+                        summary.setPorcentajeManiobra(totalGastos.compareTo(BigDecimal.ZERO) > 0
+                                ? summary.getTotalManiobra().divide(totalGastos, 4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal("100"))
+                                : BigDecimal.ZERO);
+                        summary.setPorcentajeComision(totalGastos.compareTo(BigDecimal.ZERO) > 0
+                                ? summary.getTotalComision().divide(totalGastos, 4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal("100"))
+                                : BigDecimal.ZERO);
+                        summary.setPorcentajeGastosAnualesDiarios(totalGastos.compareTo(BigDecimal.ZERO) > 0
+                                ? gastosAnualesDiarios.divide(totalGastos, 4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal("100"))
+                                : BigDecimal.ZERO);
+                        summary.setPorcentajeGastosAnualesTotal(totalGastos.compareTo(BigDecimal.ZERO) > 0
+                                ? gastosAnualesTotal.divide(totalGastos, 4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal("100"))
+                                : BigDecimal.ZERO);
+                        summary.setPorcentajeNomina(totalGastos.compareTo(BigDecimal.ZERO) > 0
+                                ? totalNomina.divide(totalGastos, 4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal("100"))
+                                : BigDecimal.ZERO);
+
+                        if (notasCache != null) {
+                            notasCache.clear();
+
+                        }
+                    }
+                }
+            }
+
+            System.out.println("Almacenado en caché " + notas.size() + " notas y resumen financiero para page: " + page + ", size: " + size);
+            return new NotaGastoResponse(notas, countAll(), summary);
+        } catch (SQLException e) {
+            throw new Exception("Error al consultar notas y resumen financiero: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                connMySQL.close();
+            }
+        }
     }
 
     public long countAll() throws Exception {

@@ -1,12 +1,13 @@
 package com.naches.model;
 
-import java.util.Date;
+import java.time.LocalDate;
+
 
 public class MantenimientoUnidad {
     private int idMantenimiento;
     private Unidad unidad;
     private String tipoMantenimiento;
-    private Date fechaMantenimiento;
+    private String fechaMantenimiento;
     private Integer kmActual;
     private int idUnidad;
 
@@ -16,8 +17,8 @@ public class MantenimientoUnidad {
     public void setUnidad(Unidad unidad) { this.unidad = unidad; }
     public String getTipoMantenimiento() { return tipoMantenimiento; }
     public void setTipoMantenimiento(String tipoMantenimiento) { this.tipoMantenimiento = tipoMantenimiento; }
-    public Date getFechaMantenimiento() { return fechaMantenimiento; }
-    public void setFechaMantenimiento(Date fechaMantenimiento) { this.fechaMantenimiento = fechaMantenimiento; }
+    public String getFechaMantenimiento() { return fechaMantenimiento; }
+    public void setFechaMantenimiento(String fechaMantenimiento) { this.fechaMantenimiento = fechaMantenimiento; }
     public Integer getKmActual() { return kmActual; }
     public void setKmActual(Integer kmActual) { this.kmActual = kmActual; }
     public int getIdUnidad() { return idUnidad; }

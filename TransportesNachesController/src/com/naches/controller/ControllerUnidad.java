@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Date;
 import java.time.LocalDate;
 
 public class ControllerUnidad {
@@ -165,21 +164,23 @@ public class ControllerUnidad {
         Connection conn = connMySQL.open();
         PreparedStatement pstmt = conn.prepareStatement(sql);
 
-        // Determine idUnidad: prefer unidad.idUnidad, fallback to direct idUnidad
-        int idUnidad = 0;
-        if (m.getUnidad() != null && m.getUnidad().getIdUnidad() > 0) {
-            idUnidad = m.getUnidad().getIdUnidad();
-        } else if (m.getIdUnidad() > 0) {
-            idUnidad = m.getIdUnidad();
-        }
-        System.out.println("idUnidad used: " + idUnidad); // Debug log
-        if (idUnidad <= 0) {
-            throw new Exception("Invalid idUnidad: " + idUnidad);
-        }
-
-        pstmt.setInt(1, idUnidad);
+        //eliminé la inserción por id, para poder colocar directamente desde el objeto unidad
+        pstmt.setInt(1, m.getUnidad().getIdUnidad());
+        
         pstmt.setString(2, m.getTipoMantenimiento());
-        pstmt.setDate(3, m.getFechaMantenimiento() != null ? new Date(m.getFechaMantenimiento().getTime()) : Date.valueOf(LocalDate.now()));
+        
+        //cambié el formato de la fecha para poder ponerlo en un formato común
+         java.sql.Date fechaMantenimientoSql = null;
+    if (m.getFechaMantenimiento() != null && !m.getFechaMantenimiento().isEmpty()) {
+        try {
+            fechaMantenimientoSql = java.sql.Date.valueOf(m.getFechaMantenimiento()); // Expects YYYY-MM-DD
+        } catch (IllegalArgumentException e) {
+            throw new Exception("Invalid date format. Expected YYYY-MM-DD: " + e.getMessage());
+        }
+    } else {
+        fechaMantenimientoSql = java.sql.Date.valueOf(LocalDate.now());
+    }
+    pstmt.setDate(3, fechaMantenimientoSql);
         pstmt.setInt(4, m.getKmActual() != null ? m.getKmActual() : 0);
 
         pstmt.executeUpdate();
@@ -189,7 +190,14 @@ public class ControllerUnidad {
 
     public List<MantenimientoUnidad> getMantenimientosPorUnidad(int idUnidad) throws Exception {
         List<MantenimientoUnidad> lista = new ArrayList<>();
-        String sql = "SELECT * FROM mantenimiento WHERE idUnidad = ? ORDER BY fechaMantenimiento DESC";
+
+        //cambié la consulta de sql ya que necesitaba para los mantenimientos los kmMantenimiento
+        //de cada unidad
+        String sql = "SELECT m.idMantenimiento, u.idUnidad, u.kmMantenimiento, m.tipoMantenimiento, m.fechaMantenimiento, m.kmActual " +
+             "FROM mantenimiento m " +
+             "LEFT JOIN unidad u ON m.idUnidad = u.idUnidad " +
+             "WHERE m.idUnidad = ? " +
+             "ORDER BY m.fechaMantenimiento DESC";
         ConexionMySQL connMySQL = new ConexionMySQL();
         Connection conn = connMySQL.open();
         PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -201,9 +209,15 @@ public class ControllerUnidad {
             Unidad u = new Unidad();
             m.setIdMantenimiento(rs.getInt("idMantenimiento"));
             u.setIdUnidad(rs.getInt("idUnidad"));
+            //agregué mantenimiento a la vista
+            u.setKmMantenimiento(rs.getInt("kmMantenimiento"));
             m.setUnidad(u);
             m.setTipoMantenimiento(rs.getString("tipoMantenimiento"));
-            m.setFechaMantenimiento(rs.getDate("fechaMantenimiento"));
+            
+            // conversión de la fecha al formato YYYY-MM-DD
+        java.sql.Date fechaMantenimiento = rs.getDate("fechaMantenimiento");
+        m.setFechaMantenimiento(fechaMantenimiento != null ? fechaMantenimiento.toString() : null); // "YYYY-MM-DD"
+            m.setKmActual(rs.getInt("kmActual"));
             lista.add(m);
         }
 
@@ -212,8 +226,8 @@ public class ControllerUnidad {
         connMySQL.close();
         return lista;
     }
-
-    public int getLatestKilometraje(int idUnidad) throws Exception {
+    
+     public int getLatestKilometraje(int idUnidad) throws Exception {
         String sql = "SELECT kmFinal FROM v_nota_gasto WHERE idUnidad = ? ORDER BY fechaLlegada DESC LIMIT 1";
         ConexionMySQL connMySQL = new ConexionMySQL();
         Connection conn = connMySQL.open();
@@ -221,14 +235,15 @@ public class ControllerUnidad {
         pstmt.setInt(1, idUnidad);
         ResultSet rs = pstmt.executeQuery();
 
-        int kilometraje = 0;
+        // en lugar de kilometraje le puse kmActual
+        int kmActual = 0;
         if (rs.next()) {
-            kilometraje = rs.getInt("kmFinal");
+            kmActual = rs.getInt("kmFinal");
         }
 
         rs.close();
         pstmt.close();
         connMySQL.close();
-        return kilometraje;
+        return kmActual;
     }
 }
