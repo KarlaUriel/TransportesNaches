@@ -6,12 +6,14 @@ import com.google.gson.JsonParseException;
 import com.naches.controller.ControllerLogin;
 import com.naches.controller.ControllerOperador;
 import com.naches.model.Operador;
+import com.naches.seguridad.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.OPTIONS;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -26,11 +28,43 @@ import java.util.List;
 @Path("operador")
 public class RESTOperador {
 
+     // Método para verificar el token en el encabezado Authorization
+    private Response validateToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Token no proporcionado o inválido.\"}")
+                    .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
+                    .header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .build();
+        }
+
+        String token = authHeader.substring("Bearer ".length()).trim();
+        if (!JWTUtil.validateToken(token)) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Token inválido o expirado.\"}")
+                    .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
+                    .header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .build();
+        }
+
+        return null; // Token válido, continuar con la solicitud
+    }
+        
     @GET
     @Path("getAll")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response getAll() {
+    public Response getAll(@HeaderParam("Authorization") String authHeader) {
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+        
         String out;
         ControllerOperador co = new ControllerOperador();
         List<Operador> operador;
@@ -61,7 +95,13 @@ public class RESTOperador {
     @Path("save")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response save(String datosOperador) {
+    public Response save(String datosOperador, @HeaderParam("Authorization") String authHeader) {
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerOperador co = new ControllerOperador();
         Operador o;
@@ -106,7 +146,13 @@ public class RESTOperador {
     @Path("delete/{idOperador}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response delete(@PathParam("idOperador") int idOperador) {
+    public Response delete(@PathParam("idOperador") int idOperador, @HeaderParam("Authorization") String authHeader) {
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerOperador co = new ControllerOperador();
 
@@ -139,7 +185,13 @@ public class RESTOperador {
     @POST
     @Path("reactivar/{idOperador}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response reactivarOperador(@PathParam("idOperador") int idOperador) {
+    public Response reactivarOperador(@PathParam("idOperador") int idOperador, @HeaderParam("Authorization") String authHeader) {
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerOperador cc = new ControllerOperador();
 

@@ -1,50 +1,384 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Transportes Naches</title>
-        <link rel="icon" type="image/png" sizes="16x16" href="/Resource/transportesNaches.png">
-        <script>
-           
-        </script>
-        <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-    <body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-orange-400 to-orange-800">
-        <div class="bg-white p-8 rounded-2xl shadow-lg text-center flex flex-col items-center">
-            <img src="Resource/transportesNaches.png" alt="logo" class="w-100 h-80 mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">Transportes Naches</h1>
-            <h2 class="text-lg text-gray-600 mb-6">¡Bienvenido!</h2>
-            <button 
-                class="bg-gradient-to-r from-orange-600 to-orange-700 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-300"
-                onclick="window.location.href = '/login'">
-                Ingresar
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transportes Naches - Fletes y Logística en León y Puerto Interior</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="/Resource/transportesNaches.png">
+    <meta name="description" content="Transportes Naches ofrece soluciones de flete terrestre, logística integral y almacenaje seguro en León, México, y Puerto Interior. Servicios confiables para grandes empresas y negocios.">
+    <meta name="keywords" content="transportes León, flete terrestre León, logística Puerto Interior, almacenaje seguro, fletes grandes empresas, logística integral México, transporte de carga, servicios logísticos León, Puerto Interior logística, transporte confiable México">
+    <meta name="author" content="Transportes Naches">
+    <meta name="robots" content="index, follow">
+    <meta name="geo.region" content="MX-GTO">
+    <meta name="geo.placename" content="León, Guanajuato, México">
+    <meta name="geo.position" content="21.1216;-101.6866">
+    <meta property="og:title" content="Transportes Naches - Fletes y Logística en León y Puerto Interior">
+    <meta property="og:description" content="Soluciones de flete y logística confiables para tu negocio en León, México, y Puerto Interior. ¡Contáctanos para cotizar!">
+    <meta property="og:image" content="/Resource/transportesNaches.png">
+    <meta property="og:url" content="https://transportesnaches.com.mx">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Transportes Naches - Fletes y Logística">
+    <meta name="twitter:description" content="Servicios de transporte y logística en León y Puerto Interior para grandes empresas.">
+    <meta name="twitter:image" content="/Resource/transportesNaches.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 1s ease-out forwards;
+        }
+
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .animate-slideInLeft {
+            animation: slideInLeft 0.8s ease-out forwards;
+        }
+
+        .animate-slideDown {
+            animation: slideDown 0.5s ease-out forwards;
+        }
+
+        .hover-scale {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-scale:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Custom styles for better mobile experience */
+        .custom-hero-bg {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+
+        .hero-text {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Mobile-first adjustments */
+        @media (max-width: 640px) {
+            .nav-links {
+                display: none;
+            }
+            .nav-links.active {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
+                padding: 1.5rem;
+                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+                border-radius: 0 0 8px 8px;
+                z-index: 10;
+                animation: slideDown 0.3s ease-out;
+            }
+            .nav-links.active a {
+                padding: 0.75rem 1rem;
+                border-bottom: 1px solid #e5e7eb;
+                color: #1f2937;
+                font-weight: 500;
+                transition: color 0.3s ease;
+            }
+            .nav-links.active a:hover {
+                color: #f97316;
+                background-color: #f3f4f6;
+                border-radius: 4px;
+            }
+            .nav-links.active .close-menu {
+                display: block;
+                margin-top: 0.5rem;
+                text-align: right;
+                color: #dc2626;
+                font-weight: 600;
+                cursor: pointer;
+            }
+            .mobile-menu-button {
+                display: flex; /* Show only on mobile */
+            }
+            .hero-text {
+                font-size: 1.75rem;
+            }
+            .sub-hero-text {
+                font-size: 0.9rem;
+            }
+            .navbar-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .brand-name {
+                display: none;
+            }
+        }
+
+        @media (min-width: 641px) {
+            .mobile-menu-button {
+                display: none; /* Hide on larger screens */
+            }
+            .nav-links {
+                display: flex !important;
+            }
+            .brand-name {
+                display: block;
+            }
+            .close-menu {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg fixed w-full z-20">
+        <div class="navbar-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-14 sm:h-16">
+            <!-- Logo with Decorative Element -->
+            <div class="flex items-center space-x-2">
+                <img src="/Resource/transportesNaches.png" alt="Transportes Naches Logo" class="h-8 w-auto sm:h-10">
+                <div class="w-1 h-8 bg-gradient-to-b from-orange-500 to-orange-700 rounded-full"></div>
+            </div>
+            <!-- Right Side: Login Button and Hamburger Menu -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <!-- Navigation Links (Sliding Menu) -->
+                <div class="nav-links hidden space-x-2 sm:space-x-3">
+                    <a href="#servicios" class="text-gray-600 hover:text-orange-600 transition duration-300 text-sm sm:text-base animate-slideDown" style="animation-delay: 0.1s;">Servicios</a>
+                    <a href="#testimonios" class="text-gray-600 hover:text-orange-600 transition duration-300 text-sm sm:text-base animate-slideDown" style="animation-delay: 0.2s;">Testimonios</a>
+                    <a href="#contacto" class="text-gray-600 hover:text-orange-600 transition duration-300 text-sm sm:text-base animate-slideDown" style="animation-delay: 0.3s;">Contacto</a>
+                    <span class="close-menu text-sm cursor-pointer hidden">Cerrar</span>
+                </div>
+                <!-- Login Button (Always Visible) -->
+                <button onclick="window.location.href='/login'" class="bg-orange-600 text-white px-2 py-1 sm:px-3 sm:py-2 rounded-full hover:bg-orange-700 transition duration-300 text-xs sm:text-sm animate-pulse flex items-center space-x-1">
+                    <span>Iniciar Sesión</span>
+                    <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </button>
+                <!-- Hamburger Menu for Mobile -->
+                <button class="mobile-menu-button text-gray-600 hover:text-white flex items-center space-x-1 bg-gradient-to-r from-orange-500 to-orange-700 text-white px-3 py-1 rounded-full shadow-sm hover:shadow-sm transition duration-300">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                    <span class="text-xs font-medium">Menú</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Brand Name -->
+    <section class="relative h-[60vh] sm:h-[70vh] md:h-screen flex items-center justify-center custom-hero-bg text-white overflow-hidden pt-14 sm:pt-16">
+        <div class="absolute inset-0 bg-black opacity-40"></div>
+        <div class="relative z-10 text-center max-w-3xl mx-auto px-4">
+            <h1 class="brand-name text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 animate-fadeInUp">Transportes Naches</h1>
+            <h1 class="hero-text text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-4 animate-fadeInUp leading-tight">¡Llevamos tu carga al éxito!</h1>
+            <p class="sub-hero-text text-base sm:text-lg md:text-xl lg:text-2xl mb-6 animate-fadeInUp" style="animation-delay: 0.3s;">Soluciones de flete y logística confiables para tu negocio, en cualquier momento y lugar.</p>
+            <button onclick="window.location.href='#contacto'" class="bg-white text-orange-600 px-4 py-2 sm:px-5 sm:py-3 rounded-full font-semibold hover:bg-gray-100 transition duration-300 text-sm sm:text-base animate-fadeInUp" style="animation-delay: 0.6s;">
+                Cotiza ahora
             </button>
-              </div>
+        </div>
+    </section>
 
-        <script type="module">
-            // Import the functions you need from the SDKs you need
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-            import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-            // TODO: Add SDKs for Firebase products that you want to use
-            // https://firebase.google.com/docs/web/setup#available-libraries
+    <!-- Services Section -->
+    <section id="servicios" class="py-12 sm:py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8 sm:mb-10 animate-fadeInUp">Nuestros Servicios</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <!-- Card 1 -->
+                <div class="bg-gradient-to-b from-gray-50 to-gray-100 p-4 sm:p-5 rounded-xl shadow-lg hover-scale animate-fadeInUp">
+                    <img src="/Resource/t1.jpg" alt="Flete Terrestre" class="w-full h-36 sm:h-40 md:h-48 object-cover rounded-lg mb-3">
+                    <h3 class="text-base sm:text-lg md:text-xl font-semibold text-gray-800 mb-2">Flete Terrestre</h3>
+                    <p class="text-gray-600 text-xs sm:text-sm md:text-base">Transportamos tu carga por todo México con seguridad y puntualidad.</p>
+                </div>
+                <!-- Card 2 -->
+                <div class="bg-gradient-to-b from-gray-50 to-gray-100 p-4 sm:p-5 rounded-xl shadow-lg hover-scale animate-fadeInUp" style="animation-delay: 0.2s;">
+                    <img src="/Resource/t2.jpg" alt="Logística Integral" class="w-full h-36 sm:h-40 md:h-48 object-cover rounded-lg mb-3">
+                    <h3 class="text-base sm:text-lg md:text-xl font-semibold text-gray-800 mb-2">Logística Integral</h3>
+                    <p class="text-gray-600 text-xs sm:text-sm md:text-base">Optimizamos tu cadena de suministro para ahorrar tiempo y costos.</p>
+                </div>
+                <!-- Card 3 -->
+                <div class="bg-gradient-to-b from-gray-50 to-gray-100 p-4 sm:p-5 rounded-xl shadow-lg hover-scale animate-fadeInUp" style="animation-delay: 0.4s;">
+                    <img src="/Resource/t3.jpg" alt="Almacenaje" class="w-full h-36 sm:h-40 md:h-48 object-cover rounded-lg mb-3">
+                    <h3 class="text-base sm:text-lg md:text-xl font-semibold text-gray-800 mb-2">Almacenaje Seguro</h3>
+                    <p class="text-gray-600 text-xs sm:text-sm md:text-base">Almacenes vigilados 24/7 para proteger tu mercancía.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-            // Your web app's Firebase configuration
-            // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-            const firebaseConfig = {
-                apiKey: "AIzaSyBMvKmqHV3W0HCno-OjcA3zBI1Df8f1gg0",
-                authDomain: "transportesnaches-b71e0.firebaseapp.com",
-                projectId: "transportesnaches-b71e0",
-                storageBucket: "transportesnaches-b71e0.firebasestorage.app",
-                messagingSenderId: "1015711514564",
-                appId: "1:1015711514564:web:c198e025f98f861f856e91",
-                measurementId: "G-DDCE1GJ2GG"
-            };
+    <!-- Why Choose Us Section -->
+    <section class="py-12 sm:py-16 bg-gradient-to-r from-orange-50 to-orange-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8 sm:mb-10 animate-fadeInUp">¿Por qué elegirnos?</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <!-- Feature 1 -->
+                <div class="flex items-start space-x-3 animate-slideInLeft">
+                    <div class="text-orange-600">
+                        <svg class="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg md:text-xl font-semibold text-gray-800 mb-2">Confianza y Seguridad</h3>
+                        <p class="text-gray-600 text-xs sm:text-sm md:text-base">Tu carga está en manos expertas, con seguimiento en tiempo real.</p>
+                    </div>
+                </div>
+                <!-- Feature 2 -->
+                <div class="flex items-start space-x-3 animate-slideInLeft" style="animation-delay: 0.2s;">
+                    <div class="text-orange-600">
+                        <svg class="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg md:text-xl font-semibold text-gray-800 mb-2">Entregas a Tiempo</h3>
+                        <p class="text-gray-600 text-xs sm:text-sm md:text-base">Cumplimos con tus plazos, sin excepciones.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-            // Initialize Firebase
-            const app = initializeApp(firebaseConfig);
-            const analytics = getAnalytics(app);
-        </script>
+    <!-- Testimonial Section -->
+    <section id="testimonios" class="py-12 sm:py-16 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8 sm:mb-10 animate-fadeInUp">Voces de nuestros clientes</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <!-- Testimonial 1 -->
+                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg animate-fadeInUp">
+                    <p class="text-gray-600 italic mb-3 text-xs sm:text-sm md:text-base">"Transportes Naches transformó nuestra logística. ¡Siempre a tiempo!"</p>
+                    <p class="text-gray-800 font-semibold text-xs sm:text-sm md:text-base">– Ana Gómez, CEO de Distribuidora MX</p>
+                </div>
+                <!-- Testimonial 2 -->
+                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg animate-fadeInUp" style="animation-delay: 0.2s;">
+                    <p class="text-gray-600 italic mb-3 text-xs sm:text-sm md:text-base">"El servicio de almacenaje es impecable. Nos sentimos seguros."</p>
+                    <p class="text-gray-800 font-semibold text-xs sm:text-sm md:text-base">– Carlos Rivera, Gerente de Logística</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    </body>
-</html>
+    <!-- Contact Section -->
+    <section id="contacto" class="py-12 sm:py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4 sm:mb-6 animate-fadeInUp">¿Listo para mover tu carga?</h2>
+            <p class="text-base sm:text-lg md:text-xl text-gray-600 mb-6 sm:mb-8 animate-fadeInUp" style="animation-delay: 0.2s;">Contáctanos y hagamos que tu negocio crezca.</p>
+            <button onclick="window.location.href='mailto:contacto@transportesnaches.com'" class="bg-orange-600 text-white px-4 py-2 sm:px-5 sm:py-3 rounded-full font-semibold hover:bg-orange-700 transition duration-300 text-sm sm:text-base animate-fadeInUp" style="animation-delay: 0.4s;">
+                Contáctanos
+            </button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-6 sm:py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div>
+                    <h3 class="text-base sm:text-lg font-semibold mb-3">Transportes Naches</h3>
+                    <p class="text-gray-400 text-xs sm:text-sm md:text-base">Tu aliado en fletes y logística en México.</p>
+                </div>
+                <div>
+                    <h3 class="text-base sm:text-lg font-semibold mb-3">Enlaces Rápidos</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#servicios" class="text-gray-400 hover:text-white transition duration-300 text-xs sm:text-sm md:text-base">Servicios</a></li>
+                        <li><a href="#testimonios" class="text-gray-400 hover:text-white transition duration-300 text-xs sm:text-sm md:text-base">Testimonios</a></li>
+                        <li><a href="#contacto" class="text-gray-400 hover:text-white transition duration-300 text-xs sm:text-sm md:text-base">Contacto</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-base sm:text-lg font-semibold mb-3">Contáctanos</h3>
+                    <p class="text-gray-400 text-xs sm:text-sm md:text-base">Email: contacto@transportesnaches.com</p>
+                    <p class="text-gray-400 text-xs sm:text-sm md:text-base">Teléfono: +52 55 1234 5678</p>
+                </div>
+            </div>
+            <div class="mt-6 sm:mt-8 text-center text-gray-400 text-xs sm:text-sm md:text-base">
+                <p>© 2025 Transportes Naches. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Firebase Initialization -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBMvKmqHV3W0HCno-OjcA3zBI1Df8f1gg0",
+            authDomain: "transportesnaches-b71e0.firebaseapp.com",
+            projectId: "transportesnaches-b71e0",
+            storageBucket: "transportesnaches-b71e0.firebasestorage.app",
+            messagingSenderId: "1015711514564",
+            appId: "1:1015711514564:web:c198e025f98f861f856e91",
+            measurementId: "G-DDCE1GJ2GG"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
+
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        // Ensure DOM is fully loaded before adding event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuButton = document.querySelector('.mobile-menu-button');
+            const navLinks = document.querySelector('.nav-links');
+            const closeMenu = document.querySelector('.close-menu');
+
+            if (mobileMenuButton && navLinks && closeMenu) {
+                mobileMenuButton.addEventListener('click', () => {
+                    navLinks.classList.add('active');
+                });
+
+                closeMenu.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                });
+
+                // Close menu when a link is clicked
+                navLinks.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        navLinks.classList.remove('active');
+                    });
+                });
+            }
+        });
+    </script>

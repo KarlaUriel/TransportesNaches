@@ -12,6 +12,11 @@ let currentFilters = {
 let notasPorPagina = 20;
 let notasMostradas = 0;
 
+const token = localStorage.getItem("token");
+
+
+
+
 
 function clearCache() {
     sessionStorage.removeItem('gastosAnuales');
@@ -30,7 +35,8 @@ async function cargarNotas() {
         while (hasMore) {
             const response = await fetch(`https://transportesnaches.com.mx/api/nota/getAll?page=${page}&size=${size}`, {
                 method: 'GET',
-                headers: {'Content-Type': 'application/json'}
+                headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`}
             });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -188,7 +194,8 @@ async function cargarNotasPorFecha(mes, anio) {
 
         const response = await fetch('https://transportesnaches.com.mx/api/nota/buscar', {
             method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            headers: {'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer ${token}`},
             body: new URLSearchParams(formData).toString()
         });
         if (!response.ok) {
@@ -251,7 +258,9 @@ async function cargarGastosAnuales() {
         console.log('Fetching gastosAnuales from API');
         const response = await fetch('https://transportesnaches.com.mx/api/gastoAnual/getAll', {
             method: 'GET',
-            headers: {'Content-Type': 'application/json'}
+            headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
         });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -504,6 +513,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cargarNotas();
 
+
+
 });
 
 document.getElementById('descargarExcel').addEventListener('click', () => {
@@ -546,7 +557,8 @@ document.getElementById('descargarExcel').addEventListener('click', () => {
         const rendimiento = nota.unidad?.rendimientoUnidad || 7;
         const precioLitro = nota.valorLitro || 25.50;
         const noEntrega = parseInt(nota.noEntrega) || 0;
-        const pagoViaje = ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
+        const pagoViaje = notaData.pagoVIaje ?? ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
+        ;
         const gastosOperativos = nota.gastos ? nota.gastos.reduce((sum, g) => sum + (g.total || 0), 0) : 0;
         const maniobra = parseFloat(nota.maniobra) || 0;
         const comision = parseFloat(nota.comision) || 0;
@@ -682,7 +694,7 @@ function formatRuta(origen, destino) {
     if (!origen || !destino)
         return 'N/A';
     const formattedOrigen = origen.includes('León') ? 'León' : origen;
-    const formattedDestino = destino.includes('León') ? 'León' : destino;
+    const formattedDestino = destino;
     return `${formattedOrigen} - ${formattedDestino}`;
 }
 
@@ -703,7 +715,8 @@ async function actualizarNumeroFactura(idNota, numeroFactura) {
     try {
         const response = await fetch(`https://transportesnaches.com.mx/api/nota/updateFactura`, {
             method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`},
             body: JSON.stringify({idNota, numeroFactura})
         });
         if (!response.ok) {
@@ -733,7 +746,7 @@ function generarNumeroFactura(notas) {
             .map(f => parseInt(f.replace('FAC-', '')))
             .filter(n => !isNaN(n));
     const maxNumero = facturas.length > 0 ? Math.max(...facturas) : 0;
-    return `FAC-${String(maxNumero + 1).padStart(3, '0')}`;
+    return `FAC-${String(maxNumero + 0).padStart(3, '0')}`;
 }
 
 function calcularGastosAnualesMensuales(mes, anio) {
@@ -890,7 +903,7 @@ function mostrarNotas(notas, financialSummary = {}) {
         const rendimiento = nota.unidad?.rendimientoUnidad || 7;
         const precioLitro = nota.valorLitro || 25.50;
         const noEntrega = parseInt(nota.noEntrega) || 0;
-        const pagoViaje = nota.pagoViaje != null ? nota.pagoViaje : ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
+        const pagoViaje = nota.pagoVIaje ?? ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
         const gastosOperativos = nota.gastos ? nota.gastos.reduce((sum, g) => sum + (g.total || 0), 0) : 0;
         const maniobra = parseFloat(nota.maniobra) || 0;
         const comision = parseFloat(nota.comision) || 0;
@@ -1388,7 +1401,8 @@ function mostrarNotas(notas, financialSummary = {}) {
                     try {
                         const response = await fetch(`https://transportesnaches.com.mx/api/nota/delete`, {
                             method: 'POST',
-                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded',
+                            'Authorization': `Bearer ${token}`},
                             body: `idNota=${encodeURIComponent(idNota)}`
                         });
                         const responseData = await response.json();
@@ -1492,7 +1506,9 @@ function mostrarGastosAnuales(gastos) {
                 try {
                     const response = await fetch(`https://transportesnaches.com.mx/api/gastoAnual/delete`, {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded',
+                            'Authorization': `Bearer ${token}`
+                        },
                         body: `idGastoAnual=${idGastoAnual}`
                     });
                     const result = await response.json();
@@ -1603,13 +1619,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (idGastoAnual) {
                     response = await fetch(`https://transportesnaches.com.mx/api/gastoAnual/update`, {
                         method: 'PUT',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded',
+                            'Authorization': `Bearer ${token}`
+                        },
                         body: new URLSearchParams({datosGastoAnual: JSON.stringify(payload)})
                     });
                 } else {
                     response = await fetch(`https://transportesnaches.com.mx/api/gastoAnual/insert`, {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
+                        headers: {'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
                         body: JSON.stringify(payload)
                     });
                 }
@@ -1667,5 +1687,16 @@ document.addEventListener('DOMContentLoaded', () => {
         cargarMasBtn.addEventListener('click', cargarMasNotas);
     }
 
-    cargarNotas();
+    if (!token) {
+        Swal.fire({
+            title: 'Error',
+            text: 'No se encontró un token de autenticación.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#f97316',
+        });
+        return;
+    }
+
+
 });

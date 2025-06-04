@@ -219,7 +219,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/ciudad/delete/${idCiudad}`, {
-                method: 'POST',
+                method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
                 }

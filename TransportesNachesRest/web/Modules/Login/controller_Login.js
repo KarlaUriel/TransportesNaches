@@ -15,27 +15,29 @@ async function validarLogin(event) {
         return;
     }
 
-    let datosLog = JSON.stringify({nombreUsuario: usuario, contrasenia: password});
+    let datosLog = { nombreUsuario: usuario, contrasenia: password };
 
     try {
         let response = await fetch("https://transportesnaches.com.mx/api/principal/login", {
-    method: "POST",
-    headers: {"Content-Type": "application/x-www-form-urlencoded"},
-    body: `datosLog=${encodeURIComponent(datosLog)}`
-});
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json" // Set to application/json
+            },
+            body: JSON.stringify(datosLog) // Send raw JSON
+        });
 
         let data = await response.json();
 
         if (response.ok) {
             // Guardar datos en localStorage
-            localStorage.setItem("nombreUsuario", data.nombreUsuario);
-            localStorage.setItem("nombreCompleto", data.nombreCompleto);
-            localStorage.setItem("nombreOperador", data.nombreOperador || data.nombreCompleto.split(' ')[0]); // Primer nombre como fallback
-            localStorage.setItem("idUsuario", data.idUsuario);
-            localStorage.setItem("rol", data.rol);
-            localStorage.setItem("nombreCompleto", data.nombreCompleto);
+            localStorage.setItem("nombreUsuario", data.usuario.nombreUsuario);
+            localStorage.setItem("nombreCompleto", data.usuario.nombreCompleto);
+            localStorage.setItem("nombreOperador", data.usuario.nombreOperador || data.usuario.nombreCompleto.split(' ')[0]); // Primer nombre como fallback
+            localStorage.setItem("idUsuario", data.usuario.idUsuario);
+            localStorage.setItem("rol", data.usuario.rol);
+            localStorage.setItem("token", data.token); // Store the JWT token
 
-            if (data.rol === "Administrador") {
+            if (data.usuario.rol === "Administrador") {
                 Swal.fire({
                     title: 'Éxito',
                     text: 'Inicio de sesión exitoso como Administrador.',
@@ -45,7 +47,7 @@ async function validarLogin(event) {
                 }).then(() => {
                     window.location.href = "/menu";
                 });
-            } else if (data.rol === "Operador") {
+            } else if (data.usuario.rol === "Operador") {
                 Swal.fire({
                     title: 'Éxito',
                     text: 'Inicio de sesión exitoso como Operador.',

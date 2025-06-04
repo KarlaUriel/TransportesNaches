@@ -38,25 +38,26 @@
                 background-color: #4a5568;
                 color: #fff;
                 text-align: center;
-                border-radius: 6px;
-                padding: 5px 10px;
+                border-radius: 4px;
+                padding: 4px 8px;
                 position: absolute;
                 z-index: 1;
                 left: 110%;
                 opacity: 0;
                 transition: opacity 0.3s;
                 white-space: nowrap;
+                font-size: 0.75rem;
             }
             .tooltip:hover .tooltiptext {
                 visibility: visible;
                 opacity: 1;
             }
             .card {
-                @apply bg-white border border-gray-200 rounded-lg shadow-md;
+                @apply bg-white border border-gray-200 rounded-md shadow-sm;
                 transition: transform 0.2s, box-shadow 0.2s;
             }
             .card:hover {
-                @apply shadow-lg transform -translate-y-1;
+                @apply shadow-md transform -translate-y 0.5;
             }
             .modal {
                 display: none;
@@ -67,24 +68,23 @@
                 width: 100%;
                 height: 100%;
                 overflow: auto;
-                background-color: rgba(0,0,0,0.4);
+                background-color: rgba(0,0,0,0.5);
             }
             .modal-content {
                 background-color: #fff;
                 margin: 5% auto;
-                padding: 20px;
-                border: 1px solid #888;
+                padding: 16px;
                 width: 90%;
-                max-width: 900px;
-                border-radius: 10px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                max-height: 85vh;
+                max-width: 800px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                max-height: 80vh;
                 overflow-y: auto;
             }
             .close {
                 color: #aaa;
                 float: right;
-                font-size: 28px;
+                font-size: 24px;
                 font-weight: bold;
             }
             .close:hover,
@@ -94,60 +94,60 @@
                 cursor: pointer;
             }
             .action-btn {
-                font-size: 0.875rem;
-                padding: 0.75rem 1.5rem;
-                border-radius: 0.5rem;
+                font-size: 0.75rem;
+                padding: 0.5rem 1rem;
+                border-radius: 0.375rem;
                 transition: all 0.3s ease;
                 width: 100%;
                 text-align: center;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
                 border: none;
                 font-weight: 500;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 0.5rem;
+                gap: 0.25rem;
             }
             .action-btn:hover {
                 transform: translateY(-1px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
             }
             @media (min-width: 640px) {
                 .action-btn {
                     width: auto;
-                    padding: 0.75rem 2rem;
-                    font-size: 1rem;
+                    padding: 0.5rem 1.25rem;
+                    font-size: 0.875rem;
                 }
             }
             .filter-btn {
                 background-color: #1e40af;
                 color: white;
-                padding: 0.75rem 1.5rem;
-                border-radius: 0.5rem;
+                padding: 0.5rem 1rem;
+                border-radius: 0.375rem;
                 cursor: pointer;
                 transition: all 0.3s ease;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
                 font-weight: 500;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 0.5rem;
+                gap: 0.25rem;
             }
             .filter-btn:hover {
                 background-color: #1e3a8a;
                 transform: translateY(-1px);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
             }
             .filter-panel {
                 position: fixed;
                 top: 0;
-                right: -350px;
-                width: 350px;
+                right: -300px;
+                width: 300px;
                 height: 100%;
-                background: rgba(31, 41, 55, 0.9);
+                background: rgba(31, 41, 55, 0.95);
                 z-index: 50;
                 transition: right 0.3s ease-in-out;
-                box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
+                box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
                 backdrop-filter: blur(5px);
                 overflow-y: auto;
             }
@@ -158,43 +158,45 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 1rem 1.5rem;
+                padding: 0.75rem 1rem;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
             .filter-panel-content {
-                padding: 1.5rem;
+                padding: 1rem;
             }
             .filter-select {
-                background-color: rgba(55, 65, 81, 0.8);
+                background-color: rgba(55, 65, 81, 0.9);
                 border: 1px solid rgba(75, 85, 99, 0.5);
                 color: white;
-                border-radius: 0.5rem;
-                padding: 0.5rem;
+                border-radius: 0.375rem;
+                padding: 0.375rem;
                 width: 100%;
+                font-size: 0.875rem;
                 transition: border-color 0.3s ease;
             }
             .filter-select:focus {
                 outline: none;
                 border-color: #3b82f6;
-                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+                box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
             }
             .custom-btn {
                 background: linear-gradient(90deg, #4b6cb7, #182848);
                 color: white;
-                padding: 0.75rem 1.5rem;
-                border-radius: 0.5rem;
+                padding: 0.5rem 1rem;
+                border-radius: 0.375rem;
                 cursor: pointer;
                 transition: all 0.3s ease;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 0.5rem;
-                font-weight: 600;
+                gap: 0.25rem;
+                font-weight: 500;
+                font-size: 0.875rem;
             }
             .custom-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
                 background: linear-gradient(90deg, #5a7cc4, #1e3a8a);
             }
             .custom-btn.green {
@@ -215,27 +217,27 @@
             .custom-btn.orange:hover {
                 background: linear-gradient(90deg, #fb923c, #c2410c);
             }
-            /* Enhanced Financial Summary Styles */
+            /* Compact Financial Summary Styles */
             .financial-panel {
-                @apply bg-white border border-gray-200 rounded-xl shadow-md p-6 mb-6;
+                @apply bg-white border border-gray-200 rounded-lg shadow-sm p-4 mb-4;
                 transition: transform 0.2s, box-shadow 0.2s;
             }
             .financial-panel:hover {
-                @apply shadow-lg;
-                transform: translateY(-2px);
+                @apply shadow-md;
+                transform: translateY(-1px);
             }
             .financial-header {
-                @apply text-2xl font-bold text-gray-800 mb-4 border-b-2 border-primary-orange pb-2 flex items-center gap-2;
+                @apply text-xl font-bold text-gray-800 mb-2 border-b border-primary-orange pb-1 flex items-center gap-1;
             }
             .financial-subheader {
-                @apply text-lg font-semibold text-gray-700 mb-3 border-l-4 border-primary-orange pl-3;
+                @apply text-base font-semibold text-gray-700 mb-2 border-l-2 border-primary-orange pl-2;
             }
             .financial-table {
-                @apply w-full border border-gray-300 rounded-lg overflow-hidden;
+                @apply w-full border border-gray-200 rounded-md overflow-hidden;
             }
             .financial-table th,
             .financial-table td {
-                @apply py-3 px-4 text-left border-b border-gray-200;
+                @apply py-2 px-3 text-left border-b border-gray-200 text-sm;
             }
             .financial-table th {
                 @apply bg-primary-orange text-white font-semibold;
@@ -256,17 +258,17 @@
                 @apply text-green-600 font-semibold;
             }
             .kpi-card {
-                @apply bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 p-4 rounded-lg shadow-sm flex-1 text-center hover-shadow-md transition-shadow;
+                @apply bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 p-3 rounded-md shadow-sm flex-1 text-center transition-shadow;
             }
             .kpi-card h4 {
-                @apply text-sm font-medium text-gray-600 mb-1;
+                @apply text-xs font-medium text-gray-600 mb 0.5;
             }
             .kpi-card p {
-                @apply text-xl font-bold text-gray-800;
+                @apply text-lg font-bold text-gray-800;
             }
             .chart-container {
-                @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm;
-                max-height: 300px !important;
+                @apply bg-white border border-gray-200 rounded-md p-3 shadow-sm;
+                max-height: 250px !important;
                 max-width: 100% !important;
                 overflow: hidden;
                 position: relative;
@@ -275,127 +277,121 @@
                 @apply w-full h-full;
             }
             .card-content {
-                @apply p-4;
+                @apply p-3;
             }
-
             .widget-label h3 {
-                @apply text-lg font-semibold text-gray-700;
+                @apply text-base font-semibold text-gray-700;
             }
-
             .widget-icon {
-                @apply text-2xl;
+                @apply text-xl;
             }
-
             table {
-                @apply w-full text-sm;
+                @apply w-full text-xs;
             }
-
             table thead tr {
                 @apply bg-blue-100;
             }
-
             table th {
-                @apply py-2 px-4 font-semibold text-gray-700;
+                @apply py 1.5 px-3 font-semibold text-gray-700;
             }
-
             table td {
-                @apply py-2 px-4;
+                @apply py 1.5 px-3;
             }
-
             table tr:hover {
                 @apply bg-gray-50;
             }
-
             #resumenFinancieroModal .modal-content {
                 @apply bg-gray-50;
-                max-width: 95vw !important;
-                max-height: 90vh !important;
+                max-width: 90vw !important;
+                max-height: 85vh !important;
                 overflow-y: auto;
             }
         </style>
     </head>
     <body class="h-screen bg-gradient-to-r from-orange-400 to-orange-700 overflow-x-hidden">
-        <div class="md:hidden fixed top-4 left-4 z-50 bg-transparent">
-            <button id="menuButton" onclick="toggleSidebar()" class="text-white text-3xl bg-transparent">
+        <div class="md:hidden fixed top-2 left-2 z-50 bg-transparent">
+            <button id="menuButton" onclick="toggleSidebar()" class="text-white text-2xl bg-transparent">
                 <i id="menu-icon" class="fas fa-bars"></i>
             </button>
         </div>
         <div class="flex h-full w-full">
-            <nav id="sidebar" class="fixed md:relative z-40 w-16 h-full flex flex-col items-center py-4 shadow-2xl transform -translate-x-full md:translate-x-0 transition-transform duration-300" style="background: linear-gradient(to bottom, #1a202c, #2d3748)">
-                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-orange-400 mb-8">
+            <nav id="sidebar" class="fixed md:relative z-40 w-12 h-full flex flex-col items-center py-2 shadow-xl transform -translate-x-full md:translate-x-0 transition-transform duration-300" style="background: linear-gradient(to bottom, #1a202c, #2d3748)">
+                <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm border border-orange-400 mb-4">
                     <a href="/menu">
-                        <img src="/Resource/transportesNaches.png" alt="logo" class="w-6 h-6 rounded-full hover:opacity-80 transition" />
+                        <img src="/Resource/transportesNaches.png" alt="logo" class="w-5 h-5 rounded-full hover:opacity-80 transition" />
                     </a>
                 </div>
-                <ul class="w-full px-2 space-y-6 flex-grow">
+                <ul class="w-full px-1 space-y-4 flex-grow">
                     <li id="bitacora" class="tooltip">
-                        <a href="/bitacora" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors">
-                            <i class="fas fa-book text-xl"></i>
+                        <a href="/bitacora" class="flex items-center justify-center p-2 text-white hover:text-orange-300 transition-colors">
+                            <i class="fas fa-book text-lg"></i>
                             <span class="tooltiptext">Bitácora</span>
                         </a>
                     </li>
                     <li class="admin-only tooltip" id="contabilidad">
-                        <a href="/contabilidad" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors">
-                            <i class="fas fa-calculator text-xl"></i>
+                        <a href="/contabilidad" class="flex items-center justify-center p-2 text-white hover:text-orange-300 transition-colors">
+                            <i class="fas fa-calculator text-lg"></i>
                             <span class="tooltiptext">Contabilidad</span>
                         </a>
                     </li>
                     <li id="gestionAdmin" class="admin-only tooltip">
-                        <button onclick="toggleGestionMenu()" class="flex items-center justify-center p-3 text-white hover:text-orange-300 transition-colors w-full">
-                            <i class="fas fa-cogs text-xl"></i>
+                        <button onclick="toggleGestionMenu()" class="flex items-center justify-center p-2 text-white hover:text-orange-300 transition-colors w-full">
+                            <i class="fas fa-cogs text-lg"></i>
                             <span class="tooltiptext">Gestión</span>
                         </button>
-                        <ul id="gestionSubmenu" class="hidden absolute left-16 top-0 bg-gray-800 text-white rounded-md shadow-lg py-2 w-48 space-y-2 z-50">
-                            <li><a href="/cliente" class="block px-4 py-2 hover:bg-orange-500">Gestión Cliente</a></li>
-                            <li><a href="/unidad" class="block px-4 py-2 hover:bg-orange-500">Gestión Unidad</a></li>
-                            <li><a href="/empleado" class="block px-4 py-2 hover:bg-orange-500">Gestión Empleado</a></li>
-                            <li><a href="/ciudad" class="block px-4 py-2 hover:bg-orange-500">Gestión Ciudad</a></li>
-                            <li><a href="/caseta" class="block px-4 py-2 hover:bg-orange-500">Gestión Caseta</a></li>
+                        <ul id="gestionSubmenu" class="hidden absolute left-12 top-0 bg-gray-800 text-white rounded-md shadow-md py-1 w-40 space-y-1 z-50">
+                            <li><a href="/cliente" class="block px-3 py-1 text-sm hover:bg-orange-500">Gestión Cliente</a></li>
+                            <li><a href="/unidad" class="block px-3 py-1 text-sm hover:bg-orange-500">Gestión Unidad</a></li>
+                            <li><a href="/empleado" class="block px-3 py-1 text-sm hover:bg-orange-500">Gestión Empleado</a></li>
+                            <li><a href="/ciudad" class="block px-3 py-1 text-sm hover:bg-orange-500">Gestión Ciudad</a></li>
+                            <li><a href="/caseta" class="block px-3 py-1 text-sm hover:bg-orange-500">Gestión Caseta</a></li>
                         </ul>
                     </li>
                 </ul>
-                <div class="mt-16 mb-4 tooltip">
-                    <button id="cerrarSesion" class="flex items-center justify-center p-3 text-white hover:text-red-300 transition-colors">
-                        <i class="fas fa-sign-out-alt text-xl"></i>
+                <div class="mt-12 mb-2 tooltip">
+                    <button id="cerrarSesion" class="flex items-center justify-center p-2 text-white hover:text-red-300 transition-colors">
+                        <i class="fas fa-sign-out-alt text-lg"></i>
                         <span class="tooltiptext">Cerrar Sesión</span>
                     </button>
                 </div>
             </nav>
-            <main class="flex-1 p-6 overflow-auto md:mt-0 mt-16">
-                <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 max-w-full mx-auto">
-                    <h1 class="text-center text-xl sm:text-2xl font-bold text-gray-800 bg-orange-200 py-2 px-4 rounded-lg mb-4 sm:mb-6">
+            <main class="flex-1 p-4 overflow-auto md:mt-0 mt-12">
+                <div class="bg-white rounded-lg shadow-xl p-3 sm:p-4 max-w-full mx-auto">
+                    <h1 class="text-center text-lg sm:text-xl font-bold text-gray-800 bg-orange-200 py-1 px-3 rounded-md mb-3 sm:mb-4">
                         Registro de Notas
                     </h1>
-                    <div class="mb-4 sm:mb-6">
-                        <!-- Search Bar -->
-                        <div class="flex justify-end mb-2">
-                            <input type="text" id="searchBar" placeholder="Buscar por cliente, operador, ruta, etc." class="border-2 border-gray-300 rounded-lg p-2 w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-orange-400">
-                        </div>
-                        <!-- Action Buttons -->
-                        <div class="flex flex-col sm:flex-row items-center sm:justify-end space-y-4 sm:space-y-0 sm:space-x-4">
-                            <button id="toggleFilterPanel" class="filter-btn flex items-center space-x-2">
-                                <i class="fas fa-filter"></i>
-                                <span>Advanced Filters</span>
-                            </button>
-                            <button id="mostrarResumenBtn" class="custom-btn green">
-                                <i class="fas fa-chart-pie"></i>
-                                <span>Resumen Financiero</span>
-                            </button>
-                            <button id="gastosAnualesBtn" class="custom-btn blue">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <span>Gastos Anuales</span>
-                            </button>
-                            <button id="descargarExcel" class="custom-btn orange">
-                                <i class="fas fa-file-excel"></i>
-                                <span>Descargar Excel</span>
-                            </button>
+                    <div class="mb-3 sm:mb-4">
+                        <!-- Search Bar and Filters -->
+                        <div class="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2">
+                            <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+                                <input type="text" id="searchBar" placeholder="Buscar..." class="border border-gray-300 rounded-md p-1.5 text-sm w-full sm:w-48 focus:outline-none focus:ring-1 focus:ring-orange-400">
+                            </div>
+                            <!-- Action Buttons -->
+                            <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                                <button id="toggleFilterPanel" class="filter-btn flex items-center space-x-1">
+                                    <i class="fas fa-filter text-sm"></i>
+                                    <span class="text-sm">Filtros</span>
+                                </button>
+                                <button id="mostrarResumenBtn" class="custom-btn green">
+                                    <i class="fas fa-chart-pie text-sm"></i>
+                                    <span class="text-sm">Resumen</span>
+                                </button>
+                                <button id="gastosAnualesBtn" class="custom-btn blue">
+                                    <i class="fas fa-money-bill-wave text-sm"></i>
+                                    <span class="text-sm">Gastos</span>
+                                </button>
+                                <button id="descargarExcel" class="custom-btn orange">
+                                    <i class="fas fa-file-excel text-sm"></i>
+                                    <span class="text-sm">Excel</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div id="notasContainer" class="space-y-4">
+                    <div id="notasContainer" class="space-y-3">
                         <!-- Las tarjetas se generarán aquí -->
                     </div>
-                    <div id="cargarMasContainer" class="flex justify-center mt-4">
-                        <button id="cargarMasBtn" class="action-btn bg-primary-orange text-white hover:bg-secondary-orange hidden">
+                    <div id="cargarMasContainer" class="flex justify-center mt-3">
+                        <button id="cargarMasBtn" class="action-btn bg-primary-orange text-white hover:bg-secondary-orange hidden text-sm">
                             Cargar más
                         </button>
                     </div>
@@ -404,43 +400,43 @@
                 <!-- Filter Panel -->
                 <div id="filterPanel" class="filter-panel">
                     <div class="filter-panel-header">
-                        <h2 class="text-xl font-bold text-white">Advanced Filters</h2>
-                        <button id="closeFilterPanel" class="text-white text-2xl">
+                        <h2 class="text-lg font-bold text-white">Filtros</h2>
+                        <button id="closeFilterPanel" class="text-white text-xl">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                     <div class="filter-panel-content">
-                        <div class="space-y-6">
+                        <div class="space-y-4">
                             <div>
-                                <label for="filtroMes" class="block text-gray-300 font-semibold mb-2">Filtrar por mes:</label>
+                                <label for="filtroMes" class="block text-gray-300 font-semibold mb-1 text-sm">Mes:</label>
                                 <select id="filtroMes" class="filter-select">
                                     <option value="todos">Todos los meses</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="filtroSemana" class="block text-gray-300 font-semibold mb-2">Filtrar por semana:</label>
+                                <label for="filtroSemana" class="block text-gray-300 font-semibold mb-1 text-sm">Semana:</label>
                                 <select id="filtroSemana" class="filter-select">
                                     <option value="todos">Todas las semanas</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="filtroOperador" class="block text-gray-300 font-semibold mb-2">Filtrar por operador:</label>
+                                <label for="filtroOperador" class="block text-gray-300 font-semibold mb-1 text-sm">Operador:</label>
                                 <select id="filtroOperador" class="filter-select">
                                     <option value="todos">Todos los operadores</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="filtroCliente" class="block text-gray-300 font-semibold mb-2">Filtrar por cliente:</label>
+                                <label for="filtroCliente" class="block text-gray-300 font-semibold mb-1 text-sm">Cliente:</label>
                                 <select id="filtroCliente" class="filter-select">
                                     <option value="todos">Todos los clientes</option>
                                 </select>
                             </div>
-                            <div class="flex space-x-4">
-                                <button id="applyFiltersBtn" class="action-btn bg-blue-600 text-white hover:bg-blue-700 w-full">
-                                    Apply Filters
+                            <div class="flex space-x-2">
+                                <button id="applyFiltersBtn" class="action-btn bg-blue-600 text-white hover:bg-blue-700 w-full text-sm">
+                                    Aplicar
                                 </button>
-                                <button id="clearFiltersBtn" class="action-btn bg-gray-600 text-white hover:bg-gray-700 w-full">
-                                    Clear Filters
+                                <button id="clearFiltersBtn" class="action-btn bg-gray-600 text-white hover:bg-gray-700 w-full text-sm">
+                                    Limpiar
                                 </button>
                             </div>
                         </div>
@@ -451,45 +447,47 @@
                 <div id="gastosAnualesModal" class="modal">
                     <div class="modal-content">
                         <span id="spanGastos" class="close">×</span>
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Gestión de Gastos Anuales</h2>
+                        <h2 class="text-lg font-bold text-gray-800 mb-3">Gastos Anuales</h2>
                         <div id="gastosFormContainer">
-                            <form id="gastosAnualesForm" class="mb-6">
+                            <form id="gastosAnualesForm" class="mb-4">
                                 <input type="hidden" id="idGastoAnual" value="">
-                                <div class="mb-4">
-                                    <label for="descripcionGasto" class="block text-gray-800 font-semibold">Descripción:</label>
-                                    <input type="text" id="descripcionGasto" class="border-2 border-orange-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                                <div class="mb-3">
+                                    <label for="descripcionGasto" class="block text-gray-800 font-semibold text-sm">Descripción:</label>
+                                    <input type="text" id="descripcionGasto" class="border border-orange-300 rounded-md p-1.5 text-sm w-full focus:outline-none focus:ring-1 focus:ring-orange-400" required>
                                 </div>
-                                <div class="mb-4">
-                                    <label for="montoGasto" class="block text-gray-800 font-semibold">Monto Anual ($):</label>
-                                    <input type="number" id="montoGasto" step="0.01" class="border-2 border-orange-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                                <div class="mb-3">
+                                    <label for="montoGasto" class="block text-gray-800 font-semibold text-sm">Monto ($):</label>
+                                    <input type="number" id="montoGasto" step="0.01" class="border border-orange-300 rounded-md p-1.5 text-sm w-full focus:outline-none focus:ring-1 focus:ring-orange-400" required>
                                 </div>
-                                <div class="mb-4">
-                                    <label for="anioGasto" class="block text-gray-800 font-semibold">Año:</label>
-                                    <input type="number" id="anioGasto" class="border-2 border-orange-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                                <div class="mb-3">
+                                    <label for="anioGasto" class="block text-gray-800 font-semibold text-sm">Año:</label>
+                                    <input type="number" id="anioGasto" class="border border-orange-300 rounded-md p-1.5 text-sm w-full focus:outline-none focus:ring-1 focus:ring-orange-400" required>
                                 </div>
-                                <div class="mb-4">
-                                    <label for="fechaInicio" class="block text-gray-800 font-semibold">Fecha de Inicio:</label>
-                                    <input type="date" id="fechaInicio" class="border-2 border-orange-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                                <div class="mb-3">
+                                    <label for="fechaInicio" class="block text-gray-800 font-semibold text-sm">Fecha Inicio:</label>
+                                    <input type="date" id="fechaInicio" class="border border-orange-300 rounded-md p-1.5 text-sm w-full focus:outline-none focus:ring-1 focus:ring-orange-400" required>
                                 </div>
-                                <div class="mb-4">
-                                    <label for="fechasPago" class="block text-gray-800 font-semibold">Fechas de Pago:</label>
-                                    <input type="text" id="fechasPago" class="border-2 border-orange-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-400" required>
+                                <div class="mb-3">
+                                    <label for="fechasPago" class="block text-gray-800 font-semibold text-sm">Fechas Pago:</label>
+                                    <input type="text" id="fechasPago" class="border border-orange-300 rounded-md p-1.5 text-sm w-full focus:outline-none focus:ring-1 focus:ring-orange-400" required>
                                 </div>
-                                <button type="submit" id="submitGastoBtn" class="bg-primary-orange text-white py-2 px-4 rounded-lg hover:bg-secondary-orange transition">Guardar</button>
-                                <button type="button" id="cancelEditBtn" class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition hidden">Cancelar Edición</button>
+                                <div class="flex space-x-2">
+                                    <button type="submit" id="submitGastoBtn" class="bg-primary-orange text-white py-1.5 px-3 rounded-md hover:bg-secondary-orange transition text-sm">Guardar</button>
+                                    <button type="button" id="cancelEditBtn" class="bg-gray-500 text-white py-1.5 px-3 rounded-md hover:bg-gray-600 transition hidden text-sm">Cancelar</button>
+                                </div>
                             </form>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Gastos Registrados</h3>
+                        <h3 class="text-base font-semibold text-gray-800 mb-2">Gastos Registrados</h3>
                         <div class="overflow-x-auto">
-                            <table class="min-w-full bg-white border border-gray-300">
+                            <table class="min-w-full bg-white border border-gray-200">
                                 <thead>
                                     <tr class="bg-orange-200">
-                                        <th class="py-2 px-4 border-b text-left">Descripción</th>
-                                        <th class="py-2 px-4 border-b text-left">Monto Anual ($)</th>
-                                        <th class="py-2 px-4 border-b text-left">Año</th>
-                                        <th class="py-2 px-4 border-b text-left">Fecha de Inicio</th>
-                                        <th class="py-2 px-4 border-b text-left">Fechas de Pago</th>
-                                        <th class="py-2 px-4 border-b text-left">Acciones</th>
+                                        <th class="py-1.5 px-3 border-b text-left text-xs">Descripción</th>
+                                        <th class="py-1.5 px-3 border-b text-left text-xs">Monto ($)</th>
+                                        <th class="py-1.5 px-3 border-b text-left text-xs">Año</th>
+                                        <th class="py-1.5 px-3 border-b text-left text-xs">Fecha Inicio</th>
+                                        <th class="py-1.5 px-3 border-b text-left text-xs">Fechas Pago</th>
+                                        <th class="py-1.5 px-3 border-b text-left text-xs">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="gastosAnualesTableBody">
@@ -499,9 +497,6 @@
                         </div>
                     </div>
                 </div>
-
-              
-
             </main>
         </div>
         <script>
@@ -558,14 +553,11 @@
                     };
                 }
 
-              
-
                 window.onclick = function (event) {
                     if (event.target == modalGastos) {
                         modalGastos.style.display = 'none';
                         resetForm();
                     }
-                    
                 };
             });
 
@@ -583,126 +575,7 @@
                 }
             }
         </script>
-        <script>
-            // Inicialización de gráficos
-            document.addEventListener('DOMContentLoaded', () => {
-                // Gráfico de Resumen General (Barras)
-                const ctxFinancial = document.getElementById('financialChart').getContext('2d');
-                const financialChart = new Chart(ctxFinancial, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Ingresos', 'Gastos', 'Ganancia Neta'],
-                        datasets: [{
-                                label: 'Monto ($)',
-                                data: [0, 0, 0],
-                                backgroundColor: ['#10b981', '#ef4444', '#3b82f6'],
-                                borderColor: ['#064e3b', '#991b1b', '#1e40af'],
-                                borderWidth: 1
-                            }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Monto ($)'
-                                },
-                                ticks: {
-                                    callback: function (value) {
-                                        return new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(value);
-                                    }
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                position: 'top'
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function (context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                            label += new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(context.parsed.y);
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-
-                // Gráfico de Desglose de Gastos (Pastel)
-                const ctxExpense = document.getElementById('expenseBreakdownChart').getContext('2d');
-                const expenseBreakdownChart = new Chart(ctxExpense, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Operativos', 'Maniobra', 'Comisión', 'Anuales Diarios', 'Anuales Total'],
-                        datasets: [{
-                                label: 'Gastos ($)',
-                                data: [0, 0, 0, 0, 0],
-                                backgroundColor: [
-                                    '#ff6384',
-                                    '#36a2eb',
-                                    '#ffcd56',
-                                    '#4bc0c0',
-                                    '#9966ff'
-                                ],
-                                borderColor: '#fff',
-                                borderWidth: 1
-                            }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top'
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function (context) {
-                                        let label = context.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed !== null) {
-                                            label += new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(context.parsed);
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-
-                // Funciones para actualizar los gráficos
-                window.updateFinancialChart = function (totalIngresos, totalGastos, gananciaNeta) {
-                    financialChart.data.datasets[0].data = [totalIngresos, totalGastos, gananciaNeta];
-                    financialChart.update();
-                };
-
-                window.updateExpenseBreakdownChart = function (gastosOperativos, maniobra, comision, gastosAnualesDiarios, gastosAnualesTotal) {
-                    expenseBreakdownChart.data.datasets[0].data = [
-                        gastosOperativos,
-                        maniobra,
-                        comision,
-                        gastosAnualesDiarios,
-                        gastosAnualesTotal
-                    ];
-                    expenseBreakdownChart.update();
-                };
-            });
-        </script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
         <script src="/Modules/Menu/controller_Menu.js" type="module"></script>
         <script src="/Modules/Contabilidad/controller_Contabilidad.js" type="module"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

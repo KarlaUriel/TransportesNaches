@@ -7,10 +7,12 @@ import com.naches.controller.ControllerUnidad;
 import com.naches.model.MantenimientoUnidad;
 import com.naches.model.TipoGasto;
 import com.naches.model.Unidad;
+import com.naches.seguridad.JWTUtil;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -22,10 +24,43 @@ import java.util.List;
 @Path("unidad")
 public class RESTUnidad {
 
+    // Método para verificar el token en el encabezado Authorization
+    private Response validateToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Token no proporcionado o inválido.\"}")
+                    .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
+                    .header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .build();
+        }
+
+        String token = authHeader.substring("Bearer ".length()).trim();
+        if (!JWTUtil.validateToken(token)) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Token inválido o expirado.\"}")
+                    .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
+                    .header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .build();
+        }
+
+        return null; // Token válido, continuar con la solicitud
+    }
+
     @GET
     @Path("getAll")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAll() {
+    public Response getAll(@HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerUnidad cu = new ControllerUnidad();
         List<Unidad> unidad;
@@ -49,7 +84,6 @@ public class RESTUnidad {
     @GET
     @Path("getAllVehiculo")
     @Produces(MediaType.APPLICATION_JSON)
-
     public Response getAllVehiculo() {
 
         String out = null;
@@ -76,7 +110,14 @@ public class RESTUnidad {
     @Path("save")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response save(String datosUnidad) {
+    public Response save(String datosUnidad, @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerUnidad cu = new ControllerUnidad();
         Unidad u;
@@ -119,7 +160,15 @@ public class RESTUnidad {
     @Path("delete/{idUnidad}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response delete(@PathParam("idUnidad") int idUnidad) {
+    public Response delete(@PathParam("idUnidad") int idUnidad,
+            @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerUnidad cu = new ControllerUnidad();
 
@@ -146,7 +195,15 @@ public class RESTUnidad {
     @POST
     @Path("reactivar/{idUnidad}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response reactivarUnidad(@PathParam("idUnidad") int idUnidad) {
+    public Response reactivarUnidad(@PathParam("idUnidad") int idUnidad,
+            @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerUnidad cu = new ControllerUnidad();
 
@@ -177,7 +234,14 @@ public class RESTUnidad {
     @Path("registrarMantenimiento")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response registrarMantenimiento(String json) {
+    public Response registrarMantenimiento(String json, @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         Gson gson = new Gson();
         ControllerUnidad cu = new ControllerUnidad();
@@ -201,7 +265,15 @@ public class RESTUnidad {
     @GET
     @Path("getMantenimientosPorUnidad/{idUnidad}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getMantenimientosPorUnidad(@PathParam("idUnidad") int idUnidad) {
+    public Response getMantenimientosPorUnidad(@PathParam("idUnidad") int idUnidad,
+            @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerUnidad cu = new ControllerUnidad();
 
@@ -221,7 +293,15 @@ public class RESTUnidad {
     @GET
     @Path("getLatestKilometraje/{idUnidad}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getLatestKilometraje(@PathParam("idUnidad") int idUnidad) {
+    public Response getLatestKilometraje(@PathParam("idUnidad") int idUnidad,
+            @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         Gson gson = new Gson();
         ControllerUnidad cu = new ControllerUnidad();

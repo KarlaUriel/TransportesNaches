@@ -15,6 +15,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let clientes = [];
 
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+        Swal.fire({
+            title: 'Error',
+            text: 'No se encontró un token de autenticación.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#f97316',
+        });
+        return;
+    }
+
     // Event listeners
     btnNuevoCliente.addEventListener('click', limpiarMostrarFormulario);
     btnRecargar.addEventListener('click', recargarClientes);
@@ -56,7 +69,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                },
+                    'Authorization': `Bearer ${token}`
+                }
             });
             const data = await response.json();
             if (!data || !Array.isArray(data)) {
@@ -175,7 +189,8 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/cliente/getSubclients/${idCliente}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`}
             });
             const data = await response.json();
             subclientesList.innerHTML = '';
@@ -231,7 +246,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     try {
                         const response = await fetch(`https://transportesnaches.com.mx/api/cliente/deleteSubclient/${idSubcliente}`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' }
+                            headers: {'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`}
                         });
                         const data = await response.json();
                         if (!response.ok || data.error) {
@@ -254,7 +270,8 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/cliente/getSubclients/${idCliente}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`}
             });
             const subclientes = await response.json();
 
@@ -285,9 +302,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                         <div class="flex items-center gap-2 text-sm">
                             <i class="fas fa-map-marker-alt text-orange-600"></i>
-                            <span>${isValidUrl 
-                                ? `<a href="${sub.ubicacion}" target="_blank" class="text-blue-500 hover:underline">Ver en Google Maps</a>`
-                                : sub.ubicacion || 'Sin Ubicación'}</span>
+                            <span>${isValidUrl
+                        ? `<a href="${sub.ubicacion}" target="_blank" class="text-blue-500 hover:underline">Ver en Google Maps</a>`
+                        : sub.ubicacion || 'Sin Ubicación'}</span>
                         </div>
                         <div class="flex justify-end mt-2">
                             <button onclick="cargarSubclienteParaEdicion(${sub.idSubcliente}, '${sub.nombre}', '${sub.ubicacion}')" 
@@ -303,8 +320,8 @@ document.addEventListener("DOMContentLoaded", function () {
             Swal.fire({
                 title: 'Subclientes',
                 html: contenido,
-                icon: 'info',
-                width: '80%',
+                icon: '',
+                width: '',
                 confirmButtonText: 'Cerrar',
                 customClass: {
                     popup: 'swal-wide',
@@ -370,7 +387,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const response = await fetch('https://transportesnaches.com.mx/api/cliente/save', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(clienteData)
             });
@@ -384,7 +402,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 const subclientesResponse = await fetch(`https://transportesnaches.com.mx/api/cliente/saveSubclients/${data.idCliente || clienteData.idCliente}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(subclientes)
                 });
@@ -415,7 +434,8 @@ document.addEventListener("DOMContentLoaded", function () {
             confirmButtonText: 'Sí, desactivar'
         });
 
-        if (!confirmacion.isConfirmed) return;
+        if (!confirmacion.isConfirmed)
+            return;
 
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/cliente/delete/${idCliente}`, {
@@ -440,7 +460,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     async function limpiarMostrarFormulario() {
-        const { value: tipoCliente } = await Swal.fire({
+        const {value: tipoCliente} = await Swal.fire({
             title: 'Seleccione el tipo de cliente',
             input: 'radio',
             inputOptions: {
@@ -523,6 +543,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 }
             });
 
@@ -554,7 +575,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (clienteId) {
             await cargarDetalleCliente(clienteId);
             const existingEntry = Array.from(subclientesList.querySelectorAll('.subcliente-entry')).find(
-                entry => entry.querySelector('.subcliente-nombre').dataset.id == idSubcliente
+                    entry => entry.querySelector('.subcliente-nombre').dataset.id == idSubcliente
             );
             if (!existingEntry) {
                 agregarSubclienteInput(nombre, ubicacion, idSubcliente);
@@ -570,7 +591,7 @@ document.addEventListener("DOMContentLoaded", function () {
     window.cargarSubclienteParaEdicion = cargarSubclienteParaEdicion;
 
     // Función para toggle del menú de gestión
-    window.toggleGestionMenu = function() {
+    window.toggleGestionMenu = function () {
         const menu = document.getElementById('gestionSubmenu');
         menu.classList.toggle('hidden');
     };
@@ -582,7 +603,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Toggle sidebar para dispositivos móviles
-    window.toggleSidebar = function() {
+    window.toggleSidebar = function () {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
         const menuIcon = document.getElementById('menu-icon');

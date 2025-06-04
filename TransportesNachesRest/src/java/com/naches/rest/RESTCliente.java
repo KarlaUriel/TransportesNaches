@@ -18,6 +18,9 @@ import com.naches.controller.ControllerCliente;
 import com.naches.model.Cliente;
 import com.naches.model.SubCliente;
 import com.google.gson.reflect.TypeToken;
+import com.naches.seguridad.JWTUtil;
+import static com.naches.seguridad.JWTUtil.validateToken;
+import jakarta.ws.rs.HeaderParam;
 import java.lang.reflect.Type;
 
 @Path("cliente")
@@ -41,11 +44,44 @@ public class RESTCliente {
                 .build();
     }
 
+    // Método para verificar el token en el encabezado Authorization
+    private Response validateToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Token no proporcionado o inválido.\"}")
+                    .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
+                    .header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .build();
+        }
+
+        String token = authHeader.substring("Bearer ".length()).trim();
+        if (!JWTUtil.validateToken(token)) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Token inválido o expirado.\"}")
+                    .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
+                    .header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .build();
+        }
+
+        return null; // Token válido, continuar con la solicitud
+    }
+
     @POST
     @Path("save")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response save(String datosCliente) {
+    public Response save(String datosCliente, @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerCliente cc = new ControllerCliente();
         Cliente c;
@@ -91,7 +127,15 @@ public class RESTCliente {
     @Path("delete/{idCliente}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response delete(@PathParam("idCliente") int idCliente) {
+    public Response delete(@PathParam("idCliente") int idCliente,
+            @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerCliente cc = new ControllerCliente();
 
@@ -122,7 +166,14 @@ public class RESTCliente {
     @Path("getAll")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response getAll() {
+    public Response getAll(@HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerCliente cc = new ControllerCliente();
         List<Cliente> clientes;
@@ -148,7 +199,15 @@ public class RESTCliente {
     @POST
     @Path("reactivar/{idCliente}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response reactivarCliente(@PathParam("idCliente") int idCliente) {
+    public Response reactivarCliente(@PathParam("idCliente") int idCliente,
+            @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerCliente cc = new ControllerCliente();
 
@@ -183,7 +242,15 @@ public class RESTCliente {
     @Path("saveSubclients/{idCliente}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response saveSubclients(@PathParam("idCliente") int idCliente, String datosSubclientes) {
+    public Response saveSubclients(@PathParam("idCliente") int idCliente, String datosSubclientes,
+            @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerCliente cc = new ControllerCliente();
         Gson gson = new Gson();
@@ -195,7 +262,8 @@ public class RESTCliente {
             }
 
             // Deserializar la lista de subclientes
-            Type listType = new TypeToken<List<SubCliente>>(){}.getType();
+            Type listType = new TypeToken<List<SubCliente>>() {
+            }.getType();
             List<SubCliente> subclientes = gson.fromJson(datosSubclientes, listType);
 
             if (subclientes == null || subclientes.isEmpty()) {
@@ -228,7 +296,15 @@ public class RESTCliente {
     @Path("deleteSubclient/{idSubcliente}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response deleteSubclient(@PathParam("idSubcliente") int idSubcliente) {
+    public Response deleteSubclient(@PathParam("idSubcliente") int idSubcliente,
+            @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerCliente cc = new ControllerCliente();
 
@@ -258,7 +334,15 @@ public class RESTCliente {
     @GET
     @Path("getSubclients/{idCliente}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getSubclients(@PathParam("idCliente") int idCliente) {
+    public Response getSubclients(@PathParam("idCliente") int idCliente,
+            @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerCliente cc = new ControllerCliente();
 

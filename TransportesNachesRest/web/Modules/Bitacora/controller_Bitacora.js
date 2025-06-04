@@ -8,6 +8,10 @@ const tiposGasStatic = [
 let navigationConfirmed = false;
 
 
+    const token = localStorage.getItem("token");
+
+
+
 // Debug: Log the form elements
 const iniciarForm = document.getElementById('iniciarViajeForm');
 const finalizarForm = document.getElementById('finalizarViajeForm');
@@ -35,6 +39,17 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log('Initializing autocomplete for existing input:', input);
         setupAutocompleter(input);
     });
+
+    if (!token) {
+        Swal.fire({
+            title: 'Error',
+            text: 'No se encontró un token de autenticación.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#f97316',
+        });
+        return;
+    }
 
     // Mostrar/ocultar selector de nivel de gasolina de inicio
     document.getElementById('gasolinaInicio')?.addEventListener('change', function () {
@@ -264,7 +279,8 @@ async function cargarNotasUsuario() {
     try {
         const response = await fetch(`https://transportesnaches.com.mx/api/nota/getAllByUser?idUsuario=${idUsuario}`, {
             method: 'GET',
-            headers: {'Content-Type': 'application/json'}
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`}
         });
 
         const notas = await response.json();
@@ -442,7 +458,8 @@ async function iniciarViaje(event) {
         isSaving = true;
         const response = await fetch('https://transportesnaches.com.mx/api/nota/iniciarViaje', {
             method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            headers: {'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer ${token}`},
             body: new URLSearchParams({datosNota: JSON.stringify(datosNota)})
         });
         const result = await response.json();
@@ -592,7 +609,8 @@ async function mostrarDatosNota(idNota) {
         const params = new URLSearchParams({idNota});
         const response = await fetch(`https://transportesnaches.com.mx/api/nota/getById?${params}`, {
             method: 'GET',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`}
         });
         const nota = await response.json();
         if (nota.error) {
@@ -908,7 +926,8 @@ async function finalizarViaje(event) {
         console.log('JSON enviado a finalizarViaje:', JSON.stringify(datosNota, null, 2));
         const response = await fetch('https://transportesnaches.com.mx/api/nota/finalizarViaje', {
             method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            headers: {'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer ${token}`},
             body: new URLSearchParams({datosNota: JSON.stringify(datosNota)}),
         });
         const result = await response.json();
@@ -1281,7 +1300,8 @@ function setupAutocompleter(input) {
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/ciudad/getAllCiudades?query=${encodeURIComponent(query)}`, {
                 method: 'GET',
-                headers: {'Content-Type': 'application/json'}
+                headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`}
             });
             if (!response.ok) {
                 throw new Error(`API error: ${response.status} ${response.statusText}`);
@@ -1452,7 +1472,8 @@ async function cargarCasetas(selectElement) {
     try {
         const response = await fetch('https://transportesnaches.com.mx/api/caseta/getAll', {
             method: 'GET',
-            headers: {'Content-Type': 'application/json'}
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`}
         });
 
         if (!response.ok) {
@@ -2201,7 +2222,13 @@ async function cargarClientes() {
         return;
 
     try {
-        const response = await fetch('https://transportesnaches.com.mx/api/cliente/getAll');
+        const response = await fetch('https://transportesnaches.com.mx/api/cliente/getAll', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
         const clientes = await response.json();
 
         if (clientes.error) {

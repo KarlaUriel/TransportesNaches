@@ -5,10 +5,12 @@ import com.naches.controller.ControllerNotaGasto;
 import com.naches.model.Contabilidad;
 import com.naches.model.NotaGasto;
 import com.naches.model.NotaGastoResponse;
+import com.naches.seguridad.JWTUtil;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -28,6 +30,32 @@ import java.util.Map;
 @Path("nota")
 public class RESTNotaGasto {
 
+    // Método para verificar el token en el encabezado Authorization
+    private Response validateToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Token no proporcionado o inválido.\"}")
+                    .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
+                    .header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .build();
+        }
+
+        String token = authHeader.substring("Bearer ".length()).trim();
+        if (!JWTUtil.validateToken(token)) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Token inválido o expirado.\"}")
+                    .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
+                    .header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .build();
+        }
+
+        return null; // Token válido, continuar con la solicitud
+    }
+
     @GET
     @Path("getAll")
     @Produces(MediaType.APPLICATION_JSON)
@@ -37,7 +65,15 @@ public class RESTNotaGasto {
             @QueryParam("year") Integer year,
             @QueryParam("month") Integer month,
             @QueryParam("operator") String operator,
-            @QueryParam("weekStart") String weekStart) {
+            @QueryParam("weekStart") String weekStart,
+            @HeaderParam("Authorization") String authHeader) {
+
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
         String out;
         ControllerNotaGasto cng = new ControllerNotaGasto();
         try {
@@ -64,7 +100,15 @@ public class RESTNotaGasto {
     @POST
     @Path("iniciarViaje")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response iniciarViaje(@FormParam("datosNota") @DefaultValue("") String datosNota) {
+    public Response iniciarViaje(@FormParam("datosNota") @DefaultValue("") String datosNota,
+            @HeaderParam("Authorization") String authHeader) {
+        
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+        
         String out;
         Gson gson = new Gson();
         ControllerNotaGasto cng = new ControllerNotaGasto();
@@ -87,7 +131,15 @@ public class RESTNotaGasto {
     @POST
     @Path("finalizarViaje")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response finalizarViaje(@FormParam("datosNota") @DefaultValue("") String datosNota) {
+    public Response finalizarViaje(@FormParam("datosNota") @DefaultValue("") String datosNota,
+            @HeaderParam("Authorization") String authHeader) {
+       
+        // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+        
         String out;
         Gson gson = new Gson();
         ControllerNotaGasto cng = new ControllerNotaGasto();
@@ -109,7 +161,15 @@ public class RESTNotaGasto {
     @Produces(MediaType.APPLICATION_JSON)
     public Response buscar(@FormParam("idNota") String idNotaStr,
             @FormParam("fechaInicio") String fechaInicio,
-            @FormParam("fechaFin") String fechaFin) {
+            @FormParam("fechaFin") String fechaFin,
+            @HeaderParam("Authorization") String authHeader) {
+       
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+        
         String out;
         ControllerNotaGasto cng = new ControllerNotaGasto();
         try {
@@ -126,7 +186,15 @@ public class RESTNotaGasto {
     @GET
     @Path("getById")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getById(@QueryParam("idNota") @DefaultValue("0") int idNota) {
+    public Response getById(@QueryParam("idNota") @DefaultValue("0") int idNota,
+            @HeaderParam("Authorization") String authHeader) {
+       
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+        
         String out;
         ControllerNotaGasto cng = new ControllerNotaGasto();
 
@@ -144,7 +212,15 @@ public class RESTNotaGasto {
     @GET
     @Path("getAllByUser")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllByUser(@QueryParam("idUsuario") int idUsuario) {
+    public Response getAllByUser(@QueryParam("idUsuario") int idUsuario,
+            @HeaderParam("Authorization") String authHeader) {
+       
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+        
         try {
             ControllerNotaGasto controller = new ControllerNotaGasto();
             List<NotaGasto> notas = controller.getAllByUser(idUsuario);
@@ -160,7 +236,15 @@ public class RESTNotaGasto {
     @PUT
     @Path("updateContabilidad")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateContabilidad(@FormParam("datosNota") @DefaultValue("") String datosNota) {
+    public Response updateContabilidad(@FormParam("datosNota") @DefaultValue("") String datosNota,
+            @HeaderParam("Authorization") String authHeader) {
+       
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+        
         String out;
         Gson gson = new Gson();
         ControllerNotaGasto cng = new ControllerNotaGasto();
@@ -183,7 +267,14 @@ public class RESTNotaGasto {
     @GET
     @Path("getNotasPendientes")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getNotasPendientes() throws Exception {
+    public Response getNotasPendientes(@HeaderParam("Authorization") String authHeader) throws Exception {
+       
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+        
         ControllerNotaGasto cng = new ControllerNotaGasto();
 
         try {
@@ -198,7 +289,15 @@ public class RESTNotaGasto {
     @PUT
     @Path("updateGeneralInfo")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateGeneralInfo(@FormParam("datosNota") @DefaultValue("") String datosNota) {
+    public Response updateGeneralInfo(@FormParam("datosNota") @DefaultValue("") String datosNota,
+            @HeaderParam("Authorization") String authHeader) {
+      
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+        
         String out;
         Gson gson = new Gson();
         ControllerNotaGasto cng = new ControllerNotaGasto();
@@ -222,7 +321,15 @@ public class RESTNotaGasto {
     @Path("delete")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteNota(@FormParam("idNota") String idNotaStr) {
+    public Response deleteNota(@FormParam("idNota") String idNotaStr,
+            @HeaderParam("Authorization") String authHeader) {
+      
+         // Validar token
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+        
         String out;
         ControllerNotaGasto cng = new ControllerNotaGasto();
 

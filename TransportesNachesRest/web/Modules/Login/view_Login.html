@@ -10,41 +10,36 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
           if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-        registrations.forEach(reg => reg.unregister());
-        navigator.serviceWorker.register('/sw.js?v=13')
-            .then(() => console.log('Service Worker registrado'))
-            .catch(err => console.error('Error al registrar Service Worker:', err));
-    });
-}
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(reg => reg.unregister());
+                navigator.serviceWorker.register('/sw.js?v=13')
+                    .then(() => console.log('Service Worker registrado'))
+                    .catch(err => console.error('Error al registrar Service Worker:', err));
+            });
+          }
         </script>
-
     </head>
     <body class="flex items-center justify-center min-h-screen bg-gradient-to-r from-orange-400 to-orange-800">
-        <div class="bg-white p-8 rounded-2xl shadow-lg w-96 text-center">
+        <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-xs sm:max-w-sm md:max-w-md text-center">
             <h2 class="text-2xl font-bold text-gray-800">Iniciar Sesión</h2>
-            <img src="../../Resource/transportesNaches.png" alt="logo" class="w-60 h-60 mx-auto my-4">
-
+            <img src="../../Resource/transportesNaches.png" alt="logo" class="w-48 h-48 sm:w-56 sm:h-56 mx-auto my-4">
             <form onsubmit="return validarLogin(event);" class="space-y-4">
                 <div class="text-left">
                     <label for="nombreUsuario" class="block text-sm font-bold text-gray-700">Usuario:</label>
                     <input type="text" id="nombreUsuario" placeholder="Usuario" required
-                           class="w-full mt-1 px-4 py-2 border rounded-lg shadow-sm focus:ring-orange-500 focus:border-orange-500">
+                           class="w-full mt-1 px-4 py-2 border rounded-lg shadow-sm focus:ring-orange-500 focus:border-orange-500 text-sm">
                 </div>
-
                 <div class="text-left">
                     <label for="password" class="block text-sm font-bold text-gray-700">Contraseña:</label>
                     <input type="password" id="password" placeholder="Contraseña" required
-                           class="w-full mt-1 px-4 py-2 border rounded-lg shadow-sm focus:ring-orange-500 focus:border-orange-500">
+                           class="w-full mt-1 px-4 py-2 border rounded-lg shadow-sm focus:ring-orange-500 focus:border-orange-500 text-sm">
                 </div>
-
                 <button type="submit"
-                        class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg transition duration-300">
+                        class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg transition duration-300 text-sm">
                     Ingresar
                 </button>
             </form>
         </div>
         <script src="/Modules/Login/controller_Login.js"></script>
-
     </body>
 </html>

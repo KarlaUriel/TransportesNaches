@@ -18,6 +18,20 @@ document.addEventListener("DOMContentLoaded", function () {
         filtroFecha: document.getElementById("filtroFecha"),
         tablaMantenimientosBody: document.getElementById("tablaMantenimientosBody")
     };
+
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+        Swal.fire({
+            title: 'Error',
+            text: 'No se encontró un token de autenticación.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#f97316',
+        });
+        return;
+    }
+
     // Debug: Verify critical elements
     console.log('btnNuevoMantenimiento:', elements.btnNuevoMantenimiento);
     console.log('nuevoMantenimientoModal:', elements.nuevoMantenimientoModal);
@@ -149,7 +163,8 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch('https://transportesnaches.com.mx/api/unidad/getAll', {
                 method: 'GET',
-                headers: {'Content-Type': 'application/json'}
+                headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`}
             });
             if (!response.ok)
                 await handleApiError(response, 'No se pudieron cargar las unidades');
@@ -264,7 +279,8 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch('https://transportesnaches.com.mx/api/unidad/save', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`},
                 body: JSON.stringify(unidadData)
             });
             if (!response.ok)
@@ -294,7 +310,8 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/unidad/delete/${idUnidad}`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'}
+                headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`}
             });
             if (!response.ok)
                 await handleApiError(response, 'No se pudo desactivar la unidad');
@@ -336,7 +353,8 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log('Fetching mantenimientos for idUnidad:', idUnidad);
             const response = await fetch(`https://transportesnaches.com.mx/api/unidad/getMantenimientosPorUnidad/${idUnidad}`, {
                 method: 'GET',
-                headers: {'Content-Type': 'application/json'}
+                headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`}
             });
             if (!response.ok)
                 await handleApiError(response, 'No se pudieron cargar los mantenimientos');
@@ -370,7 +388,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         const fragment = document.createDocumentFragment();
-        
+
         const toLocalDateFormat = (dateStr) => {
             if (!dateStr)
                 return 'N/A';
@@ -381,7 +399,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const [year, month, day] = dateStr.split('-');
             return `${day}-${month}-${year}`; // e.g., "2025-05-28" -> "28-05-2025"
         };
-        
+
         mantenimientos.forEach(m => {
             console.log('Mantenimiento individual:', m);
             const row = document.createElement('tr');
@@ -444,7 +462,8 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/unidad/getLatestKilometraje/${idUnidad}`, {
                 method: 'GET',
-                headers: {'Content-Type': 'application/json'}
+                headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`}
             });
             if (!response.ok)
                 await handleApiError(response, 'No se pudo obtener el kilometraje');
@@ -489,7 +508,9 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log(`Unidad ${idUnidad}: kmMantenimiento=${kmMantenimiento}`);
             const response = await fetch(`https://transportesnaches.com.mx/api/unidad/getMantenimientosPorUnidad/${idUnidad}`, {
                 method: 'GET',
-                headers: {'Content-Type': 'application/json'}
+                headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
             });
             if (!response.ok) {
                 throw new Error('No se pudieron cargar los mantenimientos');
@@ -699,7 +720,8 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch('https://transportesnaches.com.mx/api/unidad/registrarMantenimiento', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`},
                 body: JSON.stringify(mantenimientoData)
             });
             if (!response.ok)

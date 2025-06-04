@@ -8,6 +8,18 @@ document.addEventListener("DOMContentLoaded", function () {
     const tblCaseta = document.getElementById("tblCaseta");
     const txtBuscar = document.getElementById("txtBuscar");
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+        Swal.fire({
+            title: 'Error',
+            text: 'No se encontró un token de autenticación.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#f97316',
+        });
+        return;
+    }
+
     let casetas = [];
 
     // Eventos
@@ -20,20 +32,27 @@ document.addEventListener("DOMContentLoaded", function () {
         guardarCaseta();
     });
 
+
+
     // Inicialización
     inicializar();
 
     function inicializar() {
         recargarCasetas();
         setDetalleVisible(false);
+
+
+
     }
 
     async function recargarCasetas() {
         try {
+
             const response = await fetch('https://transportesnaches.com.mx/api/caseta/getAll', {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 }
             });
             const data = await response.json();
@@ -63,9 +82,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         <div>
                             <h3 class="font-semibold text-gray-800 text-sm">${caseta.nombre || 'Sin Nombre'}</h3>
                             <p class="text-xs text-gray-600">
-                                ${isValidUrl 
-                                    ? `<a href="${caseta.ubicacion}" target="_blank" class="text-blue-500 hover:underline">Ver en Google Maps</a>`
-                                    : caseta.ubicacion || 'Sin Ubicación'}
+                                ${isValidUrl
+                    ? `<a href="${caseta.ubicacion}" target="_blank" class="text-blue-500 hover:underline">Ver en Google Maps</a>`
+                    : caseta.ubicacion || 'Sin Ubicación'}
                             </p>
                         </div>
                     </div>
@@ -126,7 +145,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const response = await fetch(`https://transportesnaches.com.mx/api/caseta/delete/${idCaseta}`, {
                 method: 'DELETE',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+
                 }
             });
 
@@ -169,7 +190,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const response = await fetch('https://transportesnaches.com.mx/api/caseta/save', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+
                 },
                 body: JSON.stringify(casetaData)
             });
@@ -230,7 +253,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function validarURLGoogleMaps(url) {
-        if (!url) return false;
+        if (!url)
+            return false;
         const regex = /^https:\/\/(www\.)?google\.com\/maps\//;
         return regex.test(url);
     }

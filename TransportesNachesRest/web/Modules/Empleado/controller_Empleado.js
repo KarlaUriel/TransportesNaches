@@ -20,6 +20,19 @@ document.addEventListener("DOMContentLoaded", function () {
         guardarOperador();
     });
 
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+        Swal.fire({
+            title: 'Error',
+            text: 'No se encontró un token de autenticación.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#f97316',
+        });
+        return;
+    }
+
     // Inicialización
     inicializar();
 
@@ -33,7 +46,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const response = await fetch('https://transportesnaches.com.mx/api/operador/getAll', {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+
                 }
             });
             const data = await response.json();
@@ -161,7 +176,9 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch('https://transportesnaches.com.mx/api/operador/save', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(operadorData)
             });
 
@@ -190,11 +207,15 @@ document.addEventListener("DOMContentLoaded", function () {
             confirmButtonText: 'Sí, desactivar'
         });
 
-        if (!confirmacion.isConfirmed) return;
+        if (!confirmacion.isConfirmed)
+            return;
 
         try {
             const response = await fetch(`https://transportesnaches.com.mx/api/operador/delete/${idOperador}`, {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             const data = await response.json();
@@ -265,7 +286,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const response = await fetch(`https://transportesnaches.com.mx/api/operador/reactivar/${idOperador}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+
                 }
             });
 

@@ -3,7 +3,9 @@ package com.naches.rest;
 import com.google.gson.Gson;
 import com.naches.controller.ControllerNotaGasto;
 import com.naches.model.TipoGasto;
+import com.naches.seguridad.JWTUtil;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
@@ -43,6 +45,36 @@ public class RESTGasto {
 //        
 //    }
 //    
+    
+    
+    
+    // Método para verificar el token en el encabezado Authorization
+    private Response validateToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Token no proporcionado o inválido.\"}")
+                    .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
+                    .header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .build();
+        }
+
+        String token = authHeader.substring("Bearer ".length()).trim();
+        if (!JWTUtil.validateToken(token)) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"error\":\"Token inválido o expirado.\"}")
+                    .header("Access-Control-Allow-Origin", "https://transportesnaches.com.mx")
+                    .header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+                    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                    .header("Access-Control-Allow-Credentials", "true")
+                    .build();
+        }
+
+        return null; // Token válido, continuar con la solicitud
+    }
+    
+    
     @GET
     @Path("getAllTipoGasto")
     @Produces(MediaType.APPLICATION_JSON)

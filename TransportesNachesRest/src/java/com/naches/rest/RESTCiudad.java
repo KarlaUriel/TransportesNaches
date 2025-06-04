@@ -5,9 +5,11 @@ import com.google.gson.JsonParseException;
 import com.naches.controller.ControllerCiudad;
 import com.naches.model.Ciudad;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
@@ -16,6 +18,7 @@ import java.util.List;
 
 @Path("ciudad")
 public class RESTCiudad {
+
     @GET
     @Path("getAllCiudades")
     @Produces(MediaType.APPLICATION_JSON)
@@ -36,6 +39,7 @@ public class RESTCiudad {
         }
         return Response.ok(out).build();
     }
+
     @POST
     @Path("save")
     @Produces(MediaType.APPLICATION_JSON)
@@ -71,8 +75,7 @@ public class RESTCiudad {
 
         return Response.ok(out).build();
     }
-    
-    
+
     @GET
     @Path("getAll")
     @Produces(MediaType.APPLICATION_JSON)
@@ -93,5 +96,35 @@ public class RESTCiudad {
         return Response.ok(out).build();
     }
 
-    
+    @DELETE
+    @Path("delete/{idCiudad}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteCiudad(@PathParam("idCiudad") int idCiudad) {
+        String out;
+        ControllerCiudad cci = new ControllerCiudad();
+
+        try {
+            // Verify the received ID
+            System.out.println("ID de ciudad a eliminar: " + idCiudad);
+
+            // Check if the ID is valid
+            if (idCiudad < 1) {
+                out = "{\"error\":\"El ID de la ciudad no es válido.\"}";
+                return Response.status(Response.Status.BAD_REQUEST).entity(out).build();
+            }
+
+            // Call the controller to delete the city
+            cci.deleteCiudad(idCiudad);
+
+            // Return success message
+            out = "{\"success\":\"Ciudad eliminada correctamente.\"}";
+            return Response.ok(out).build();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            out = "{\"error\":\"Error interno del servidor, comunícate al área de sistemas: " + e.getMessage() + "\"}";
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(out).build();
+        }
+    }
+
 }

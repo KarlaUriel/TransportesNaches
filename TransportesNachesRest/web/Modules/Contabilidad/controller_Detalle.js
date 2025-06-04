@@ -5,13 +5,18 @@ let operadores = [];
 let clientes = [];
 let unidades = [];
 
+const token = localStorage.getItem("token");
+
+
 async function fetchOperadores() {
     try {
         const response = await fetch('https://transportesnaches.com.mx/api/operador/getAll', {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`}
         });
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+        if (!response.ok)
+            throw new Error(`Error HTTP: ${response.status}`);
         operadores = await response.json();
         populateSelect('nombreOperadorSelect', operadores, 'nombreOperador', 'nombreOperador');
     } catch (error) {
@@ -23,9 +28,11 @@ async function fetchClientes() {
     try {
         const response = await fetch('https://transportesnaches.com.mx/api/cliente/getAll', {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`}
         });
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+        if (!response.ok)
+            throw new Error(`Error HTTP: ${response.status}`);
         clientes = await response.json();
         populateSelect('nombreClienteSelect', clientes, 'nombreCliente', 'nombreCliente');
     } catch (error) {
@@ -37,9 +44,11 @@ async function fetchUnidades() {
     try {
         const response = await fetch('https://transportesnaches.com.mx/api/unidad/getAll', {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`}
         });
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+        if (!response.ok)
+            throw new Error(`Error HTTP: ${response.status}`);
         unidades = await response.json();
         populateSelect('tipoVehiculoSelect', unidades, 'tipoVehiculo', 'tipoVehiculo');
     } catch (error) {
@@ -62,9 +71,11 @@ async function fetchInvoiceNumber(idNota) {
     try {
         const response = await fetch(`https://transportesnaches.com.mx/api/nota/getById?idNota=${idNota}`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`}
         });
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+        if (!response.ok)
+            throw new Error(`Error HTTP: ${response.status}`);
         const data = await response.json();
         return data.numeroFactura || 'FAC-001';
     } catch (error) {
@@ -77,23 +88,26 @@ async function preloadContabilidadData() {
     try {
         const response = await fetch('https://transportesnaches.com.mx/api/nota/getAll', {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
         });
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+        if (!response.ok)
+            throw new Error(`Error HTTP: ${response.status}`);
         const notas = await response.json();
 
         // Select only essential fields to reduce data size
         const slimNotas = notas.map(nota => ({
-            idNota: nota.idNota,
-            numeroFactura: nota.numeroFactura,
-            maniobra: nota.maniobra,
-            comision: nota.comision,
-            gananciaCalculada: nota.gananciaCalculada,
-            pago: nota.pago,
-            fechaPago: nota.fechaPago,
-            estadoFact: nota.estadoFact,
-            estado: nota.fechaLlegada ? 'COMPLETADA' : 'PENDIENTE'
-        }));
+                idNota: nota.idNota,
+                numeroFactura: nota.numeroFactura,
+                maniobra: nota.maniobra,
+                comision: nota.comision,
+                gananciaCalculada: nota.gananciaCalculada,
+                pago: nota.pago,
+                fechaPago: nota.fechaPago,
+                estadoFact: nota.estadoFact,
+                estado: nota.fechaLlegada ? 'COMPLETADA' : 'PENDIENTE'
+            }));
 
         const cacheData = JSON.stringify({
             data: slimNotas,
@@ -141,7 +155,8 @@ async function cargarDetallesNota() {
     try {
         const response = await fetch(`https://transportesnaches.com.mx/api/nota/getById?idNota=${idNota}`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`}
         });
 
         if (!response.ok) {
@@ -165,17 +180,17 @@ async function cargarDetallesNota() {
         const fotoOtraFinDiv = document.getElementById('fotoOtraFin');
 
         fotoTableroDiv.innerHTML = notaData.fotoTablero
-            ? `<img src="data:image/jpeg;base64,${notaData.fotoTablero}" alt="Foto Tablero" class="w-full h-full object-contain rounded-lg">`
-            : '<span class="text-gray-500">Sin imagen</span>';
+                ? `<img src="data:image/jpeg;base64,${notaData.fotoTablero}" alt="Foto Tablero" class="w-full h-full object-contain rounded-lg">`
+                : '<span class="text-gray-500">Sin imagen</span>';
         fotoAcuseDiv.innerHTML = notaData.fotoAcuse
-            ? `<img src="data:image/jpeg;base64,${notaData.fotoAcuse}" alt="Foto Acuse" class="w-full h-full object-contain rounded-lg">`
-            : '<span class="text-gray-500">Sin imagen</span>';
+                ? `<img src="data:image/jpeg;base64,${notaData.fotoAcuse}" alt="Foto Acuse" class="w-full h-full object-contain rounded-lg">`
+                : '<span class="text-gray-500">Sin imagen</span>';
         fotoOtraInicioDiv.innerHTML = notaData.fotoOtraInicio
-            ? `<img src="data:image/jpeg;base64,${notaData.fotoOtraInicio}" alt="Otra Foto Inicio" class="w-full h-full object-contain rounded-lg">`
-            : '<span class="text-gray-500">Sin imagen</span>';
+                ? `<img src="data:image/jpeg;base64,${notaData.fotoOtraInicio}" alt="Otra Foto Inicio" class="w-full h-full object-contain rounded-lg">`
+                : '<span class="text-gray-500">Sin imagen</span>';
         fotoOtraFinDiv.innerHTML = notaData.fotoOtraFin
-            ? `<img src="data:image/jpeg;base64,${notaData.fotoOtraFin}" alt="Otra Foto Fin" class="w-full h-full object-contain rounded-lg">`
-            : '<span class="text-gray-500">Sin imagen</span>';
+                ? `<img src="data:image/jpeg;base64,${notaData.fotoOtraFin}" alt="Otra Foto Fin" class="w-full h-full object-contain rounded-lg">`
+                : '<span class="text-gray-500">Sin imagen</span>';
 
         const distancia = notaData.kmFinal && notaData.kmInicio ? notaData.kmFinal - notaData.kmInicio : (notaData.distancia || 258);
         const rendimiento = notaData.unidad?.rendimientoUnidad || 7;
@@ -219,16 +234,26 @@ async function cargarDetallesNota() {
                 const gastoCard = document.createElement('div');
                 gastoCard.classList.add('card', 'border', 'border-gray-200');
                 const campos = [];
-                if (gasto.tipoGasto?.descripcion && gasto.tipoGasto.descripcion !== 'N/A') campos.push(`<p><strong>Tipo Gasto:</strong> ${gasto.tipoGasto.descripcion}</p>`);
-                if (gasto.total && gasto.total !== 'N/A') campos.push(`<p><strong>Total:</strong> $${parseFloat(gasto.total).toFixed(2)}</p>`);
-                if (gasto.caseta && gasto.caseta !== 'N/A') campos.push(`<p><strong>Caseta:</strong> ${gasto.caseta}</p>`);
-                if (gasto.tipoGas && gasto.tipoGas !== 'N/A') campos.push(`<p><strong>Tipo Gasolina:</strong> ${gasto.tipoGas}</p>`);
-                if (gasto.tipoPago && gasto.tipoPago !== 'N/A') campos.push(`<p><strong>Tipo Pago:</strong> ${gasto.tipoPago}</p>`);
-                if (gasto.cantidad && gasto.cantidad !== 'N/A') campos.push(`<p><strong>Cantidad:</strong> ${gasto.cantidad}</p>`);
-                if (gasto.cantidadGas && gasto.cantidadGas !== 'N/A') campos.push(`<p><strong>Cantidad Gasolina:</strong> ${gasto.cantidadGas}</p>`);
-                if (gasto.costo && gasto.costo !== 'N/A') campos.push(`<p><strong>Costo Unitario:</strong> $${parseFloat(gasto.costo).toFixed(2)}</p>`);
-                if (gasto.subTotal && gasto.subTotal !== 'N/A') campos.push(`<p><strong>Subtotal:</strong> $${parseFloat(gasto.subTotal).toFixed(2)}</p>`);
-                if (gasto.comentarioGasto && gasto.comentarioGasto !== 'N/A') campos.push(`<p><strong>Comentario:</strong> ${gasto.comentarioGasto}</p>`);
+                if (gasto.tipoGasto?.descripcion && gasto.tipoGasto.descripcion !== 'N/A')
+                    campos.push(`<p><strong>Tipo Gasto:</strong> ${gasto.tipoGasto.descripcion}</p>`);
+                if (gasto.total && gasto.total !== 'N/A')
+                    campos.push(`<p><strong>Total:</strong> $${parseFloat(gasto.total).toFixed(2)}</p>`);
+                if (gasto.caseta && gasto.caseta !== 'N/A')
+                    campos.push(`<p><strong>Caseta:</strong> ${gasto.caseta}</p>`);
+                if (gasto.tipoGas && gasto.tipoGas !== 'N/A')
+                    campos.push(`<p><strong>Tipo Gasolina:</strong> ${gasto.tipoGas}</p>`);
+                if (gasto.tipoPago && gasto.tipoPago !== 'N/A')
+                    campos.push(`<p><strong>Tipo Pago:</strong> ${gasto.tipoPago}</p>`);
+                if (gasto.cantidad && gasto.cantidad !== 'N/A')
+                    campos.push(`<p><strong>Cantidad:</strong> ${gasto.cantidad}</p>`);
+                if (gasto.cantidadGas && gasto.cantidadGas !== 'N/A')
+                    campos.push(`<p><strong>Cantidad Gasolina:</strong> ${gasto.cantidadGas}</p>`);
+                if (gasto.costo && gasto.costo !== 'N/A')
+                    campos.push(`<p><strong>Costo Unitario:</strong> $${parseFloat(gasto.costo).toFixed(2)}</p>`);
+                if (gasto.subTotal && gasto.subTotal !== 'N/A')
+                    campos.push(`<p><strong>Subtotal:</strong> $${parseFloat(gasto.subTotal).toFixed(2)}</p>`);
+                if (gasto.comentarioGasto && gasto.comentarioGasto !== 'N/A')
+                    campos.push(`<p><strong>Comentario:</strong> ${gasto.comentarioGasto}</p>`);
                 if (campos.length > 0) {
                     gastoCard.innerHTML = `<div class="grid grid-cols-1 gap-2 text-sm text-gray-800">${campos.join('')}</div>`;
                     gastosContainer.appendChild(gastoCard);
@@ -249,9 +274,9 @@ async function cargarDetallesNota() {
         document.getElementById('totalGastos').textContent = totalGastos ? `$${totalGastos.toFixed(2)}` : '$0.00';
 
         const gananciaCalculada = notaData.gananciaCalculada || (pagoViaje - totalGastos);
-        const gananciaText = gananciaCalculada >= 0 
-            ? `$${gananciaCalculada.toFixed(2)} (Positiva)`
-            : `-$${Math.abs(gananciaCalculada).toFixed(2)} (Negativa)`;
+        const gananciaText = gananciaCalculada >= 0
+                ? `$${gananciaCalculada.toFixed(2)} (Positiva)`
+                : `-$${Math.abs(gananciaCalculada).toFixed(2)} (Negativa)`;
         document.getElementById('gananciaCalculada').textContent = gananciaText;
         document.getElementById('gananciaCalculadaInput').value = gananciaCalculada.toFixed(2);
 
@@ -264,7 +289,8 @@ async function cargarDetallesNota() {
 
         // Process route to show only city names
         const processCityName = (location) => {
-            if (!location) return '';
+            if (!location)
+                return '';
             const parts = location.split(',');
             return parts[0].trim();
         };
@@ -316,7 +342,8 @@ async function cargarDetallesNota() {
 }
 
 function formatearFecha(fecha) {
-    if (!fecha) return null;
+    if (!fecha)
+        return null;
     const date = new Date(fecha);
     const dia = String(date.getDate()).padStart(2, '0');
     const mes = String(date.getMonth() + 1).padStart(2, '0');
@@ -355,7 +382,9 @@ async function guardarContabilidad() {
 
     const response = await fetch(`https://transportesnaches.com.mx/api/nota/getById?idNota=${idNota}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    }
     });
     const nota = await response.json();
     const factura = nota.cliente?.factura || 0;
@@ -363,11 +392,11 @@ async function guardarContabilidad() {
     const rendimiento = nota.unidad?.rendimientoUnidad || 7;
     const precioLitro = nota.precioLitro || 25.50;
     const noEntrega = parseInt(nota.noEntrega) || 0;
-   //  const pagoViaje = ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
+    //  const pagoViaje = ((distancia / rendimiento) * precioLitro * 3.5) + (noEntrega * 289);
     const estado = nota.fechaLlegada ? 'COMPLETADA' : 'PENDIENTE';
 
     let numeroFactura = numeroFacturaInput.value;
-  
+
 
     const datosActualizados = {
         idNota,
@@ -386,8 +415,9 @@ async function guardarContabilidad() {
     try {
         const response = await fetch(`https://transportesnaches.com.mx/api/nota/updateContabilidad`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ datosNota: JSON.stringify(datosActualizados) })
+            headers: {'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer ${token}`},
+            body: new URLSearchParams({datosNota: JSON.stringify(datosActualizados)})
         });
 
         if (!response.ok) {
@@ -396,7 +426,8 @@ async function guardarContabilidad() {
 
         const responseData = await fetch(`https://transportesnaches.com.mx/api/nota/getById?idNota=${idNota}`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`}
         });
         const updatedNota = await responseData.json();
         notaData = updatedNota;
@@ -408,9 +439,9 @@ async function guardarContabilidad() {
         document.getElementById('maniobraInput').value = maniobra;
         document.getElementById('comision').textContent = comision ? `$${comision.toFixed(2)}` : 'N/A';
         document.getElementById('comisionInput').value = comision;
-        document.getElementById('gananciaCalculada').textContent = gananciaCalculada >= 0 
-            ? `$${gananciaCalculada.toFixed(2)} (Positiva)`
-            : `-$${Math.abs(gananciaCalculada).toFixed(2)} (Negativa)`;
+        document.getElementById('gananciaCalculada').textContent = gananciaCalculada >= 0
+                ? `$${gananciaCalculada.toFixed(2)} (Positiva)`
+                : `-$${Math.abs(gananciaCalculada).toFixed(2)} (Negativa)`;
         document.getElementById('gananciaCalculadaInput').value = gananciaCalculada.toFixed(2);
         document.getElementById('maniobraTotal').textContent = maniobra ? `$${maniobra.toFixed(2)}` : '$0.00';
         document.getElementById('comisionTotal').textContent = comision ? `$${comision.toFixed(2)}` : '$0.00';
@@ -522,8 +553,8 @@ async function guardarInfoGeneral() {
     const datosActualizados = {
         idNota,
         nombreOperador,
-        cliente: { nombreCliente },
-        unidad: tipoVehiculo ? { tipoVehiculo } : null,
+        cliente: {nombreCliente},
+        unidad: tipoVehiculo ? {tipoVehiculo} : null,
         origen,
         destino,
         noEntrega: noEntrega ? parseInt(noEntrega) : null,
@@ -540,8 +571,9 @@ async function guardarInfoGeneral() {
     try {
         const response = await fetch(`https://transportesnaches.com.mx/api/nota/updateGeneralInfo`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ datosNota: JSON.stringify(datosActualizados) })
+            headers: {'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer ${token}`},
+            body: new URLSearchParams({datosNota: JSON.stringify(datosActualizados)})
         });
 
         if (!response.ok) {
@@ -588,10 +620,10 @@ function configurarBotones() {
 
     // Photo containers
     const photoContainers = [
-        { id: 'fotoTablero', modalId: 'fotoTableroModal' },
-        { id: 'fotoAcuse', modalId: 'fotoAcuseModal' },
-        { id: 'fotoOtraInicio', modalId: 'fotoOtraInicioModal' },
-        { id: 'fotoOtraFin', modalId: 'fotoOtraFinModal' }
+        {id: 'fotoTablero', modalId: 'fotoTableroModal'},
+        {id: 'fotoAcuse', modalId: 'fotoAcuseModal'},
+        {id: 'fotoOtraInicio', modalId: 'fotoOtraInicioModal'},
+        {id: 'fotoOtraFin', modalId: 'fotoOtraFinModal'}
     ];
 
     // Modal close buttons
@@ -691,7 +723,7 @@ function configurarBotones() {
             document.getElementById('gananciaCalculadaInput').value = notaData.gananciaCalculada || '0';
         });
     }
-    
+
 
     if (toggleSidebarBtn) {
         toggleSidebarBtn.addEventListener('click', toggleSidebar);
@@ -702,7 +734,7 @@ function configurarBotones() {
         const container = document.getElementById(id);
         if (container) {
             container.addEventListener('click', () => openImageModal(modalId));
-        }
+    }
     });
 
     // Add event listeners for modal close buttons
@@ -736,7 +768,7 @@ function openImageModal(modalId) {
     const modal = document.getElementById(modalId);
     const modalImg = document.getElementById(modalId + 'Img');
     const originalImg = document.getElementById(modalId.replace('Modal', '')).querySelector('img');
-    
+
     if (modal && modalImg && originalImg) {
         modalImg.src = originalImg.src;
         modal.style.display = 'block';
@@ -760,7 +792,8 @@ function closeImageModal(modalId) {
 }
 
 function processCityName(location) {
-    if (!location) return '';
+    if (!location)
+        return '';
     const parts = location.split(',');
     return parts[0].trim();
 }
@@ -775,6 +808,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.opacity = '1';
     cargarDetallesNota();
     configurarBotones();
+
+    if (!token) {
+        Swal.fire({
+            title: 'Error',
+            text: 'No se encontró un token de autenticación.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#f97316',
+        });
+        return;
+    }
+
     const userRole = localStorage.getItem('isAdmin') === 'true' ? 'administrador' : 'usuario';
     document.querySelectorAll('.admin-only').forEach(el => {
         el.style.display = userRole === 'administrador' ? '' : 'none';
