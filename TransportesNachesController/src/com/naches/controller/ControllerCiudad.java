@@ -147,4 +147,27 @@ public class ControllerCiudad {
         return c;
     }
 
+    // Add this method to ControllerCiudad.java
+    public void deleteCiudad(int idCiudad) throws Exception {
+        // Define the SQL query or stored procedure for deleting a city
+        String sql = "{CALL eliminarCiudad(?)}"; // Hypothetical stored procedure
+
+        // Open the database connection
+        ConexionMySQL connMySQL = new ConexionMySQL();
+        Connection conn = connMySQL.open();
+
+        // Prepare the CallableStatement for the stored procedure
+        CallableStatement cstmt = conn.prepareCall(sql);
+
+        // Set the parameter for the stored procedure
+        cstmt.setInt(1, idCiudad);
+
+        // Execute the stored procedure
+        cstmt.executeUpdate();
+
+        // Close the connection
+        cstmt.close();
+        connMySQL.close();
+    }
+
 }

@@ -862,10 +862,8 @@ public class ControllerNotaGasto {
             cstmt.setString(2, ng.getOperador() != null ? ng.getOperador().getNombreOperador() : null);
             cstmt.setString(3, ng.getCliente() != null ? ng.getCliente().getNombreCliente() : null);
             cstmt.setString(4, ng.getUnidad() != null ? ng.getUnidad().getTipoVehiculo() : null);
-            String ruta = (ng.getOrigen() != null && ng.getDestino() != null)
-                    ? ng.getOrigen() + " - " + ng.getDestino()
-                    : (ng.getOrigen() != null ? ng.getOrigen() : ng.getDestino() != null ? ng.getDestino() : "");
-            cstmt.setString(5, ruta.isEmpty() ? null : ruta);
+           
+            cstmt.setString(5, ng.getDestino());
             cstmt.setInt(6, ng.getNoEntrega());
             cstmt.setDate(7, ng.getFechaSalida() != null ? new java.sql.Date(ng.getFechaSalida().getTime()) : null);
             cstmt.setString(8, ng.getHoraSalida());
