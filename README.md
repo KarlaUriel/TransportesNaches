@@ -1,4 +1,3 @@
-¡Claro que sí\! Aquí tienes una versión rediseñada del README, utilizando formatos de Markdown para mejorar la presentación, agregar íconos y estructurarlo de una manera más profesional y atractiva, como se ve comúnmente en proyectos de software.
 
 -----
 
