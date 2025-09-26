@@ -1,0 +1,2 @@
+cache.provider=ehcache
+ehcache.config.file=/WEB-INF/ehcache.xml

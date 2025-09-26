@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitácora de Gastos</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="/Resource/transportesNaches.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-orange': '#f97316',
+                        'secondary-orange': '#fb923c',
+                        'dark-bg-start': '#1a202c',
+                        'dark-bg-end': '#2d3748'
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-in': 'slideIn 0.3s ease-in-out',
+                        'float-in': 'floatIn 0.3s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideIn: { '0%': { transform: 'translateY(10px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        floatIn: { '0%': { transform: 'translateY(10px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
+                    },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+                        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --base-font-size: 3.5vw;
+        }
+        body {
+            font-size: var(--base-font-size);
+            line-height: 1.5;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            background: linear-gradient(135deg, #f97316, #fb923c);
+        }
+        .tooltip {
+            position: relative;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            background-color: #1a202c;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 20;
+            left: 110%;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        input, select, textarea, button {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            font-size: 0.875rem;
+            border-radius: 8px;
+            padding: 0.75rem;
+            transition: all 0.2s ease;
+        }
+        button {
+            min-width: 48px;
+            min-height: 48px;
+        }
+        #gastosTable {
+            table-layout: fixed;
+            width: 100%;
+        }
+        #gastosTable th,
+        #gastosTable td {
+            width: 11.11%;
+            text-align: center;
+            vertical-align: middle;
+            padding: 1rem;
+        }
+        #gastosTable .header-row th {
+            background-color: #f97316;
+            color: white;
+            font-weight: 600;
+            border-bottom: 2px solid #fb923c;
+        }
+        #gastosTable .data-row td {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background-color 0.2s ease;
+        }
+        #gastosTable .data-row:hover td {
+            background-color: #f9fafb;
+        }
+        #gastosTable input,
+        #gastosTable select {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #sugerenciasDestino {
+            position: absolute;
+            z-index: 50;
+            background-color: white;
+            border: 1px solid #f97316;
+            border-radius: 8px;
+            max-height: 12rem;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+        #sugerenciasDestino li {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        #sugerenciasDestino li:hover {
+            background-color: #f97316;
+            color: white;
+        }
+        #destinosContainer {
+            overflow: visible !important;
+        }
+        #destinosContainer .destino-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 0.75rem;
+        }
+        .destino-input {
+            flex-grow: 1;
+        }
+        #destinosContainer .destino-row:not(:last-child) .btnAgregarDestino {
+            display: none;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background-color: #f97316;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+            position: relative;
+        }
+        .checkbox-label:hover {
+            background-color: #e56b14;
+            border-color: #fb923c;
+        }
+        .checkbox-label input:checked + span {
+            font-weight: 600;
+        }
+        .checkbox-label input {
+            margin-right: 0.5rem;
+            height: 1.25rem;
+            width: 1.25rem;
+            border: 2px solid #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            accent-color: #fb923c;
+        }
+        .checkbox-label input:checked {
+            background-color: #fff;
+            border-color: #fff;
+        }
+        .checkbox-label span {
+            color: white;
+            font-size: 0.875rem;
+            transition: font-weight 0.2s ease;
+        }
+        .no-gastos-label {
+            padding: 0.5rem 1rem;
+            background-color: #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .no-gastos-label:hover {
+            background-color: #d1d5db;
+            border-color: #9ca3af;
+        }
+        .no-gastos-label input:checked + span {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .no-gastos-label input {
+            margin-right: 0.5rem;
+            height: 1.25rem;
+            width: 1.25rem;
+            border: 2px solid #6b7280;
+            border-radius: 4px;
+            cursor: pointer;
+            accent-color: #f97316;
+        }
+        .no-gastos-label input:checked {
+            background-color: #f97316;
+            border-color: #f97316;
+        }
+        .no-gastos-label span {
+            color: #374151;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+        .fuel-level-container {
+            display: none;
+            margin-top: 0.5rem;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 0.5rem;
+            z-index: 10;
+            animation: float-in 0.3s ease-out;
+        }
+        .fuel-level-container.show {
+            display: flex;
+        }
+        .fuel-level-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .fuel-level-btn:hover {
+            background-color: #f97316;
+            color: white;
+        }
+        .fuel-level-btn.selected {
+            background-color: #f97316;
+            color: white;
+            font-weight: 600;
+        }
+        .fuel-level-display {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #374151;
+            background-color: #fef3c7;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            display: none;
+        }
+        .fuel-level-display.show {
+            display: block;
+        }
+        .gasto-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .gasto-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        .card-field label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+        .card-field select,
+        .card-field input,
+        .card-field textarea {
+            border: 1px solid #d1d5db;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-field select:focus,
+        .card-field input:focus,
+        .card-field textarea:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
+        select:required:invalid,
+        input:required:invalid {
+            border-color: #ef4444;
+        }
+        button.agregarCasetaBtn {
+            font-size: 0.875rem;
+        }
+        .btnEliminar i {
+            font-size: 1.25rem;
+        }
+        @media (max-width: 640px) {
+            :root { --base-font-size: 14px; }
+            .gasto-card {
+                padding: 1rem;
+            }
+            .card-field label {
+                font-size: 0.875rem;
+            }
+            .card-field select,
+            .card-field input,
+            .card-field textarea {
+                font-size: 0.875rem;
+                padding: 0.5rem;
+            }
+            .fuel-level-container {
+                width: 100%;
+            }
+        }
+        @media (min-width: 640px) {
+            :root { --base-font-size: 16px; }
+        }
+    </style>
+</head>
+<body class="h-screen overflow-x-hidden">
+    <div class="md:hidden fixed top-4 left-4 z-50">
+        <button id="menuButton" onclick="toggleSidebar()" class="text-white text-2xl bg-dark-bg-start p-3 rounded-full hover:bg-dark-bg-end transition shadow-lg">
+            <i id="menu-icon" class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <div class="flex h-full w-full">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="fixed md:relative z-40 w-16 h-full flex flex-col items-center py-6 shadow-2xl transform -translate-x-full md:translate-x-0 transition-transform duration-300 bg-gradient-to-b from-dark-bg-start to-dark-bg-end">
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-primary-orange mb-8">
+                <a href="/menu">
+                    <img src="/Resource/transportesNaches.png" alt="logo" class="w-8 h-8 rounded-full hover:opacity-80 transition" />
+                </a>
+            </div>
+            <ul class="w-full px-2 space-y-6 flex-grow">
+                <li id="bitacora" class="tooltip">
+                    <a href="/bitacora" class="flex items-center justify-center p-3 text-white hover:text-primary-orange transition-colors">
+                        <i class="fas fa-book text-xl"></i>
+                        <span class="tooltiptext">Bitácora</span>
+                    </a>
+                </li>
+                <li class="admin-only tooltip" id="contabilidad">
+                    <a href="/contabilidad" class="flex items-center justify-center p-3 text-white hover:text-primary-orange transition-colors">
+                        <i class="fas fa-calculator text-xl"></i>
+                        <span class="tooltiptext">Contabilidad</span>
+                    </a>
+                </li>
+                <li id="gestionAdmin" class="admin-only tooltip">
+                    <button id="btnGestion" onclick="toggleGestionMenu()" class="flex items-center justify-center p-3 text-white hover:text-primary-orange transition-colors w-full">
+                        <i class="fas fa-cogs text-xl"></i>
+                        <span class="tooltiptext">Gestión</span>
+                    </button>
+                    <ul id="gestionSubmenu" class="hidden absolute left-16 top-0 bg-dark-bg-start text-white rounded-lg shadow-xl py-3 w-48 space-y-2 z-50">
+                        <li><a href="/cliente" class="block px-4 py-2 text-sm hover:bg-primary-orange transition-colors">Gestión Cliente</a></li>
+                        <li><a href="/unidad" class="block px-4 py-2 text-sm hover:bg-primary-orange transition-colors">Gestión Unidad</a></li>
+                        <li><a href="/empleado" class="block px-4 py-2 text-sm hover:bg-primary-orange transition-colors">Gestión Empleado</a></li>
+                        <li><a href="/ciudad" class="block px-4 py-2 text-sm hover:bg-primary-orange transition-colors">Gestión Ciudad</a></li>
+                        <li><a href="/caseta" class="block px-4 py-2 text-sm hover:bg-primary-orange transition-colors">Gestión Caseta</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="mt-auto mb-6 tooltip">
+                <button id="cerrarSesion" class="flex items-center justify-center p-3 text-white hover:text-red-400 transition-colors">
+                    <i class="fas fa-sign-out-alt text-xl"></i>
+                    <span class="tooltiptext">Cerrar Sesión</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 overflow-auto md:mt-0 mt-16">
+            <div class="bg-white rounded-xl shadow-2xl p-8 max-w-5xl mx-auto animate-slide-in">
+                <h1 class="text-center text-2xl md:text-3xl font-bold text-gray-900 bg-orange-100 py-3 px-6 rounded-lg mb-8 shadow-md">
+                    Bitácora
+                </h1>
+
+                <form id="iniciarViajeForm" method="POST" enctype="multipart/form-data" class="space-y-8">
+                    <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-3">
+                        <i class="fas fa-road text-primary-orange"></i> Iniciar Viaje
+                    </h2>
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex-1 space-y-5">
+                            <div class="card-field">
+                                <label for="nombreCliente" class="block text-sm font-medium text-gray-700 mb-2">Nombre Cliente:</label>
+                                <select id="nombreCliente" name="nombreCliente" class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm focus:ring-2 focus:ring-primary-orange" required>
+                                    <option value="">Seleccione un cliente</option>
+                                </select>
+                            </div>
+                            <div class="card-field">
+                                <label for="origen" class="block text-sm font-medium text-gray-700 mb-2">Origen:</label>
+                                <input type="text" id="origen" name="origen" class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm" value="León" disabled>
+                            </div>
+                            <div class="card-field">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Destinos:</label>
+                                <div id="destinosContainer" class="space-y-3">
+                                    <div class="flex items-center destino-row">
+                                        <input type="text" class="destino-input w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm focus:ring-2 focus:ring-primary-orange" placeholder="Escribe una ciudad..." autocomplete="off">
+                                        <div class="flex items-center ml-3 gap-3">
+                                            <button type="button" class="btnAgregarDestino bg-primary-orange text-white p-2 rounded-lg hover:bg-secondary-orange transition shadow-md"><i class="fas fa-plus"></i></button>
+                                            <button type="button" class="btnEliminarDestino text-red-500 hover:text-red-700 p-2"><i class="fas fa-trash-alt"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <ul id="sugerenciasDestino" class="hidden"></ul>
+                            </div>
+                        </div>
+                        <div class="flex-1 space-y-5">
+                            <div class="card-field">
+                                <label for="idUnidad" class="block text-sm font-medium text-gray-700 mb-2">Unidad:</label>
+                                <select id="idUnidad" name="idUnidad" class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm focus:ring-2 focus:ring-primary-orange" required>
+                                    <option value="">Seleccione una unidad</option>
+                                </select>
+                            </div>
+                            <div class="card-field">
+                                <label for="kmInicio" class="block text-sm font-medium text-gray-700 mb-2">Km. Inicio:</label>
+                                <input type="number" step="0.01" id="kmInicio" name="kmInicio" class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm focus:ring-2 focus:ring-primary-orange" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estado del Vehículo -->
+                    <div class="mt-8 bg-gray-50 p-6 rounded-xl shadow-md">
+                        <h2 class="text-xl font-semibold text-gray-900 bg-orange-100 py-3 px-4 rounded-lg mb-4 text-center">Estado del Vehículo</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="relative">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="gasolinaInicio" id="gasolinaInicio">
+                                    <span>Gasolina</span>
+                                </label>
+                                <div id="gasolinaLevel" class="fuel-level-container">
+                                    <button type="button" onclick="selectGasLevel('1/4')" class="fuel-level-btn">1/4</button>
+                                    <button type="button" onclick="selectGasLevel('1/2')" class="fuel-level-btn">1/2</button>
+                                    <button type="button" onclick="selectGasLevel('3/4')" class="fuel-level-btn">3/4</button>
+                                    <button type="button" onclick="selectGasLevel('1')" class="fuel-level-btn">1</button>
+                                </div>
+                                <div id="gasolinaLevelDisplay" class="fuel-level-display">
+                                    Nivel seleccionado: <span id="gasolinaLevelText"></span>
+                                </div>
+                                <input type="hidden" name="gasolinaLevel" id="gasolinaLevelInput" value="">
+                            </div>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="llantasInicio" id="llantasInicio"><span>Llantas</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="aceiteInicio" id="aceiteInicio"><span>Aceite</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="anticongelanteInicio" id="anticongelanteInicio"><span>Anticongelante</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="liquidoFrenosInicio" id="liquidoFrenosInicio"><span>Líquido de Frenos</span>
+                            </label>
+                        </div>
+                        <div class="mt-4 card-field">
+                            <label for="comentarioEstado" class="block text-sm font-medium text-gray-700 mb-2">Comentarios:</label>
+                            <textarea id="comentarioEstado" name="comentarioEstado" class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm h-24" placeholder="Nota:"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex-1 card-field">
+                            <label for="fotoTablero" class="block text-sm font-medium text-gray-700 mb-2">Foto Tablero:</label>
+                            <input type="file" id="fotoTablero" name="fotoTablero" class="block w-full text-sm text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-orange file:text-white hover:file:bg-secondary-orange transition" accept="image/*" required>
+                            <div id="vistaPreviaTablero" class="mt-3"></div>
+                        </div>
+                        <div class="flex-1 card-field">
+                            <label for="fotoOtraInicio" class="block text-sm font-medium text-gray-700 mb-2">Otra Foto (Opcional):</label>
+                            <input type="file" id="fotoOtraInicio" name="fotoOtraInicio" class="block w-full text-sm text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-orange file:text-white hover:file:bg-secondary-orange transition" accept="image/*">
+                            <div id="vistaPreviaOtraInicio" class="mt-3"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center space-x-4 mt-8">
+                        <button type="submit" id="iniciarViaje" class="bg-primary-orange text-white py-2 px-6 rounded-lg flex items-center gap-2 hover:bg-secondary-orange transition shadow-md">
+                            <i class="fas fa-play"></i> Iniciar Viaje
+                        </button>
+                        <button type="button" id="btnVolver" class="btnVolver bg-gray-600 text-white py-2 px-6 rounded-lg flex items-center gap-2 hover:bg-gray-700 transition shadow-md">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Formulario para Finalizar Viaje -->
+                <form id="finalizarViajeForm" method="POST" enctype="multipart/form-data" class="space-y-8 hidden">
+                    <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-3">
+                        <i class="fas fa-flag-checkered text-primary-orange"></i> Finalizar Viaje
+                    </h2>
+                    <div class="card-field">
+                        <label for="viajePendiente" class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Viaje Pendiente:</label>
+                        <select id="viajePendiente" name="viajePendiente" class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm focus:ring-2 focus:ring-primary-orange">
+                            <option value="">Seleccione un viaje...</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex-1 space-y-5">
+                            <div id="datosNota" class="space-y-5">
+                                <button type="button" id="registrarOtroViaje" class="bg-green-600 text-white py-2 px-6 rounded-lg flex items-center gap-2 hover:bg-green-700 transition shadow-md hidden">
+                                    <i class="fas fa-plus"></i> Registrar Otro Viaje
+                                </button>
+                            </div>
+                            <div class="card-field">
+                                <label for="kmFinal" class="block text-sm font-medium text-gray-700 mb-2">Km. Final:</label>
+                                <input type="number" step="0.01" id="kmFinal" name="kmFinal" class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm focus:ring-2 focus:ring-primary-orange" required>
+                            </div>
+                            <div class="card-field">
+                                <label for="noEntrega" class="block text-sm font-medium text-gray-700 mb-2">No. Entregas:</label>
+                                <input type="number" id="noEntrega" name="noEntrega" class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm focus:ring-2 focus:ring-primary-orange" required>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Registro de Gastos -->
+                     <div id="gastosCards" class="mt-6">
+                        <h2 class="text-xl font-semibold text-gray-900 bg-orange-100 py-3 px-4 rounded-lg mb-4 text-center">Registro de Gastos</h2>
+                        <div id="gastosCards" class="sm:hidden block space-y-5"></div>
+                        <div class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <label class="no-gastos-label flex items-center gap-2 text-sm">
+                                    <input type="checkbox" id="noGastos" name="noGastos">
+                                    <span>No hubo gastos</span>
+                                </label>
+                            </div>
+                            <div class="text-lg font-semibold text-gray-900">
+                                <strong>Total:</strong> <span id="totalGastos" class="text-gray-800">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="agregarGasto" class="bg-primary-orange text-white py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-secondary-orange transition shadow-md">
+                        <i class="fas fa-plus"></i> Agregar Gasto
+                    </button>
+                    <div class="card-field mt-4">
+                        <label for="comentarioGeneral" class="block text-sm font-medium text-gray-700 mb-2">Comentarios:</label>
+                        <textarea id="comentarioGeneral" name="comentarioGeneral" class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-800 text-sm h-24" placeholder="Nota:"></textarea>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex-1 card-field">
+                            <label for="fotoAcuse" class="block text-sm font-medium text-gray-700 mb-2">Foto Acuse:</label>
+                            <input type="file" id="fotoAcuse" name="fotoAcuse" class="block w-full text-sm text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-orange file:text-white hover:file:bg-secondary-orange transition" accept="image/*" required>
+                            <div id="vistaPreviaAcuse" class="mt-3"></div>
+                        </div>
+                        <div class="flex-1 card-field">
+                            <label for="fotoOtraFin" class="block text-sm font-medium text-gray-700 mb-2">Otra Foto (Opcional):</label>
+                            <input type="file" id="fotoOtraFin" name="fotoOtraFin" class="block w-full text-sm text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-orange file:text-white hover:file:bg-secondary-orange transition" accept="image/*">
+                            <div id="vistaPreviaOtraFin" class="mt-3"></div>
+                        </div>
+                    </div>
+                    <div id="datosNota" class="space-y-5">
+                        <button type="button" id="registrarOtroViaje" class="bg-green-600 text-white py-2 px-6 rounded-lg flex items-center gap-2 hover:bg-green-700 transition shadow-md hidden">
+                            <i class="fas fa-plus"></i> Registrar Otro Viaje
+                        </button>
+                    </div>
+                    <div class="flex justify-center space-x-4 mt-8">
+                        <button type="submit" id="finalizarViaje" class="bg-primary-orange text-white py-2 px-6 rounded-lg flex items-center gap-2 hover:bg-secondary-orange transition shadow-md">
+                            <i class="fas fa-stop"></i> Finalizar Viaje
+                        </button>
+                        <button type="button" class="btnVolver bg-gray-600 text-white py-2 px-6 rounded-lg flex items-center gap-2 hover:bg-gray-700 transition shadow-md">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const menuIcon = document.getElementById('menu-icon');
+            sidebar.classList.toggle('-translate-x-full');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                menuIcon.classList.remove('fa-times');
+                menuIcon.classList.add('fa-bars');
+            } else {
+                menuIcon.classList.remove('fa-bars');
+                menuIcon.classList.add('fa-times');
+            }
+        }
+        function selectGasLevel(level) {
+            // Prevent form from being marked as dirty for unload alert
+            const form = document.getElementById('iniciarViajeForm');
+            const originalOnBeforeUnload = window.onbeforeunload;
+            window.onbeforeunload = null;
+
+            document.getElementById('gasolinaLevelInput').value = level;
+            document.querySelectorAll('.fuel-level-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.textContent === level);
+            });
+            const fuelLevelContainer = document.getElementById('gasolinaLevel');
+            const fuelLevelDisplay = document.getElementById('gasolinaLevelDisplay');
+            const fuelLevelText = document.getElementById('gasolinaLevelText');
+            fuelLevelContainer.classList.remove('show');
+            fuelLevelText.textContent = level;
+            fuelLevelDisplay.classList.add('show');
+
+            // Restore onbeforeunload after a short delay to ensure the action is complete
+            setTimeout(() => {
+                window.onbeforeunload = originalOnBeforeUnload;
+            }, 100);
+        }
+        function toggleGestionMenu() {
+            const menu = document.getElementById('gestionSubmenu');
+            menu.classList.toggle('hidden');
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const userRole = 'administrador';
+            document.querySelectorAll('.admin-only').forEach(el => {
+                el.style.display = userRole === 'administrador' ? '' : 'none';
+            });
+            // Toggle fuel level sub-menu
+            const gasolinaCheckbox = document.getElementById('gasolinaInicio');
+            const fuelLevelContainer = document.getElementById('gasolinaLevel');
+            const fuelLevelDisplay = document.getElementById('gasolinaLevelDisplay');
+            gasolinaCheckbox.addEventListener('change', () => {
+                if (gasolinaCheckbox.checked) {
+                    fuelLevelContainer.classList.add('show');
+                    fuelLevelDisplay.classList.remove('show');
+                    document.getElementById('gasolinaLevelInput').value = '';
+                    document.querySelectorAll('.fuel-level-btn').forEach(btn => btn.classList.remove('selected'));
+                } else {
+                    fuelLevelContainer.classList.remove('show');
+                    fuelLevelDisplay.classList.remove('show');
+                    document.getElementById('gasolinaLevelInput').value = '';
+                }
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/Modules/Menu/controller_Menu.js" type="module"></script>
+    <script src="/Modules/Bitacora/controller_Bitacora.js" type="module"></script>
+</body>
+</html>

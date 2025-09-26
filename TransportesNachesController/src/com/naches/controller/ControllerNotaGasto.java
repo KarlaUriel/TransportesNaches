@@ -1,5 +1,6 @@
 package com.naches.controller;
 
+import com.google.gson.Gson;
 import com.naches.db.ConexionMySQL;
 import com.naches.model.*;
 import java.sql.*;
@@ -16,6 +17,7 @@ import org.ehcache.config.Configuration;
 import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.xml.XmlConfiguration;
 import java.net.URL;
+import java.util.Map;
 
 public class ControllerNotaGasto {
 
@@ -91,7 +93,7 @@ public class ControllerNotaGasto {
         try {
             // Buscar el idCliente basado en el nombreCliente
             int idCliente = 0;
-            String sqlCliente = "SELECT idCliente FROM cliente WHERE TRIM(nombreCliente) = TRIM(?) AND activoCliente = 1";
+            String sqlCliente = "SELECT idCliente FROM v_cliente WHERE TRIM(nombreCliente) = TRIM(?) AND activoCliente = 1";
             try (PreparedStatement pstmt = conn.prepareStatement(sqlCliente)) {
                 pstmt.setString(1, ng.getNombreCliente().trim());
                 ResultSet rs = pstmt.executeQuery();
@@ -821,76 +823,143 @@ public class ControllerNotaGasto {
         }
     }
 
-    public void updateGeneralInfo(NotaGasto ng) throws Exception {
-        String sql = "{CALL update_nota_gasto_general(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
-        ConexionMySQL connMySQL = new ConexionMySQL();
-        Connection conn = connMySQL.open();
-        CallableStatement cstmt = conn.prepareCall(sql);
+   public void updateGeneralInfo(NotaGasto ng) throws Exception {
+    
 
-        try {
-            // Fetch existing note to get fields not sent by frontend
-            NotaGasto existingNota = getById(ng.getIdNota());
-            if (existingNota == null) {
-                throw new Exception("Nota con idNota: " + ng.getIdNota() + " no encontrada");
-            }
+    String sql = "{CALL update_nota_gasto_general(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+    ConexionMySQL connMySQL = new ConexionMySQL();
+    Connection conn = connMySQL.open();
+    CallableStatement cstmt = conn.prepareCall(sql);
 
-            // Look up idCliente based on nombreCliente
-            String nombreCliente = ng.getNombreCliente() != null ? ng.getCliente().getNombreCliente() : "";
-            int idCliente = 0;
-            if (nombreCliente != null && !nombreCliente.trim().isEmpty()) {
-                String sqlCliente = "SELECT idCliente FROM cliente WHERE TRIM(nombreCliente) = TRIM(?) AND activoCliente = 1";
-                try (PreparedStatement pstmt = conn.prepareStatement(sqlCliente)) {
-                    pstmt.setString(1, nombreCliente.trim());
-                    ResultSet rs = pstmt.executeQuery();
-                    if (rs.next()) {
-                        idCliente = rs.getInt("idCliente");
-                    } else {
-                        throw new Exception("No se encontró el cliente con nombre: " + nombreCliente);
-                    }
-                }
-            } else {
-                idCliente = 1;
-            }
-
-            // Debug logging
-            System.out.println("Updating notaGasto with idNota: " + ng.getIdNota());
-            System.out.println("nombreCliente: " + nombreCliente + ", idCliente: " + idCliente);
-            System.out.println("nombreOperador: " + (ng.getOperador() != null ? ng.getOperador().getNombreOperador() : "null"));
-            System.out.println("tipoVehiculo: " + (ng.getUnidad() != null ? ng.getUnidad().getTipoVehiculo() : "null"));
-
-            cstmt.setInt(1, ng.getIdNota());
-            cstmt.setString(2, ng.getOperador() != null ? ng.getOperador().getNombreOperador() : null);
-            cstmt.setString(3, ng.getCliente() != null ? ng.getCliente().getNombreCliente() : null);
-            cstmt.setString(4, ng.getUnidad() != null ? ng.getUnidad().getTipoVehiculo() : null);
-           
-            cstmt.setString(5, ng.getDestino());
-            cstmt.setInt(6, ng.getNoEntrega());
-            cstmt.setDate(7, ng.getFechaSalida() != null ? new java.sql.Date(ng.getFechaSalida().getTime()) : null);
-            cstmt.setString(8, ng.getHoraSalida());
-            cstmt.setDate(9, ng.getFechaLlegada() != null ? new java.sql.Date(ng.getFechaLlegada().getTime()) : null);
-            cstmt.setString(10, ng.getHoraLlegada());
-            cstmt.setDouble(11, ng.getKmInicio());
-            cstmt.setDouble(12, ng.getKmFinal());
-            cstmt.setBoolean(13, ng.isGasolinaInicio());
-            cstmt.setString(14, existingNota.getGasolinaLevel() != null ? existingNota.getGasolinaLevel() : null);
-            cstmt.setBoolean(15, existingNota.isLlantasInicio());
-            cstmt.setBoolean(16, existingNota.isAceiteInicio());
-            cstmt.setBoolean(17, existingNota.isAnticongelanteInicio());
-            cstmt.setBoolean(18, existingNota.isLiquidoFrenosInicio());
-            cstmt.setString(19, ng.getComentarioEstado());
-
-            cstmt.execute();
-
-            // Invalidate cache
-            if (notasCache != null) {
-                notasCache.clear();
-                System.out.println("Cache invalidado tras updateGeneralInfo");
-            }
-        } catch (SQLException e) {
-            throw new Exception("Error al actualizar información general: " + e.getMessage(), e);
-        } finally {
-            cstmt.close();
-            connMySQL.close();
+    try {
+        // Fetch existing note to get fields not sent by frontend
+        NotaGasto existingNota = getById(ng.getIdNota());
+        if (existingNota == null) {
+            throw new Exception("Nota con idNota: " + ng.getIdNota() + " no encontrada");
         }
+
+        // Look up idCliente based on nombreCliente
+        String nombreCliente = ng.getNombreCliente() != null ? ng.getCliente().getNombreCliente() : "";
+        int idCliente = 0;
+        if (nombreCliente != null && !nombreCliente.trim().isEmpty()) {
+            String sqlCliente = "SELECT idCliente FROM cliente WHERE TRIM(nombreCliente) = TRIM(?) AND activoCliente = 1";
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlCliente)) {
+                pstmt.setString(1, nombreCliente.trim());
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    idCliente = rs.getInt("idCliente");
+                } else {
+                    throw new Exception("No se encontró el cliente con nombre: " + nombreCliente);
+                }
+            }
+        } else {
+            idCliente = 1; // Consider reviewing this default value
+        }
+
+        // Debug logging
+        System.out.println("Updating notaGasto with idNota: " + ng.getIdNota());
+        System.out.println("nombreCliente: " + nombreCliente + ", idCliente: " + idCliente);
+        System.out.println("nombreOperador: " + (ng.getOperador() != null ? ng.getOperador().getNombreOperador() : "null"));
+        System.out.println("tipoVehiculo: " + (ng.getUnidad() != null ? ng.getUnidad().getTipoVehiculo() : "null"));
+
+        cstmt.setInt(1, ng.getIdNota());
+        cstmt.setString(2, ng.getOperador() != null ? ng.getOperador().getNombreOperador() : null);
+        cstmt.setString(3, ng.getCliente() != null ? ng.getCliente().getNombreCliente() : null);
+        cstmt.setString(4, ng.getUnidad() != null ? ng.getUnidad().getTipoVehiculo() : null);
+        cstmt.setString(5, ng.getDestino());
+        cstmt.setInt(6, ng.getNoEntrega());
+        cstmt.setDate(7, ng.getFechaSalida() != null ? new java.sql.Date(ng.getFechaSalida().getTime()) : null);
+        cstmt.setString(8, ng.getHoraSalida());
+        cstmt.setDate(9, ng.getFechaLlegada() != null ? new java.sql.Date(ng.getFechaLlegada().getTime()) : null);
+        cstmt.setString(10, ng.getHoraLlegada());
+        cstmt.setDouble(11, ng.getKmInicio());
+        cstmt.setDouble(12, ng.getKmFinal());
+        cstmt.setBoolean(13, ng.isGasolinaInicio());
+        cstmt.setString(14, existingNota.getGasolinaLevel() != null ? existingNota.getGasolinaLevel() : null);
+        cstmt.setBoolean(15, existingNota.isLlantasInicio());
+        cstmt.setBoolean(16, existingNota.isAceiteInicio());
+        cstmt.setBoolean(17, existingNota.isAnticongelanteInicio());
+        cstmt.setBoolean(18, existingNota.isLiquidoFrenosInicio());
+        cstmt.setString(19, ng.getComentarioEstado());
+
+        cstmt.execute();
+
+        // Invalidate cache
+        if (notasCache != null) {
+            notasCache.clear();
+            System.out.println("Cache invalidado tras updateGeneralInfo");
+        }
+    } catch (SQLException e) {
+        throw new Exception("Error al actualizar información general: " + e.getMessage(), e);
+    } finally {
+        cstmt.close();
+        connMySQL.close();
     }
+}    
+  public void updateGastos(int idNota, List<Gasto> gastos) throws Exception {
+    String sql = "{CALL agregarGasto(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+    ConexionMySQL connMySQL = new ConexionMySQL();
+    Connection conn = connMySQL.open();
+
+    try {
+        for (Gasto gasto : gastos) {
+            int idTipoGasto = gasto.getTipoGasto().getIdTipoGasto();
+            if (idTipoGasto <= 0) {
+                System.err.println("idTipoGasto is invalid (must be greater than 0) for Gasto with noGasto: " + gasto.getNoGasto());
+                continue;
+            }
+            try (CallableStatement cstmt = conn.prepareCall(sql)) {
+                cstmt.setInt(1, idNota);
+                cstmt.setInt(2, gasto.getNoGasto());
+                cstmt.setDouble(3, gasto.getCantidad());
+                cstmt.setInt(4, gasto.getTipoGasto().getIdTipoGasto());
+                cstmt.setString(5, gasto.getDetalleCaseta());
+                cstmt.setString(6, gasto.getTipoGas());
+                cstmt.setDouble(7, gasto.getCostoUnitario());
+                cstmt.setDouble(8, gasto.getSubTotal());
+                cstmt.setDouble(9, gasto.getTotal());
+                cstmt.setString(10, gasto.getTipoPago());
+                cstmt.setDouble(11, gasto.getValorLitro());
+                cstmt.execute();
+            }
+        }
+        // Invalidate cache
+        if (notasCache != null) {
+            notasCache.clear();
+            System.out.println("Cache invalidado tras updateGastos");
+        }
+    } catch (SQLException e) {
+        throw new Exception("Error al actualizar gastos: " + e.getMessage(), e);
+    } finally {
+        connMySQL.close();
+    }
+}
+
+public void updatePhotos(int idNota, Map<String, String> photos) throws Exception {
+    String sql = "{CALL update_nota_photos(?, ?, ?, ?, ?)}";
+    ConexionMySQL connMySQL = new ConexionMySQL();
+    Connection conn = connMySQL.open();
+    CallableStatement cstmt = conn.prepareCall(sql);
+
+    try {
+        cstmt.setInt(1, idNota);
+        cstmt.setString(2, photos.getOrDefault("fotoTablero", null));
+        cstmt.setString(3, photos.getOrDefault("fotoAcuse", null));
+        cstmt.setString(4, photos.getOrDefault("fotoOtraInicio", null));
+        cstmt.setString(5, photos.getOrDefault("fotoOtraFin", null));
+        cstmt.execute();
+
+        // Invalidate cache
+        if (notasCache != null) {
+            notasCache.clear();
+            System.out.println("Cache invalidado tras updatePhotos");
+        }
+    } catch (SQLException e) {
+        throw new Exception("Error al actualizar fotos: " + e.getMessage(), e);
+    } finally {
+        cstmt.close();
+        connMySQL.close();
+    }
+}
+    
 }

@@ -1,0 +1,125 @@
+/* SIDEBAR */
+/*INTENTO 1 DE SUBIR ESTO*/
+#sidebar {
+    position: fixed;
+    z-index: 1070;
+    width: 9rem;
+    min-width: 6rem;
+    height: 100%;
+    background: linear-gradient(to bottom, #1a202c, #2d3748);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /*justify-between*/
+    align-items: center;
+    padding-bottom: 35px;
+    box-shadow: 0 0px 200px rgba(0, 0, 0, 0.5);
+    overflow: visible;
+    transition: transform 0.3s ease-in-out;
+}
+#logo {
+    margin-top: 2rem;
+    height: 5rem;
+    width: 5rem;
+}
+
+#logo img{
+    border-radius: 50%;
+}
+#sidebar i ,
+#cerrarSesion{
+    font-size: 50px; /* Cambia esto según el tamaño que desees */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s; /* Efecto de escala al pasar el ratón */
+    margin-top: 2rem;
+}
+
+/* SUBMENU */
+#gestionSubmenu {
+    position: flex;
+    left: 10rem !important; /* Increase this value to move the submenu further away from the sidebar */
+    top: 50% !important;
+    background-color: #2d3748; /* Match the sidebar's gradient for consistency */
+    border-radius: 0.375rem; /* Tailwind's rounded-md */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Tailwind's shadow-lg */
+    padding: 0.5rem 0; /* Tailwind's py-2 */
+    width: 12rem !important; /* Maintain the width */
+    min-width: 7rem !important;
+    z-index: 50;
+    transition: transform 0.3s; /* Efecto de escala al pasar el ratón */
+    align-items: center;
+}
+#gestionSubmenu a, #gestionSubmenu i{
+    font-size: 30px; /* Cambia esto según el tamaño que desees */
+    border-radius: 12px;
+}
+#gestionSubmenu li, #gestionSubmenu a, #gestionSubmenu i{
+    margin-top: 5px;
+}
+#logo:hover,
+#cerrarSesion:hover,
+#sidebar i:hover,
+#gestionSubmenu li:hover,
+#menuButton i:hover{
+    transform: scale(1.1);
+}
+
+/* TOOLTIP */
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: auto;
+    background-color: #4a5568;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 1;
+    font-size: 20px;
+    left: 110%;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+}
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+/* Suppress the Gestión tooltip when submenu is open */
+#gestionAdmin.suppress-tooltip .tooltiptext {
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* RESPONSIVE VISTA MOVIL*/
+@media(max-width: 768px) {
+    #sidebar {
+        width: 3rem;
+        padding-top: 1rem;
+    }
+    #logo {
+        height: 3rem;
+        width: 3rem;
+    }
+    #sidebar i,
+    #cerrarSesion {
+        font-size: 35px;
+        margin-top: 1rem;
+    }
+    #gestionSubmenu {
+        left: 7rem !important; /* Adjust to create a gap from the 4rem sidebar */
+        width: 8rem !important; /* Maintain the width */
+    }
+    #gestionSubmenu a{
+        font-size: 15px;
+    }
+     #gestionSubmenu a i{
+        font-size: 20px;
+    }
+   
+    #gestionSubmenu li {
+        margin-top: 1px;
+    }
+}

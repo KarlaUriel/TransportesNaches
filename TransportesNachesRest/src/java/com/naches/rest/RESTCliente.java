@@ -197,48 +197,6 @@ public class RESTCliente {
     }
 
     @POST
-    @Path("reactivar/{idCliente}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response reactivarCliente(@PathParam("idCliente") int idCliente,
-            @HeaderParam("Authorization") String authHeader) {
-
-        // Validar token
-        Response authResponse = validateToken(authHeader);
-        if (authResponse != null) {
-            return authResponse;
-        }
-
-        String out;
-        ControllerCliente cc = new ControllerCliente();
-
-        try {
-            if (idCliente <= 0) {
-                out = "{\"error\":\"El ID de cliente no es válido.\"}";
-                return Response.status(Response.Status.BAD_REQUEST).entity(out).build();
-            }
-
-            boolean reactivado = cc.reactivarCliente(idCliente);
-            if (reactivado) {
-                out = "{\"result\":\"Cliente reactivado correctamente.\"}";
-            } else {
-                out = "{\"error\":\"No se pudo reactivar el cliente.\"}";
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            out = "{\"error\":\"Error interno del servidor: " + ex.getMessage() + "\"}";
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(out).build();
-        }
-
-        return buildResponse(out);
-    }
-
-    @OPTIONS
-    @Path("reactivar/{idCliente}")
-    public Response handlePreflightReactivar() {
-        return buildPreflightResponse();
-    }
-
-    @POST
     @Path("saveSubclients/{idCliente}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)

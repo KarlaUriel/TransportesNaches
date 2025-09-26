@@ -1,8 +1,10 @@
 package com.naches.rest;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.naches.controller.ControllerNotaGasto;
 import com.naches.model.Contabilidad;
+import com.naches.model.Gasto;
 import com.naches.model.NotaGasto;
 import com.naches.model.NotaGastoResponse;
 import com.naches.seguridad.JWTUtil;
@@ -18,6 +20,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -102,13 +105,13 @@ public class RESTNotaGasto {
     @Produces(MediaType.APPLICATION_JSON)
     public Response iniciarViaje(@FormParam("datosNota") @DefaultValue("") String datosNota,
             @HeaderParam("Authorization") String authHeader) {
-        
-         // Validar token
+
+        // Validar token
         Response authResponse = validateToken(authHeader);
         if (authResponse != null) {
             return authResponse;
         }
-        
+
         String out;
         Gson gson = new Gson();
         ControllerNotaGasto cng = new ControllerNotaGasto();
@@ -133,13 +136,13 @@ public class RESTNotaGasto {
     @Produces(MediaType.APPLICATION_JSON)
     public Response finalizarViaje(@FormParam("datosNota") @DefaultValue("") String datosNota,
             @HeaderParam("Authorization") String authHeader) {
-       
+
         // Validar token
         Response authResponse = validateToken(authHeader);
         if (authResponse != null) {
             return authResponse;
         }
-        
+
         String out;
         Gson gson = new Gson();
         ControllerNotaGasto cng = new ControllerNotaGasto();
@@ -163,13 +166,13 @@ public class RESTNotaGasto {
             @FormParam("fechaInicio") String fechaInicio,
             @FormParam("fechaFin") String fechaFin,
             @HeaderParam("Authorization") String authHeader) {
-       
-         // Validar token
+
+        // Validar token
         Response authResponse = validateToken(authHeader);
         if (authResponse != null) {
             return authResponse;
         }
-        
+
         String out;
         ControllerNotaGasto cng = new ControllerNotaGasto();
         try {
@@ -188,13 +191,13 @@ public class RESTNotaGasto {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getById(@QueryParam("idNota") @DefaultValue("0") int idNota,
             @HeaderParam("Authorization") String authHeader) {
-       
-         // Validar token
+
+        // Validar token
         Response authResponse = validateToken(authHeader);
         if (authResponse != null) {
             return authResponse;
         }
-        
+
         String out;
         ControllerNotaGasto cng = new ControllerNotaGasto();
 
@@ -214,13 +217,13 @@ public class RESTNotaGasto {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllByUser(@QueryParam("idUsuario") int idUsuario,
             @HeaderParam("Authorization") String authHeader) {
-       
-         // Validar token
+
+        // Validar token
         Response authResponse = validateToken(authHeader);
         if (authResponse != null) {
             return authResponse;
         }
-        
+
         try {
             ControllerNotaGasto controller = new ControllerNotaGasto();
             List<NotaGasto> notas = controller.getAllByUser(idUsuario);
@@ -238,13 +241,13 @@ public class RESTNotaGasto {
     @Produces(MediaType.APPLICATION_JSON)
     public Response updateContabilidad(@FormParam("datosNota") @DefaultValue("") String datosNota,
             @HeaderParam("Authorization") String authHeader) {
-       
-         // Validar token
+
+        // Validar token
         Response authResponse = validateToken(authHeader);
         if (authResponse != null) {
             return authResponse;
         }
-        
+
         String out;
         Gson gson = new Gson();
         ControllerNotaGasto cng = new ControllerNotaGasto();
@@ -268,13 +271,13 @@ public class RESTNotaGasto {
     @Path("getNotasPendientes")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getNotasPendientes(@HeaderParam("Authorization") String authHeader) throws Exception {
-       
-         // Validar token
+
+        // Validar token
         Response authResponse = validateToken(authHeader);
         if (authResponse != null) {
             return authResponse;
         }
-        
+
         ControllerNotaGasto cng = new ControllerNotaGasto();
 
         try {
@@ -289,32 +292,28 @@ public class RESTNotaGasto {
     @PUT
     @Path("updateGeneralInfo")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateGeneralInfo(@FormParam("datosNota") @DefaultValue("") String datosNota,
+    public Response updateGeneralInfo(@FormParam("datosNota") @DefaultValue(" ") String datosNota,
             @HeaderParam("Authorization") String authHeader) {
-      
-         // Validar token
+
+        // Validar token
         Response authResponse = validateToken(authHeader);
         if (authResponse != null) {
             return authResponse;
         }
-        
-        String out;
+
         Gson gson = new Gson();
         ControllerNotaGasto cng = new ControllerNotaGasto();
 
         try {
-            System.out.println("=== DATOS RECIBIDOS EN updateGeneralInfo ===");
-            System.out.println(datosNota); // Imprimir los datos recibidos para depuración
-
             NotaGasto ng = gson.fromJson(datosNota, NotaGasto.class);
             cng.updateGeneralInfo(ng);
-            out = "{\"result\":\"Información general actualizada correctamente.\"}";
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            out = String.format("{\"error\":\"%s\"}", ex.getMessage());
+            return Response.ok("Información general actualizada correctamente").build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al actualizar información general: " + e.getMessage())
+                    .build();
         }
 
-        return Response.ok(out).build();
     }
 
     @POST
@@ -323,13 +322,13 @@ public class RESTNotaGasto {
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteNota(@FormParam("idNota") String idNotaStr,
             @HeaderParam("Authorization") String authHeader) {
-      
-         // Validar token
+
+        // Validar token
         Response authResponse = validateToken(authHeader);
         if (authResponse != null) {
             return authResponse;
         }
-        
+
         String out;
         ControllerNotaGasto cng = new ControllerNotaGasto();
 
@@ -349,6 +348,82 @@ public class RESTNotaGasto {
             ex.printStackTrace();
             out = String.format("{\"error\":\"Error al eliminar la nota: %s\"}", ex.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(out).build();
+        }
+
+        return Response.ok(out).build();
+    }
+
+    @PUT
+    @Path("updateGastos")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateGastos(@FormParam("idNota") int idNota,
+            @FormParam("gastos") @DefaultValue("[]") String gastosJson,
+            @HeaderParam("Authorization") String authHeader) {
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
+        String out;
+        Gson gson = new Gson();
+        ControllerNotaGasto cng = new ControllerNotaGasto();
+
+        try {
+            System.out.println("=== DATOS RECIBIDOS EN updateGastos ===");
+            System.out.println("idNota: " + idNota);
+            System.out.println("gastos: " + gastosJson);
+
+            // Deserializar la lista de gastos desde el JSON
+            Type listType = new TypeToken<List<Gasto>>() {
+            }.getType();
+            List<Gasto> gastos = gson.fromJson(gastosJson, listType);
+
+            // Validar que la lista de gastos no esté vacía
+            if (gastos == null || gastos.isEmpty()) {
+                out = "{\"error\":\"La lista de gastos está vacía o es inválida.\"}";
+                return Response.status(Response.Status.BAD_REQUEST).entity(out).build();
+            }
+
+            // Llamar al método updateGastos del controlador
+            cng.updateGastos(idNota, gastos);
+            out = "{\"result\":\"Gastos actualizados correctamente.\"}";
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            out = String.format("{\"error\":\"Error al actualizar gastos: %s\"}", ex.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(out).build();
+        }
+
+        return Response.ok(out).build();
+    }
+
+    @PUT
+    @Path("updatePhotos")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updatePhotos(@FormParam("idNota") int idNota,
+            @FormParam("photos") @DefaultValue("{}") String photosJson,
+            @HeaderParam("Authorization") String authHeader) {
+        Response authResponse = validateToken(authHeader);
+        if (authResponse != null) {
+            return authResponse;
+        }
+
+        String out;
+        Gson gson = new Gson();
+        ControllerNotaGasto cng = new ControllerNotaGasto();
+
+        try {
+            System.out.println("=== DATOS RECIBIDOS EN updatePhotos ===");
+            System.out.println("idNota: " + idNota);
+            System.out.println("photos: " + photosJson);
+
+            Type mapType = new TypeToken<Map<String, String>>() {
+            }.getType();
+            Map<String, String> photos = gson.fromJson(photosJson, mapType);
+            cng.updatePhotos(idNota, photos);
+            out = "{\"result\":\"Fotos actualizadas correctamente.\"}";
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            out = String.format("{\"error\":\"%s\"}", ex.getMessage());
         }
 
         return Response.ok(out).build();
